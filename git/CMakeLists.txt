@@ -6,7 +6,9 @@ add_library(git
     commands/HelpCommand.hpp
     commands/HelpCommand.cpp
     commands/InitCommand.hpp
-    commands/InitCommand.cpp)
+    commands/InitCommand.cpp
+    commands/AddCommand.hpp
+    commands/AddCommand.cpp)
 
 if (UNIX)
 target_link_libraries(git 

@@ -17,16 +17,21 @@ InitCommand::~InitCommand()
 
 int InitCommand::execute() {
     //Creation of .git folder with folder .git/objects, and files .git/index, .git/HEAD
+    const fs::path gitDirectory(".git");
+    const fs::path objectsDirectory = fs::path(".git").append("objects");
+    const fs::path indexDirectory = fs::path(".git").append("index");
+    const fs::path headDirectory = fs::path(".git").append("HEAD");
+    
 
     //1. If .git folder already exists, then print to screen that a local git repo already exists. Else, create folder
-    if(fs::exists(".git")) 
+    if(fs::exists(gitDirectory)) 
     {
         cout << "Error: A git repo already exists here."<< endl;
         return 1;
     }
     else 
     {
-        if(!fs::create_directory(".git"))
+        if(!fs::create_directory(gitDirectory))
         {
             cout << "Failed to create .git folder." <<endl;
             return 1;
@@ -34,16 +39,16 @@ int InitCommand::execute() {
     }
 
     //2. Create empty object folder
-    if(!fs::create_directory(".git/objects"))
+    if(!fs::create_directory(objectsDirectory))
     {
-        cout << "Failed to create .git/objects folder." <<endl;
+        cout << "Failed to create "<< objectsDirectory.c_str() << "folder." <<endl;
         return 1;
     }
     
     //3. Create empty files index and HEAD files
-    ofstream file(".git/HEAD");
+    ofstream file(headDirectory.c_str());
     file.close();
-    file.open(".git/index");
+    file.open(indexDirectory.c_str());
     file.close();
 
     return 0;
