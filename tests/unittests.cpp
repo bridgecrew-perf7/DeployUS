@@ -20,6 +20,12 @@ TEST_CASE("Init Command")
 {
 	char* argv[2] = {program_invocation_name, strdup("init")};
 	int argc = 2;
+	
+	//Path to needed files/folders
+    const fs::path gitDirectory(".git");
+    const fs::path objectsDirectory = fs::path(".git").append("objects");
+    const fs::path indexDirectory = fs::path(".git").append("index");
+    const fs::path headDirectory = fs::path(".git").append("HEAD");
 
 	//Delete .git folder if it exists
 	if(fs::exists(".git")) fs::remove_all(".git");
@@ -29,10 +35,10 @@ TEST_CASE("Init Command")
 	cmd->execute();
 
 	//Assertions that proper files/folders exists
-	REQUIRE(fs::is_directory(".git"));
-	REQUIRE(fs::is_directory(".git/objects"));
-	REQUIRE(fs::is_regular_file(".git/index"));
-	REQUIRE(fs::is_regular_file(".git/HEAD"));
+	REQUIRE(fs::is_directory(gitDirectory));
+	REQUIRE(fs::is_directory(objectsDirectory));
+	REQUIRE(fs::is_regular_file(indexDirectory));
+	REQUIRE(fs::is_regular_file(headDirectory));
 
 	//Catching cout output to see if messages are working
 	int buffSize = 100;
