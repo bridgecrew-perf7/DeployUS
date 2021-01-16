@@ -10,5 +10,5 @@ public:
     HelpCommand(BaseCommand* bcptr);
     ~HelpCommand();
 
-    virtual void execute();
+    virtual int execute();
 };

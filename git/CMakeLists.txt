@@ -8,7 +8,6 @@ add_library(git
     commands/InitCommand.hpp
     commands/InitCommand.cpp)
 
-
 if (UNIX)
 target_link_libraries(git 
     PUBLIC 

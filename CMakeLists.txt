@@ -9,9 +9,9 @@ set(Boost_USE_MULTITHREADED ON)
 
 if (UNIX)
 find_package(ZLIB REQUIRED) 
-find_package(Boost 1.71.0 REQUIRED COMPONENTS iostreams filesystem)
+find_package(Boost 1.71.0 REQUIRED COMPONENTS iostreams filesystem program_options )
 else ()
-find_package(Boost 1.71.0 REQUIRED COMPONENTS iostreams filesystem zlib)
+find_package(Boost 1.71.0 REQUIRED COMPONENTS iostreams filesystem zlib program_options )
 endif ()
 		
 set(CXX_STANDARD 17)

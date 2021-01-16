@@ -10,8 +10,9 @@ HelpCommand::~HelpCommand()
 {
 }
 
-void HelpCommand::execute() {
+int HelpCommand::execute() {
     bc->help();
+    return 0;
 }
 
 

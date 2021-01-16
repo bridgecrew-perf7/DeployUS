@@ -9,6 +9,6 @@ public:
     ~BaseCommand();
 
     //Method to be overwritten
-    virtual void execute();
+    virtual int execute();
     virtual void help();
 };

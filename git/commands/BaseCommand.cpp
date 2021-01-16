@@ -9,7 +9,8 @@ BaseCommand::~BaseCommand()
 {
 }
 
-void BaseCommand::execute() {
+int BaseCommand::execute() {
+    return 0;
 }
 
 void BaseCommand::help() {
