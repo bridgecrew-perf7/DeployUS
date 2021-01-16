@@ -1,6 +1,14 @@
 add_library(git
-    dummy.h 
-    dummy.cpp)
+    argParser.h 
+    argParser.cpp
+    commands/BaseCommand.hpp
+    commands/BaseCommand.cpp
+    commands/HelpCommand.hpp
+    commands/HelpCommand.cpp
+    commands/InitCommand.hpp
+    commands/InitCommand.cpp)
+
+
 if (UNIX)
 target_link_libraries(git 
     PUBLIC 
