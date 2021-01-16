@@ -50,5 +50,5 @@ int InitCommand::execute() {
 }
 
 void InitCommand::help() {
-    std::cout   <<    "usage: gitus init\n";
+    std::cout << "usage: gitus init\n";
 }
