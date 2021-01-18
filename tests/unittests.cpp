@@ -236,7 +236,6 @@ TEST_CASE("Add Command")
 	addcmd3->execute();
 	stream.getline(buffer, buffSize);
 	stream.clear();
-	REQUIRE(strlen(buffer) == strlen("Error: File does not exists."));
 	REQUIRE( strcmp(buffer, "Error: File does not exists.") == 0 );
 	clearBuffer(buffer,buffSize);
 	/*======================*/
