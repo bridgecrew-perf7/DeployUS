@@ -22,42 +22,42 @@ int AddCommand::execute() {
     //1. Verify that there is one file to be added.
     if (numArgs < 3)
     {
-        cout << "Error: no filepath specified.";
+        cout << "Error: no filepath specified.\n";
         return 1;
     }
     else if (numArgs > 3)
     {
-        cout << "Warning, only adding first file specified.";
+        cout << "Warning, only adding first file specified.\n";
     }
     
     //2. Verify that a git folder has been initiated
     if (!fs::exists("./.git/") || !fs::is_directory("./.git/"))
     {
-        cout << "Error: No git repository has been found.";
+        cout << "Error: No git repository has been found.\n";
         return 1;
     }
 
-    //2. Verify that the file specified exists
+    //3. Verify that the file specified exists
     if (!fs::is_regular_file(args[2])) 
     {
-        cout << "Error: File does not exists.";
+        cout << "Error: File does not exists.\n";
         return 1;
     }
 
-    //3. Create GitBlob object
+    //4. Create GitBlob object
     GitBlob* gitblob = new GitBlob(args[2]);
 
-    //4. Add blob file in object directory
+    //5. Add blob file in object directory
     if( gitblob->addInObjects())
     {
-        cout << "Error: File is already added." << endl;
+        cout << "Error: File is already added.\n";
         return 1;
     }
 
-    //5. Add reference to blob file in the index file.
+    //6. Add reference to blob file in the index file.
     if (gitblob->addInIndex())
     {
-        cout << "Error: File could not be added in Index file." << endl;
+        cout << "Error: File could not be added in Index file.\n";
         return 1;
     }
     

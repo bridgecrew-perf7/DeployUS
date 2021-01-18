@@ -224,6 +224,7 @@ TEST_CASE("Add Command")
 	stream.getline(buffer, buffSize);
 	stream.clear();
 	REQUIRE( strcmp(buffer, "Error: File is already added.") == 0 );
+	clearBuffer(buffer,buffSize);
 	/*======================*/
 
 	/*======================*/
@@ -235,7 +236,9 @@ TEST_CASE("Add Command")
 	addcmd3->execute();
 	stream.getline(buffer, buffSize);
 	stream.clear();
+	REQUIRE(strlen(buffer) == strlen("Error: File does not exists."));
 	REQUIRE( strcmp(buffer, "Error: File does not exists.") == 0 );
+	clearBuffer(buffer,buffSize);
 	/*======================*/
 
 	//Test5: fail when not specifying a file
@@ -246,6 +249,7 @@ TEST_CASE("Add Command")
 	stream.getline(buffer, buffSize);
 	stream.clear();
 	REQUIRE( strcmp(buffer, "Error: no filepath specified.") == 0 );
+	clearBuffer(buffer,buffSize);
 	/*======================*/
 
 	//Removing .git folder
@@ -256,6 +260,7 @@ TEST_CASE("Add Command")
 	stream.getline(buffer, buffSize);
 	stream.clear();
 	REQUIRE( strcmp(buffer, "Error: No git repository has been found.") == 0 );
+	clearBuffer(buffer,buffSize);
 	/*======================*/
 
 
