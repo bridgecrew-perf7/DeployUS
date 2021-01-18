@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BaseCommand.hpp"
+#include <string>
 
 class AddCommand: public BaseCommand
 {
@@ -13,4 +14,19 @@ public:
 
     virtual int execute();
     virtual void help();
+};
+
+class GitBlob
+{
+    private: 
+        char* relativePath;
+        std::string filecontents;
+        std::string sha1hash;
+        std::string generateBlobContents();
+    public:
+        GitBlob(char* path);
+        ~GitBlob();
+
+        int addInObjects();
+        int addInIndex();
 };
