@@ -30,5 +30,9 @@ class GitCommit: public BaseGitObject
         static GitCommit* createFromGitObject(string sha1);
 
         GitTree* getRootTree();
+        inline string* getParentSHA() {return parentCommitSHA1;};
+        inline string* getMsg() {return msg;};
+        inline string* getAuthor() {return commitAuthor;};
+        inline string* getCommitTime() {return commitTime;};
 };
 

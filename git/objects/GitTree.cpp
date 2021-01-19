@@ -44,6 +44,9 @@ GitTree::GitTree(string* rootSHA1)
         }
         
     }
+
+    //Must find SHA1 again
+    this->generateTreeSHA1();
 }
 
 GitTree::~GitTree()

@@ -14,10 +14,12 @@ using namespace std;
 GitCommit::GitCommit(GitTree *tree, string *author, string *message, string* parentSHA1, string* dt)
 {
     root = tree;
-    commitAuthor = author;
-    msg = message;
-    commitTime = dt;
-    parentCommitSHA1 = parentSHA1;
+    commitAuthor = new string(*author);
+    msg = new string(*message);
+    if(dt != nullptr) commitTime = new string(*dt);
+    else commitTime = nullptr;
+    if(parentSHA1 != nullptr) parentCommitSHA1 = new string(*parentSHA1);
+    else parentSHA1 = nullptr;
 
     commitcontent = generateCommitContents();
 }
@@ -42,8 +44,9 @@ GitCommit* GitCommit::createFromGitObject(string sha1)
     }
 
     GitTree* root = new GitTree(&memberfields["tree"]);
-
-    return new GitCommit(root,&memberfields["Author"],&memberfields["Message"],&memberfields["Parent"],&memberfields["Time(UTC)"]);
+    GitCommit* out = new GitCommit(root,&memberfields["Author"],&memberfields["Message"],&memberfields["Parent"],&memberfields["Time(UTC)"]);
+    out->generateCommitSHA1();
+    return out;
 }
 
 GitCommit::~GitCommit()
