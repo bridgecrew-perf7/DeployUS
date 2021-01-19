@@ -5,6 +5,7 @@
 
 #include "catch.hpp"
 #include "unittests.hpp"
+#include <common.hpp>
 #include <argParser.h>
 #include <commands/BaseCommand.hpp>
 #include <commands/HelpCommand.hpp>

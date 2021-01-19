@@ -1,6 +1,16 @@
 add_library(git
+    common.hpp
+    common.cpp
     argParser.h 
     argParser.cpp
+    objects/BaseGitObject.hpp
+    objects/BaseGitObject.cpp
+    objects/GitBlob.hpp
+    objects/GitBlob.cpp
+    objects/GitTree.hpp
+    objects/GitTree.cpp
+    objects/GitCommit.hpp
+    objects/GitCommit.cpp
     commands/BaseCommand.hpp
     commands/BaseCommand.cpp
     commands/HelpCommand.hpp
