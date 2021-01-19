@@ -3,20 +3,61 @@
 #include <algorithm>
 #include <sstream>
 #include <iostream>
+#include <boost/tokenizer.hpp>
+
+typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
 
 using namespace std;
 
 GitTree::GitTree()
 {
-    branches = new map<string, GitTree>();
-    leaves = new list<pair<string, string>>();
+    initialize();
 }
+
+GitTree::GitTree(string* rootSHA1)
+{
+    initialize();
+
+    //Read in file referenced by SHA1
+    string contents = readGitObject(*rootSHA1);
+    boost::char_separator<char> sepnewline{"\n"};
+    tokenizer newline{contents, sepnewline};
+    for(const auto& line: newline)
+    {
+        //Split line on null-terminating character
+        auto nulltermPos = line.find('\0');
+        string typeObj = line.substr(0,nulltermPos);
+        string resultant = line.substr(nulltermPos + 1, line.size() - nulltermPos - 1);
+        
+        nulltermPos = resultant.find('\0');
+        string sha1 = resultant.substr(0,nulltermPos);
+        string filepath = resultant.substr(nulltermPos + 1, line.size() - nulltermPos - 1);
+
+        //Add reference to the tree
+        if(typeObj.compare("blob") == 0) 
+        {
+            this->addBlob(filepath,sha1);
+        }
+        else if (typeObj.compare("tree") == 0)
+        {
+            (*branches)[filepath] = new GitTree(&sha1);
+        }
+        
+    }
+}
+
 GitTree::~GitTree()
 {
     if(branches != nullptr) delete branches;
     if(leaves != nullptr) delete leaves;
 }
 
+void GitTree::initialize()
+//Initializes member attributes.
+{
+    branches = new map<string, GitTree*>();
+    leaves = new list<pair<string, string>>();
+}
 
 void GitTree::addBlob(string filepath, string sha1hash)
 //Adds a blob to the appropriate place in the tree.
@@ -37,10 +78,10 @@ void GitTree::addBlob(string filepath, string sha1hash)
 
         //Creating branch if it does not exists
         if(!branches->count(firstDirectoryName))
-            (*branches)[firstDirectoryName];
+            (*branches)[firstDirectoryName] = new GitTree();
 
         //Recursively checking the branch to add the blob
-        branches->at(firstDirectoryName).addBlob(remainingPath,sha1hash);
+        branches->at(firstDirectoryName)->addBlob(remainingPath,sha1hash);
     }
 }
 
@@ -54,7 +95,7 @@ std::string GitTree::generateTreeSHA1()
         //Adding references from branches (sub-directories)
         for(auto branch = branches->begin(); branch != branches->end(); branch++)
         {
-            bytestream << branch->first << branch->second.generateTreeSHA1();
+            bytestream << branch->first << branch->second->generateTreeSHA1();
         }
 
         //Adding references to leaves (files in this directory)
@@ -87,7 +128,7 @@ std::string GitTree::generateTreeContents()
     //Adding references from branches (sub-directories)
     for(auto branch = branches->begin(); branch != branches->end(); branch++)
     {
-        bytestream << "tree" << TREE_OBJECT_SEPERATOR << branch->second.getSHA1Hash() << TREE_OBJECT_SEPERATOR << branch->first <<'\n';
+        bytestream << "tree" << TREE_OBJECT_SEPERATOR << branch->second->getSHA1Hash() << TREE_OBJECT_SEPERATOR << branch->first <<'\n';
     }
 
     //Adding references to leaves (files in this directory)
@@ -106,7 +147,7 @@ void GitTree::addTreeInObjects()
     //Adding sub-trees in the .git/object folders
     for(auto branch = branches->begin(); branch != branches->end(); branch++)
     {
-        branch->second.addTreeInObjects();
+        branch->second->addTreeInObjects();
     }
 
     //Adds the tree object to the .git/objects folder

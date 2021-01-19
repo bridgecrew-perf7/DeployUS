@@ -6,4 +6,6 @@
 using namespace std;
 
 string generateSHA1(string text);
+
 string readFile(const char* path);
+string readGitObject(const string objSHA1);

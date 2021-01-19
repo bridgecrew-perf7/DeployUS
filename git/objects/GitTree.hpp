@@ -9,11 +9,13 @@
 class GitTree: public BaseGitObject
 {
     private:
-        std::map<std::string, GitTree> *branches;                             //Other Trees
-        std::list<std::pair<std::string, std::string>>  *leaves;              //Files in folder represented by tree
+        std::map<std::string, GitTree*> *branches;                             //Other Trees (dirname,GitTree object). The GitTree object contaisn the SHA1
+        std::list<std::pair<std::string, std::string>>  *leaves;              //Files in folder represented by tree (filename, sha1)
 
+        void initialize();
     public:
         GitTree();
+        GitTree(std::string* rootSHA1);
         ~GitTree();
 
         //Tree manipulation function

@@ -12,7 +12,6 @@ class BaseGitObject
         ~BaseGitObject();
 
         int addInObjects(string sha1hash, string filecontent);
-
         inline string getSHA1Hash() {return sha1hash;}; 
 
 };

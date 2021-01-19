@@ -12,16 +12,23 @@ class GitCommit: public BaseGitObject
 {
     private:
         GitTree* root;
+        string* parentCommitSHA1;
         string* commitAuthor;
         string* msg;
+        string* commitTime;
 
         string commitcontent;
 
     public:
-        GitCommit(GitTree* tree, string *author, string *message);
+        GitCommit(GitTree *tree, string *author, string *message, string* parentSHA1, string* dt = nullptr);
         ~GitCommit();
 
         string generateCommitContents();
         string generateCommitSHA1();
         void addCommitInObjects();
+
+        static GitCommit* createFromGitObject(string sha1);
+
+        GitTree* getRootTree();
 };
+

@@ -3,6 +3,7 @@
 #include "../objects/GitTree.hpp"
 #include "../objects/GitCommit.hpp"
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <algorithm>
 #include <boost/filesystem.hpp>
@@ -42,8 +43,22 @@ int CommitCommand::execute()
     commitMessage = args[2];
     commitAuthor = args[3];
 
+    //3. Verify that there are staged files
+    if(readFile(".git/index").size() == 0)
+    {
+        cout << "Error: There are no staged files. You can stage some files using ./gitus add <pathspec>\n";
+        return 1;
+    }
+
     //3. Fetch root tree
-    GitTree *root = new GitTree();
+    GitTree *root = nullptr;
+    string parentCommitSHA1 = readFile(".git/HEAD");
+    if(parentCommitSHA1.size() != 0)
+    {
+        GitCommit* parentCommit = GitCommit::createFromGitObject(parentCommitSHA1);
+        root = parentCommit->getRootTree();
+    }
+    else root = new GitTree();
 
     //4. Read the index file.
     fs::path indexPath("./.git/index");
@@ -73,19 +88,41 @@ int CommitCommand::execute()
     //8. Save tree objects to the .git/objects folder
     root->addTreeInObjects(); 
 
-    //9. Create commit object
-    GitCommit commitobj(root, &commitAuthor, &commitMessage);
+    //9. Create commit object 
+    GitCommit* commitobj = new GitCommit(root, &commitAuthor, &commitMessage, &parentCommitSHA1);
 
     //10. Save commit object to the .git/objects folder
-    commitobj.generateCommitSHA1();
-    commitobj.addCommitInObjects();
+    commitobj->generateCommitSHA1();
+    commitobj->addCommitInObjects();
 
+    //11. Delete content on .git/index file
+    clearIndex();
 
-
+    //12. Update the .git/HEAD file
+    updateHEAD(commitobj);
 
     return 0;
 }
 
 void CommitCommand::help() {
     cout << "usage: gitus commit <msg> <author>" << endl;
+}
+
+void CommitCommand::clearIndex()
+//Clears the content of the .index file
+{
+    ofstream file;
+    file.open(".git/index", std::ofstream::out | std::ofstream::trunc);
+    file.close();
+}
+
+
+void CommitCommand::updateHEAD(GitCommit* obj)
+//Insert SHA1 of new commit to the HEAD file
+{
+    ofstream file;
+    file.open(".git/HEAD", std::ofstream::out | std::ofstream::trunc);
+    string commitSHA1 = obj->getSHA1Hash();
+    file.write(commitSHA1.c_str(), 40);
+    file.close();
 }

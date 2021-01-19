@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BaseCommand.hpp"
+#include "../objects/GitCommit.hpp"
 #include <map>
 #include <utility>
 #include <string>
@@ -22,4 +23,7 @@ class CommitCommand: public BaseCommand
 
         virtual int execute();
         virtual void help();
+
+        void clearIndex();
+        void updateHEAD(GitCommit* obj);
 };
