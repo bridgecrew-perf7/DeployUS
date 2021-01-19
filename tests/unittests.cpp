@@ -5,11 +5,14 @@
 
 #include "catch.hpp"
 #include "unittests.hpp"
+#include <common.hpp>
 #include <argParser.h>
 #include <commands/BaseCommand.hpp>
 #include <commands/HelpCommand.hpp>
 #include <commands/InitCommand.hpp>
 #include <commands/AddCommand.hpp>
+#include <commands/CommitCommand.hpp>
+#include <objects/GitCommit.hpp>
 #include <boost/filesystem.hpp>
 #include <iostream>
 #include <string>
@@ -18,7 +21,7 @@ namespace fs = boost::filesystem;
 using namespace std;
 
 
-TEST_CASE("Help Messages") 
+TEST_CASE("Help_Messages") 
 {
 	char* argv[3] = {program_invocation_name, strdup("init"), strdup("--help")};
 	int argc = 3;
@@ -55,7 +58,7 @@ TEST_CASE("Help Messages")
 	expected = "usage: gitus init\n";
 	REQUIRE( strcmp(expected, buffer) == 0);
 
-	//2. TESTING ADDCOMMAND HELP (from ./gitus add --help)
+	//3. TESTING ADDCOMMAND HELP (from ./gitus add --help)
 	for(int i = 0; i < buffSize; i++) buffer[i] = '\0'; //clearing buffer
 	AddCommand* addcmd = new AddCommand(argc,argv);
 	helpcmd = new HelpCommand(addcmd);
@@ -65,12 +68,22 @@ TEST_CASE("Help Messages")
 	expected = "usage: gitus add <pathspec>\n";
 	REQUIRE( strcmp(expected, buffer) == 0);
 
+	//4. TESTING COMMMITCOMMAND HELP (from ./gitus commit --help)
+	for(int i = 0; i < buffSize; i++) buffer[i] = '\0'; //clearing buffer
+	CommitCommand* commitcmd = new CommitCommand(argc,argv);
+	helpcmd = new HelpCommand(commitcmd);
+	helpcmd->execute();
+	stream.read(buffer, buffSize);
+	stream.clear();
+	expected = "usage: gitus commit <msg> <author>\n";
+	REQUIRE( strcmp(expected, buffer) == 0);
+
 
 	// Redirecting cout to its saved buffer
 	cout.rdbuf(sbuf);
 }
 
-TEST_CASE("Init Command") 
+TEST_CASE("Init_Command") 
 {
 	//Removing .git folder
 	fs::remove_all(".git");
@@ -122,7 +135,7 @@ TEST_CASE("Init Command")
 
 }
 
-TEST_CASE("Add Command") 
+TEST_CASE("Add_Command") 
 {
 	//Removing .git folder
 	fs::remove_all(".git");
@@ -266,5 +279,105 @@ TEST_CASE("Add Command")
 	// Redirecting cout to its saved buffer
 	cout.rdbuf(sbuf);
 
+}
+
+TEST_CASE("Commit_Command")
+{
+	//Disabling cout
+	cout.setstate(ios_base::failbit);
+
+	//Removing .git folder
+	fs::remove_all(".git");
+
+	//Commit Failing because not .git folder
+	int argc = 4;
+	char* argvcommit[argc] = {program_invocation_name, strdup("commit"), strdup("The Message"),strdup("The Author")};
+	BaseCommand* cmd = new CommitCommand(argc,argvcommit);
+	REQUIRE(cmd->execute() == 1); // Error
+
+	//Init
+	argc = 2;
+	char* argv[argc] = {program_invocation_name, strdup("init")};
+	cmd = new InitCommand(argc,argv); 
+	REQUIRE(cmd->execute() == 0);
+
+	//Commit Failing because of no staged files
+	argc = 4;
+	cmd = new CommitCommand(argc,argvcommit);
+	REQUIRE(cmd->execute() == 1); // Error
+
+	//Add test files
+	argc = 3;
+	char* argvadd[argc] = {program_invocation_name, strdup("add"), strdup("testfolder1/letters.txt")};
+	cmd = new AddCommand(argc,argvadd); 
+	cmd->execute();
+	argvadd[2] = strdup("testfolder1/testfolder2/a.txt");
+	cmd = new AddCommand(argc,argvadd); 
+	REQUIRE(cmd->execute() == 0);
+
+	//Commit Files
+	argc = 4;
+	argvcommit[2] = strdup("The Message");
+	argvcommit[3] = strdup("The Author");
+	cmd = new CommitCommand(argc,argvcommit);
+	REQUIRE(cmd->execute() == 0);
+
+	//1. Verify empty index file
+	REQUIRE(readFile(".git/index").size() == 0); 	
+
+	//2. HEAD contains SHA of commit
+	string commitSHA1 = readFile(".git/HEAD");
+	REQUIRE(commitSHA1.size() == 40);  
+
+	//3. Verify Commit
+	GitCommit* commitobj1 = GitCommit::createFromGitObject(commitSHA1);
+	REQUIRE(commitobj1->getSHA1Hash().size() == 40);
+	REQUIRE(commitobj1->getSHA1Hash().compare(commitSHA1) == 0);
+	REQUIRE(commitobj1->getMsg()->compare("The Message") == 0);
+	REQUIRE(commitobj1->getAuthor()->compare("The Author") == 0);
+	REQUIRE(commitobj1->getCommitTime()->size() > 0);
+	REQUIRE(commitobj1->getParentSHA()->size() == 0);
+
+
+	//Adding a third file
+	argc = 3;
+	argvadd[2] = strdup("testfolder1/numbers.txt");
+	cmd = new AddCommand(argc,argvadd); 
+	REQUIRE(cmd->execute() == 0);
+
+	//Committing new file
+	argc = 4;
+	argvcommit[2] = strdup("The Second Message");
+	argvcommit[3] = strdup("The Second Author");
+	cmd = new CommitCommand(argc,argvcommit);
+	REQUIRE(cmd->execute() == 0);
+
+	//4. Verify empty index file
+	REQUIRE(readFile(".git/index").size() == 0); 	
+
+	//5. HEAD contains SHA of commit
+	string commitSHA2 = readFile(".git/HEAD");
+	REQUIRE(commitSHA2.size() == 40);  
+	
+	//6. Verify Commit
+	GitCommit* commitobj2 = GitCommit::createFromGitObject(commitSHA2);
+	REQUIRE(commitobj2->getSHA1Hash().size() == 40);
+	REQUIRE(commitobj2->getSHA1Hash().compare(commitSHA2) == 0);
+	REQUIRE(commitobj2->getMsg()->compare("The Second Message") == 0);
+	REQUIRE(commitobj2->getAuthor()->compare("The Second Author") == 0);
+	REQUIRE(commitobj2->getCommitTime()->size() > 0);
+	REQUIRE(commitobj2->getParentSHA()->compare(commitSHA1) == 0);
+
+	//Commit Failing because of no staged files
+	argc = 4;
+	cmd = new CommitCommand(argc,argvcommit);
+	REQUIRE(cmd->execute() == 1); // Error
+
+	//Removing .git folder
+	fs::remove_all(".git");
+
+	//Reenabling cout
+	cout.clear();
+	
 }
 
