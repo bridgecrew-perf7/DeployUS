@@ -85,6 +85,9 @@ TEST_CASE("Help_Messages")
 
 TEST_CASE("Init_Command") 
 {
+	//Disabling cout
+	cout.setstate(ios_base::failbit);
+
 	//Removing .git folder
 	fs::remove_all(".git");
 
@@ -110,53 +113,31 @@ TEST_CASE("Init_Command")
 	REQUIRE(fs::is_regular_file(indexDirectory));
 	REQUIRE(fs::is_regular_file(headDirectory));
 
-	//Catching cout output to see if messages are working
-	int buffSize = 100;
-	stringstream stream;
-	char* buffer = new char[buffSize]();
-
-	// Saving cout's buffer
-	streambuf *sbuf = cout.rdbuf();
-
-	// Redirect cout to our stringstream buffer or any other ostream
-	cout.rdbuf(stream.rdbuf());
-
 	//Testing message that .git folder already exists
 	InitCommand* initcmd = new InitCommand(argc,argv);
-	initcmd->execute();
-	stream.getline(buffer, buffSize);
-	REQUIRE( strcmp(buffer, "Error: A git repo already exists here.") == 0 );
-	
-	// Redirecting cout to its saved buffer
-	cout.rdbuf(sbuf);
+	REQUIRE(initcmd->execute() != 0) ;
 
 	//Removing .git folder
 	fs::remove_all(".git");
+
+	//Reenabling cout
+	cout.clear();
 
 }
 
 TEST_CASE("Add_Command") 
 {
+	//Disabling cout
+	cout.setstate(ios_base::failbit);
+
 	//Removing .git folder
 	fs::remove_all(".git");
 	char* argv[2] = {program_invocation_name, strdup("init")};
 	int argc = 2;
 
-	//Catching cout output to see if messages are working
-	int buffSize = 100;
-	stringstream stream;
-	char* buffer = new char[buffSize]();
-
-	// Saving cout's buffer
-	streambuf *sbuf = cout.rdbuf();
-
-	// Redirect cout to our stringstream buffer or any other ostream
-	cout.rdbuf(stream.rdbuf());
-
-
 	//Testing message that .git folder already exists
 	InitCommand* initcmd = new InitCommand(argc,argv);
-	initcmd->execute();
+	REQUIRE(initcmd->execute() == 0 );
 
 	/*=======================*/
 	/*Test1: Add letters.txt for the first time */
@@ -164,7 +145,7 @@ TEST_CASE("Add_Command")
 	char* argvLetters[3] = {program_invocation_name, strdup("add"), strdup(letterspath.c_str())};
 	int argcLetters= 3;
 	BaseCommand* addcmd = parse_args(argcLetters,argvLetters);
-	addcmd->execute();
+	REQUIRE(addcmd->execute() == 0);
 
 	//Reading letters.txt file
     string letterscontents = readFile(letterspath.c_str());
@@ -177,13 +158,13 @@ TEST_CASE("Add_Command")
 	REQUIRE(lettersSHA1.size() == 40);
 	
 	//Folder and file must exists
-	auto lettersFolderPath = fs::path("./.git/objects/").append(lettersSHA1.substr(0,2));
+	auto lettersFolderPath = fs::path(GitFilesystem::getObjectsPath()).append(lettersSHA1.substr(0,2));
 	REQUIRE(fs::is_directory(lettersFolderPath));
 	auto lettersFilePath = lettersFolderPath.append(lettersSHA1.substr(2,38));
 	REQUIRE(fs::is_regular_file(lettersFilePath));
 
 	//The file must be referenced at the first line of the Index file.
-	string indexContents = readFile("./.git/index");
+	string indexContents = readFile(GitFilesystem::getIndexPath().c_str());
 	int offset = 0;
 	int sepPos = indexContents.find('\0',offset);
 	string lettersFilenameIndex = indexContents.substr(offset,sepPos-offset);
@@ -214,13 +195,13 @@ TEST_CASE("Add_Command")
 	REQUIRE(numbersSHA1.size() == 40);
 	
 	//Folder and file must exists
-	auto numbersFolderPath = fs::path("./.git/objects/").append(numbersSHA1.substr(0,2));
+	auto numbersFolderPath = fs::path(GitFilesystem::getObjectsPath()).append(numbersSHA1.substr(0,2));
 	REQUIRE(fs::is_directory(numbersFolderPath));
 	auto numbersFilePath = numbersFolderPath.append(numbersSHA1.substr(2,38));
 	REQUIRE(fs::is_regular_file(numbersFilePath));
 
 	//The file must be referenced at the first line of the Index file.
-	indexContents = readFile("./.git/index");
+	indexContents = readFile(GitFilesystem::getIndexPath().c_str());
 	offset = indexContents.find('\n');
 	sepPos = indexContents.find('\0',offset);
 	string numbersFilenameIndex = indexContents.substr(offset+1,sepPos-offset-1);
@@ -233,11 +214,7 @@ TEST_CASE("Add_Command")
 
 	/*======================*/
 	//Test3: Adding numbers.txt again to see it fail
-	addcmd2->execute();
-	stream.getline(buffer, buffSize);
-	stream.clear();
-	REQUIRE( strcmp(buffer, "Error: File is already added.") == 0 );
-	clearBuffer(buffer,buffSize);
+	REQUIRE(addcmd2->execute() != 0);
 	/*======================*/
 
 	/*======================*/
@@ -246,38 +223,26 @@ TEST_CASE("Add_Command")
 	char* argvnonexistant[3] = {program_invocation_name, strdup("add"), strdup(nonexistantpath.c_str())};
 	int argcnonexistant= 3;
 	AddCommand* addcmd3 = new AddCommand(argcnonexistant,argvnonexistant);
-	addcmd3->execute();
-	stream.getline(buffer, buffSize);
-	stream.clear();
-	REQUIRE( strcmp(buffer, "Error: File does not exists.") == 0 );
-	clearBuffer(buffer,buffSize);
+	REQUIRE(addcmd3->execute() != 0);
 	/*======================*/
 
 	//Test5: fail when not specifying a file
 	char* argvnofile[2] = {program_invocation_name, strdup("add")};
 	int argcnofile= 2;
 	AddCommand* addcmd4 = new AddCommand(argcnofile,argvnofile);
-	addcmd4->execute();
-	stream.getline(buffer, buffSize);
-	stream.clear();
-	REQUIRE( strcmp(buffer, "Error: no filepath specified.") == 0 );
-	clearBuffer(buffer,buffSize);
+	REQUIRE(addcmd4->execute() != 0);
 	/*======================*/
 
 	//Removing .git folder
 	fs::remove_all(".git");
 
 	//Last test: fail when no .git folder
-	addcmd3->execute();
-	stream.getline(buffer, buffSize);
-	stream.clear();
-	REQUIRE( strcmp(buffer, "Error: No git repository has been found.") == 0 );
-	clearBuffer(buffer,buffSize);
+	REQUIRE(addcmd3->execute() != 0);
 	/*======================*/
 
 
 	// Redirecting cout to its saved buffer
-	cout.rdbuf(sbuf);
+	cout.clear();
 
 }
 
@@ -326,7 +291,7 @@ TEST_CASE("Commit_Command")
 	REQUIRE(readFile(".git/index").size() == 0); 	
 
 	//2. HEAD contains SHA of commit
-	string commitSHA1 = readFile(".git/HEAD");
+	string commitSHA1 = readFile(GitFilesystem::getHEADPath().c_str());
 	REQUIRE(commitSHA1.size() == 40);  
 
 	//3. Verify Commit
@@ -353,10 +318,10 @@ TEST_CASE("Commit_Command")
 	REQUIRE(cmd->execute() == 0);
 
 	//4. Verify empty index file
-	REQUIRE(readFile(".git/index").size() == 0); 	
+	REQUIRE(readFile(GitFilesystem::getIndexPath().c_str()).size() == 0); 	
 
 	//5. HEAD contains SHA of commit
-	string commitSHA2 = readFile(".git/HEAD");
+	string commitSHA2 = readFile(GitFilesystem::getHEADPath().c_str());
 	REQUIRE(commitSHA2.size() == 40);  
 	
 	//6. Verify Commit
@@ -371,7 +336,7 @@ TEST_CASE("Commit_Command")
 	//Commit Failing because of no staged files
 	argc = 4;
 	cmd = new CommitCommand(argc,argvcommit);
-	REQUIRE(cmd->execute() == 1); // Error
+	REQUIRE(cmd->execute() != 0); // Error
 
 	//Removing .git folder
 	fs::remove_all(".git");
