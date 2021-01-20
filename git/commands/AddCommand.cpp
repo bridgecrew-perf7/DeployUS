@@ -21,7 +21,7 @@ AddCommand::~AddCommand()
 
 int AddCommand::execute() {
     //1. Verify that a git folder has been initiated
-    if (!fs::exists("./.git/") || !fs::is_directory("./.git/"))
+    if (!fs::exists(this->getDotGitPath()) || !fs::is_directory(this->getDotGitPath()))
     {
         cout << "Error: No git repository has been found.\n";
         return 1;
@@ -49,7 +49,7 @@ int AddCommand::execute() {
     GitBlob* gitblob = new GitBlob(args[2]);
 
     //5. Add blob file in object directory
-    if( gitblob->addBlobInObjects() )
+    if( gitblob->addInObjects() )
     {
         cout << "Error: File is already added.\n";
         return 1;

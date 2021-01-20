@@ -8,7 +8,7 @@
 namespace fs = boost::filesystem;
 using namespace std;
 
-GitBlob::GitBlob(char* path)
+GitBlob::GitBlob(const char* path)
 {
     //Saving path of file.
     this->relativePath = string(path);
@@ -18,31 +18,34 @@ GitBlob::GitBlob(char* path)
         this->relativePath = this->relativePath.substr(2, this->relativePath.size() - 2);
 
     //Open file & read all contents
-    this->filecontents = readFile(path);
+    this->verabtimFileContent = readFile(path);
 
     //Get SHA-1 digest of header + file content 
-    this->sha1hash = generateBlobHash(this->filecontents);
+    this->sha1hash = generateHash();
+
+    //Generate blob contents
+    this->filecontents = generateContents();
 }
 
-string GitBlob::generateBlobContents()
+string GitBlob::generateContents()
 //Generate the content of the object blob
 {
     string blobcontents;
 
     //1. Adding Filename
-    blobcontents.append("File name: ");
+    blobcontents.append(GITBLOB_OBJECT_FILENAME_FIELD);
     blobcontents.append(this->relativePath);
-    blobcontents.push_back('\n');
+    blobcontents.push_back(GITBLOB_OBJECT_INTER_SEPERATOR);
 
     //2. Adding file size
-    blobcontents.append("File size: ");
-    blobcontents.append(to_string(this->filecontents.size()));
-    blobcontents.push_back('\n');
+    blobcontents.append(GITBLOB_OBJECT_FILESIZE_FIELD);
+    blobcontents.append(to_string(this->verabtimFileContent.size()));
+    blobcontents.push_back(GITBLOB_OBJECT_INTER_SEPERATOR);
 
     //3. Adding file contents
-    blobcontents.append("File content: ");
-    blobcontents.append(this->filecontents);
-    blobcontents.push_back('\n');
+    blobcontents.append(GITBLOB_OBJECT_FILECONTENTS_FIELD);
+    blobcontents.append(this->verabtimFileContent);
+    blobcontents.push_back(GITBLOB_OBJECT_INTER_SEPERATOR);
 
     return blobcontents;
 }
@@ -51,8 +54,7 @@ int GitBlob::addInIndex()
 // Adds reference to file blob to the Index file. Returns non-zero if unsuccessful.
 {
     //Fetch the end of the IndexFile
-    fs::path indexpath("./.git/index");
-    ofstream indexfile(indexpath.c_str(), ios_base::app);
+    ofstream indexfile(this->getIndexPath().c_str(), ios_base::app);
 
     //1. Add file name
     indexfile << this->relativePath;
@@ -67,19 +69,14 @@ int GitBlob::addInIndex()
     return 0;
 }
 
-string GitBlob::generateBlobHash(string text)
+string GitBlob::generateHash()
 /* Returns SHA-1 of given text*/
 {
-    string header = "";
-    header += "blob ";
-    header += to_string(text.size());
+    string header;
+    header += GITBLOB_OBJECT_BLOB_NAME;
+    header += " ";
+    header += to_string(this->verabtimFileContent.size());
     header += '\0';
 
-    return generateSHA1(header + text);
-}
-
-int GitBlob::addBlobInObjects()
-// Add blob to the .git/objects folder. Returns non-zero if an error occurs
-{
-    return addInObjects(getSHA1Hash(),generateBlobContents() );
+    return generateSHA1(header + this->verabtimFileContent);
 }

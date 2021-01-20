@@ -333,10 +333,10 @@ TEST_CASE("Commit_Command")
 	GitCommit* commitobj1 = GitCommit::createFromGitObject(commitSHA1);
 	REQUIRE(commitobj1->getSHA1Hash().size() == 40);
 	REQUIRE(commitobj1->getSHA1Hash().compare(commitSHA1) == 0);
-	REQUIRE(commitobj1->getMsg()->compare("The Message") == 0);
-	REQUIRE(commitobj1->getAuthor()->compare("The Author") == 0);
-	REQUIRE(commitobj1->getCommitTime()->size() > 0);
-	REQUIRE(commitobj1->getParentSHA()->size() == 0);
+	REQUIRE(commitobj1->getMsg().compare("The Message") == 0);
+	REQUIRE(commitobj1->getAuthor().compare("The Author") == 0);
+	REQUIRE(commitobj1->getCommitTime().size() > 0);
+	REQUIRE(commitobj1->getParentSHA().size() == 0);
 
 
 	//Adding a third file
@@ -363,10 +363,10 @@ TEST_CASE("Commit_Command")
 	GitCommit* commitobj2 = GitCommit::createFromGitObject(commitSHA2);
 	REQUIRE(commitobj2->getSHA1Hash().size() == 40);
 	REQUIRE(commitobj2->getSHA1Hash().compare(commitSHA2) == 0);
-	REQUIRE(commitobj2->getMsg()->compare("The Second Message") == 0);
-	REQUIRE(commitobj2->getAuthor()->compare("The Second Author") == 0);
-	REQUIRE(commitobj2->getCommitTime()->size() > 0);
-	REQUIRE(commitobj2->getParentSHA()->compare(commitSHA1) == 0);
+	REQUIRE(commitobj2->getMsg().compare("The Second Message") == 0);
+	REQUIRE(commitobj2->getAuthor().compare("The Second Author") == 0);
+	REQUIRE(commitobj2->getCommitTime().size() > 0);
+	REQUIRE(commitobj2->getParentSHA().compare(commitSHA1) == 0);
 
 	//Commit Failing because of no staged files
 	argc = 4;

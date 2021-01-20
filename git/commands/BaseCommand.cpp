@@ -11,7 +11,8 @@ BaseCommand::~BaseCommand()
 {
 }
 
-int BaseCommand::execute() {
+int BaseCommand::execute() 
+{ //Returns 0 if execution is successful
     return 0;
 }
 

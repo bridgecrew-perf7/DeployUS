@@ -4,24 +4,30 @@
 #include <list>
 #include <string>
 
-#define TREE_OBJECT_SEPERATOR '\0'
+#define GITTREE_OBJECT_SEPERATOR '\0'
+#define GITTREE_OBJECT_TREE_NAME "tree"
+#define GITTREE_OBJECT_BLOB_NAME "blob"
+
+using namespace std;
 
 class GitTree: public BaseGitObject
 {
     private:
-        std::map<std::string, GitTree*> *branches;                             //Other Trees (dirname,GitTree object). The GitTree object contaisn the SHA1
-        std::list<std::pair<std::string, std::string>>  *leaves;              //Files in folder represented by tree (filename, sha1)
+        map<string, GitTree*> *branches;                             //Other Trees (dirname,GitTree object). The GitTree object contaisn the SHA1
+        list<pair<string, string>>  *leaves;              //Files in folder represented by tree (filename, sha1)
 
         void initialize();
     public:
         GitTree();
-        GitTree(std::string* rootSHA1);
+        GitTree(const string& rootSHA1);
         ~GitTree();
 
         //Tree manipulation function
-        void addBlob(std::string filepath, std::string sha1hash);
-        std::string generateTreeSHA1();
-        std::string generateTreeContents();
+        void addBlob(const string& filepath, const string& sha1hash);
         void sort();
-        void addTreeInObjects();
+        virtual int addInObjects();
+
+        //String generation
+        virtual string generateHash();
+        virtual string generateContents();
 };
