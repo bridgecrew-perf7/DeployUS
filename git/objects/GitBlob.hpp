@@ -2,19 +2,29 @@
 #include "BaseGitObject.hpp"
 #include <string>
 
+#define GITBLOB_OBJECT_BLOB_NAME "blob"
+#define GITBLOB_OBJECT_FILENAME_FIELD "Filename: "
+#define GITBLOB_OBJECT_FILESIZE_FIELD "Filesize: "
+#define GITBLOB_OBJECT_FILECONTENTS_FIELD "File contents: "
+#define GITBLOB_OBJECT_INTER_SEPERATOR '\n'
+
+using namespace std;
+
 class GitBlob: public BaseGitObject
 {
     private: 
-        std::string relativePath;
-        std::string filecontents;
+        string relativePath;
+        string verabtimFileContent;
 
     public:
-        GitBlob(char* path);
+        GitBlob(const char* path);
         ~GitBlob();
 
-        int addBlobInObjects();
+        //Interface with database
         int addInIndex();
-        std::string generateBlobContents();
-        std::string generateBlobHash(std::string text);
+
+        //String generation
+        virtual string generateContents();
+        virtual string generateHash();
 
 };

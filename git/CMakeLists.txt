@@ -3,6 +3,8 @@ add_library(git
     common.cpp
     argParser.h 
     argParser.cpp
+    filesystem/GitFilesystem.hpp
+    filesystem/GitFilesystem.cpp
     objects/BaseGitObject.hpp
     objects/BaseGitObject.cpp
     objects/GitBlob.hpp

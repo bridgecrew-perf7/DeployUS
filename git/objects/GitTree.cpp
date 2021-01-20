@@ -14,12 +14,12 @@ GitTree::GitTree()
     initialize();
 }
 
-GitTree::GitTree(string* rootSHA1)
+GitTree::GitTree(const string& rootSHA1)
 {
     initialize();
 
     //Read in file referenced by SHA1
-    string contents = readGitObject(*rootSHA1);
+    string contents = readGitObject(rootSHA1);
     boost::char_separator<char> sepnewline{"\n"};
     tokenizer newline{contents, sepnewline};
     for(const auto& line: newline)
@@ -34,19 +34,19 @@ GitTree::GitTree(string* rootSHA1)
         string filepath = resultant.substr(nulltermPos + 1, line.size() - nulltermPos - 1);
 
         //Add reference to the tree
-        if(typeObj.compare("blob") == 0) 
+        if(typeObj.compare(GITTREE_OBJECT_BLOB_NAME) == 0) 
         {
             this->addBlob(filepath,sha1);
         }
-        else if (typeObj.compare("tree") == 0)
+        else if (typeObj.compare(GITTREE_OBJECT_TREE_NAME) == 0)
         {
-            (*branches)[filepath] = new GitTree(&sha1);
+            (*branches)[filepath] = new GitTree(sha1);
         }
         
     }
 
     //Must find SHA1 again
-    this->generateTreeSHA1();
+    this->generateHash();
 }
 
 GitTree::~GitTree()
@@ -62,7 +62,7 @@ void GitTree::initialize()
     leaves = new list<pair<string, string>>();
 }
 
-void GitTree::addBlob(string filepath, string sha1hash)
+void GitTree::addBlob(const string& filepath, const string& sha1hash)
 //Adds a blob to the appropriate place in the tree.
 {
     //If the blob stems from a file in the root folder, add it to the root tree's leaves.
@@ -88,7 +88,7 @@ void GitTree::addBlob(string filepath, string sha1hash)
     }
 }
 
-std::string GitTree::generateTreeSHA1()
+std::string GitTree::generateHash()
 //Generate SHA1 from tree object
 {
     if(sha1hash.size() == 0)
@@ -98,7 +98,7 @@ std::string GitTree::generateTreeSHA1()
         //Adding references from branches (sub-directories)
         for(auto branch = branches->begin(); branch != branches->end(); branch++)
         {
-            bytestream << branch->first << branch->second->generateTreeSHA1();
+            bytestream << branch->first << branch->second->generateHash();
         }
 
         //Adding references to leaves (files in this directory)
@@ -120,10 +120,10 @@ void GitTree::sort()
     //Sorting files
     leaves->sort();
 
-    //No need to sort folders as the std::map object is already sorted 
+    //No need to sort branches (folders) as the std::map object is already sorted 
 }
 
-std::string GitTree::generateTreeContents()
+std::string GitTree::generateContents()
 //Formats the content of a tree object
 {
     stringstream bytestream; //filecontents
@@ -131,29 +131,29 @@ std::string GitTree::generateTreeContents()
     //Adding references from branches (sub-directories)
     for(auto branch = branches->begin(); branch != branches->end(); branch++)
     {
-        bytestream << "tree" << TREE_OBJECT_SEPERATOR << branch->second->getSHA1Hash() << TREE_OBJECT_SEPERATOR << branch->first <<'\n';
+        bytestream << GITTREE_OBJECT_TREE_NAME << GITTREE_OBJECT_SEPERATOR << branch->second->getSHA1Hash() << GITTREE_OBJECT_SEPERATOR << branch->first <<'\n';
     }
 
     //Adding references to leaves (files in this directory)
     for(auto leaf = leaves->begin(); leaf != leaves->end(); leaf++)
     {
-        bytestream << "blob" << TREE_OBJECT_SEPERATOR << leaf->second << TREE_OBJECT_SEPERATOR << leaf->first <<'\n';
+        bytestream << GITTREE_OBJECT_BLOB_NAME << GITTREE_OBJECT_SEPERATOR << leaf->second << GITTREE_OBJECT_SEPERATOR << leaf->first <<'\n';
     }
 
     //Returning contents
     return bytestream.str();
 }
 
-void GitTree::addTreeInObjects()
-//Adds all necessary tree objects to the .git/objects folder
+int GitTree::addInObjects()
+//Adds all necessary tree objects to the .git/objects folder. Return 0 if successful. Non-zero otherwise.
 {
     //Adding sub-trees in the .git/object folders
     for(auto branch = branches->begin(); branch != branches->end(); branch++)
     {
-        branch->second->addTreeInObjects();
+        branch->second->addInObjects();
     }
-
     //Adds the tree object to the .git/objects folder
-    addInObjects(sha1hash, generateTreeContents());
-    
+    this->filecontents = generateContents();
+
+    return BaseGitObject::addInObjects();
 }

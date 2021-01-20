@@ -17,10 +17,10 @@ InitCommand::~InitCommand()
 
 int InitCommand::execute() {
     //Creation of .git folder with folder .git/objects, and files .git/index, .git/HEAD
-    const fs::path gitDirectory(".git");
-    const fs::path objectsDirectory = fs::path(".git").append("objects");
-    const fs::path indexDirectory = fs::path(".git").append("index");
-    const fs::path headDirectory = fs::path(".git").append("HEAD");
+    const fs::path gitDirectory(GITFILESYSTEM_DOTGIT_FOLDER_NAME);
+    const fs::path objectsDirectory = fs::path(gitDirectory).append(GITFILESYSTEM_OBJECTS_FOLDER_NAME);
+    const fs::path indexDirectory = fs::path(gitDirectory).append(GITFILESYSTEM_INDEX_FILE_NAME);
+    const fs::path headDirectory = fs::path(gitDirectory).append(GITFILESYSTEM_HEAD_FILE_NAME);
     
 
     //1. If .git folder already exists, then print to screen that a local git repo already exists. Else, create folder
