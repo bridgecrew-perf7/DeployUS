@@ -1,4 +1,5 @@
 #include "GitTree.hpp"
+#include "GitBlob.hpp"
 #include "../common.hpp"
 #include <algorithm>
 #include <sstream>
@@ -113,23 +114,49 @@ std::string GitTree::generateHash()
     return sha1hash;
 }
 
-void GitTree::rmTrackedFiles(fs::path directory)
+void GitTree::rmTrackedFiles(fs::path parentDirectory)
 {
     //Removing folders
     for(auto branch = branches->begin(); branch != branches->end(); branch++)
     {
         //Removing folder contents
-        branch->second->rmTrackedFiles(fs::path(directory).append(branch->first));
+        branch->second->rmTrackedFiles(fs::path(parentDirectory).append(branch->first));
 
         //Remove folder if it does not exists
-        cout << branch->first << endl;
+        auto childDirectory = fs::path(parentDirectory).append(branch->first);
+        if(fs::exists(childDirectory))
+            if(fs::is_empty(childDirectory))
+                fs::remove(childDirectory);
     }
 
-    //Removing files in directory
+    //Removing files in parentDirectory
     for(auto leaf = leaves->begin(); leaf != leaves->end(); leaf++)
     {
-        //fs::remove(fs::path(leaf->first));
-        cout << fs::path(directory).append(leaf->first).string() << endl;
+        fs::remove(fs::path(parentDirectory).append(leaf->first));
+    }
+}
+
+void GitTree::restoreTrackedFiles(fs::path parentDirectory)
+//Restores all tracked files.
+{
+    //Restoring folders
+    for(auto branch = branches->begin(); branch != branches->end(); branch++)
+    {
+        //Restoring folder if it does not exists
+        auto childDirectory = fs::path(parentDirectory).append(branch->first);
+        if(!fs::exists(childDirectory))
+            fs::create_directory(childDirectory);
+
+        //Restoring folder contents
+        branch->second->restoreTrackedFiles(fs::path(parentDirectory).append(branch->first));
+    }
+
+    //Restoring files in parentDirectory
+    for(auto leaf = leaves->begin(); leaf != leaves->end(); leaf++)
+    {
+        //Restore Blob
+        GitBlob fileBlobObj = GitBlob::createFromGitObject(leaf->second);
+        fileBlobObj.restoreBlob();
     }
 }
 

@@ -62,6 +62,12 @@ void GitCommit::rmTrackedFiles()
     root->rmTrackedFiles(getDotGitPath().parent_path());
 }
 
+void GitCommit::restoreTrackedFiles()
+// Restores all files tracked in current commit object
+{
+    root->restoreTrackedFiles(getDotGitPath().parent_path());
+}
+
 string GitCommit::generateContents()
 //Generate the content of the commit object to be stored in the .git/objects folder.
 {

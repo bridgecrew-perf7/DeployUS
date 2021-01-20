@@ -30,6 +30,7 @@ class GitCommit: public BaseGitObject
         virtual string generateHash();
 
         void rmTrackedFiles();
+        void restoreTrackedFiles();
 
         static GitCommit* createFromGitObject(const string& sha1);
 

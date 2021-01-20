@@ -27,6 +27,7 @@ class GitTree: public BaseGitObject
         //Tree manipulation function
         void addBlob(const string& filepath, const string& sha1hash);
         void rmTrackedFiles(fs::path directory);
+        void restoreTrackedFiles(fs::path directory);
         void sort();
         virtual int addInObjects();
 

@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include <filesystem/GitFilesystem.hpp>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -51,6 +52,16 @@ string readFile(const char* path)
 	return filecontents;
 }
 
+string readFile(const string path)
+{
+    return readFile(path.c_str());
+}
+
+string readFile(const fs::path path)
+{
+    return readFile(path.c_str());
+}
+
 string readGitObject(const string objSHA1)
 // Reads the file in the .git/object folder that corresponds to the sha1 passed in parameter
 {
@@ -58,7 +69,7 @@ string readGitObject(const string objSHA1)
 
     string foldername = objSHA1.substr(0,2);
     string filename = objSHA1.substr(2,38);
-    fs::path filepath = fs::path(".git/objects").append(foldername).append(filename);
+    fs::path filepath = fs::path(GitFilesystem::getObjectsPath()).append(foldername).append(filename);
 
     //Return contents if the object exists
     if(!fs::exists(filepath))  return nullptr;
