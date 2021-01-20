@@ -22,6 +22,11 @@ GitCommit::GitCommit(GitTree *tree, const string& author, const string& message,
     filecontents = generateContents();
 }
 
+GitCommit::~GitCommit()
+{
+    
+}
+
 GitCommit* GitCommit::createFromGitObject(const string& sha1)
 // Reads file specified by SHA1 and returns a valid GitCommit object of the commit object specified by parentCommitSHA1
 {
@@ -51,9 +56,10 @@ GitCommit* GitCommit::createFromGitObject(const string& sha1)
     return out;
 }
 
-GitCommit::~GitCommit()
+void GitCommit::rmTrackedFiles()
+// Removes all files tracked in current commit object
 {
-    
+    root->rmTrackedFiles(getDotGitPath().parent_path());
 }
 
 string GitCommit::generateContents()
@@ -105,3 +111,4 @@ GitTree* GitCommit::getRootTree()
 {
     return root;
 }
+
