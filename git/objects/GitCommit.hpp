@@ -29,6 +29,8 @@ class GitCommit: public BaseGitObject
         virtual string generateContents();
         virtual string generateHash();
 
+        void rmTrackedFiles();
+
         static GitCommit* createFromGitObject(const string& sha1);
 
         GitTree* getRootTree();

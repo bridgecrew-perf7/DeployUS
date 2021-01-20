@@ -4,9 +4,11 @@
 #include <sstream>
 #include <iostream>
 #include <boost/tokenizer.hpp>
+#include <boost/filesystem.hpp>
 
 typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
 
+namespace fs = boost::filesystem;
 using namespace std;
 
 GitTree::GitTree()
@@ -91,27 +93,44 @@ void GitTree::addBlob(const string& filepath, const string& sha1hash)
 std::string GitTree::generateHash()
 //Generate SHA1 from tree object
 {
-    if(sha1hash.size() == 0)
+    stringstream bytestream; //Used to calculate tree hash.
+
+    //Adding references from branches (sub-directories)
+    for(auto branch = branches->begin(); branch != branches->end(); branch++)
     {
-        stringstream bytestream; //Used to calculate tree hash.
-
-        //Adding references from branches (sub-directories)
-        for(auto branch = branches->begin(); branch != branches->end(); branch++)
-        {
-            bytestream << branch->first << branch->second->generateHash();
-        }
-
-        //Adding references to leaves (files in this directory)
-        for(auto leaf = leaves->begin(); leaf != leaves->end(); leaf++)
-        {
-            bytestream << leaf->first << leaf->second;
-        }
-
-        ///Save hash value of tree
-        sha1hash = generateSHA1(bytestream.str());
+        bytestream << branch->first << branch->second->generateHash();
     }
 
+    //Adding references to leaves (files in this directory)
+    for(auto leaf = leaves->begin(); leaf != leaves->end(); leaf++)
+    {
+        bytestream << leaf->first << leaf->second;
+    }
+
+    ///Save hash value of tree
+    sha1hash = generateSHA1(bytestream.str());
+
     return sha1hash;
+}
+
+void GitTree::rmTrackedFiles(fs::path directory)
+{
+    //Removing folders
+    for(auto branch = branches->begin(); branch != branches->end(); branch++)
+    {
+        //Removing folder contents
+        branch->second->rmTrackedFiles(fs::path(directory).append(branch->first));
+
+        //Remove folder if it does not exists
+        cout << branch->first << endl;
+    }
+
+    //Removing files in directory
+    for(auto leaf = leaves->begin(); leaf != leaves->end(); leaf++)
+    {
+        //fs::remove(fs::path(leaf->first));
+        cout << fs::path(directory).append(leaf->first).string() << endl;
+    }
 }
 
 void GitTree::sort()
