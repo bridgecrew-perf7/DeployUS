@@ -24,3 +24,6 @@ class GitFilesystem
         inline static fs::path getIndexPath() {return fs::path(dotgitFolderPath).append(GITFILESYSTEM_INDEX_FILE_NAME);};
         inline static fs::path getHEADPath() {return fs::path(dotgitFolderPath).append(GITFILESYSTEM_HEAD_FILE_NAME);};
 };
+
+
+fs::path findDotGitFolder();
