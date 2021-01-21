@@ -61,6 +61,9 @@ int CheckoutCommand::execute()
         fs::remove(GitFilesystem::getTOPCOMMITPath());
     }
 
+    //4. Update HEAD
+    writeFile(GitFilesystem::getHEADPath(), wantedCommitObj->getSHA1Hash());
+
     return 0;
 }
 

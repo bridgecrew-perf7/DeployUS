@@ -12,6 +12,7 @@
 #include <commands/InitCommand.hpp>
 #include <commands/AddCommand.hpp>
 #include <commands/CommitCommand.hpp>
+#include <commands/CheckoutCommand.hpp>
 #include <objects/GitCommit.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
@@ -20,6 +21,11 @@
 
 namespace fs = boost::filesystem;
 using namespace std;
+
+#define TESTFILE_NUMBERS_TXT  			"testfolder1/numbers.txt"
+#define TESTFILE_LETTERS_TXT  			"testfolder1/letters.txt"
+#define TESTFILE_A_TXT        			"testfolder1/testfolder2/a.txt"
+#define TESTFILE_NONEXISTANT_TXT        "testfolder1/testfolder2/nonexistant.txt"
 
 
 TEST_CASE("Help_Messages") 
@@ -142,7 +148,7 @@ TEST_CASE("Add_Command")
 
 	/*=======================*/
 	/*Test1: Add letters.txt for the first time */
-	string letterspath("testfolder1/letters.txt");
+	string letterspath(TESTFILE_LETTERS_TXT);
 	char* argvLetters[3] = {program_invocation_name, strdup("add"), strdup(letterspath.c_str())};
 	int argcLetters= 3;
 	BaseCommand* addcmd = parse_args(argcLetters,argvLetters);
@@ -184,7 +190,7 @@ TEST_CASE("Add_Command")
 
 	/*=======================*/
 	/*Test2: Add numbers.txt for the first time */
-	string numberspath("testfolder1/numbers.txt");
+	string numberspath(TESTFILE_NUMBERS_TXT);
 	char* argvNumber[3] = {program_invocation_name, strdup("add"), strdup(numberspath.c_str())};
 	int argcNumber= 3;
 	BaseCommand* addcmd2 = parse_args(argcNumber,argvNumber);
@@ -230,7 +236,7 @@ TEST_CASE("Add_Command")
 
 	/*======================*/
 	//Test4: Adding a non existant file to see it fail
-	string nonexistantpath("testfolder2/nonexistant.txt");
+	string nonexistantpath(TESTFILE_NONEXISTANT_TXT);
 	char* argvnonexistant[3] = {program_invocation_name, strdup("add"), strdup(nonexistantpath.c_str())};
 	int argcnonexistant= 3;
 	AddCommand* addcmd3 = new AddCommand(argcnonexistant,argvnonexistant);
@@ -284,10 +290,10 @@ TEST_CASE("Commit_Command")
 
 	//Add test files
 	argc = 3;
-	char* argvadd[argc] = {program_invocation_name, strdup("add"), strdup("testfolder1/letters.txt")};
+	char* argvadd[argc] = {program_invocation_name, strdup("add"), strdup(TESTFILE_LETTERS_TXT)};
 	cmd = new AddCommand(argc,argvadd); 
-	cmd->execute();
-	argvadd[2] = strdup("testfolder1/testfolder2/a.txt");
+	REQUIRE(cmd->execute() == 0);
+	argvadd[2] = strdup(TESTFILE_A_TXT);
 	cmd = new AddCommand(argc,argvadd); 
 	REQUIRE(cmd->execute() == 0);
 
@@ -317,7 +323,7 @@ TEST_CASE("Commit_Command")
 
 	//Adding a third file
 	argc = 3;
-	argvadd[2] = strdup("testfolder1/numbers.txt");
+	argvadd[2] = strdup(TESTFILE_NUMBERS_TXT);
 	cmd = new AddCommand(argc,argvadd); 
 	REQUIRE(cmd->execute() == 0);
 
@@ -348,6 +354,127 @@ TEST_CASE("Commit_Command")
 	argc = 4;
 	cmd = new CommitCommand(argc,argvcommit);
 	REQUIRE(cmd->execute() != 0); // Error
+
+	//Removing .git folder
+	fs::remove_all(".git");
+
+	//Reenabling cout
+	cout.clear();
+	
+}
+
+TEST_CASE("Checkout_Command")
+{
+	int argc;
+	BaseCommand* cmd;
+
+	//Disabling cout
+	cout.setstate(ios_base::failbit);
+
+	//Removing .git folder
+	fs::remove_all(".git");
+
+	//Init
+	argc = 2;
+	char* argv[argc] = {program_invocation_name, strdup("init")};
+	cmd = new InitCommand(argc,argv); 
+	REQUIRE(cmd->execute() == 0);
+
+	//Add and commit file 1
+	argc = 3;
+	char* argvadd[argc] = {program_invocation_name, strdup("add"), strdup(TESTFILE_LETTERS_TXT)};
+	cmd = new AddCommand(argc,argvadd); 
+	REQUIRE(cmd->execute() == 0);
+	argc = 4;
+	char* argvcommit[argc] = {program_invocation_name, strdup("commit"), strdup("The Message"),strdup("The Author")};
+	cmd = new CommitCommand(argc,argvcommit);
+	REQUIRE(cmd->execute() == 0);
+	string shaCommit1 = readFile(GitFilesystem::getHEADPath());
+
+	//Add and commit file 2
+	argc = 3;
+	argvadd[2] = strdup(TESTFILE_A_TXT);
+	cmd = new AddCommand(argc,argvadd); 
+	REQUIRE(cmd->execute() == 0);
+	argc = 4;
+	cmd = new CommitCommand(argc,argvcommit);
+	REQUIRE(cmd->execute() == 0);
+	string shaCommit2 = readFile(GitFilesystem::getHEADPath());
+
+	//Checkout the first commit
+	argc = 3;
+	char* argvCheckout[argc] = {program_invocation_name, strdup("checkout"), strdup(shaCommit1.c_str())};
+	cmd = new CheckoutCommand(argc,argvCheckout);
+	REQUIRE(cmd->execute() == 0);
+
+	//Verify that the checkout worked
+	REQUIRE(fs::exists(GitFilesystem::getTOPCOMMITPath()));
+	REQUIRE(readFile(GitFilesystem::getTOPCOMMITPath()).size() == 40);
+	REQUIRE(readFile(GitFilesystem::getHEADPath()).compare(shaCommit1) == 0);
+	REQUIRE(fs::exists(TESTFILE_LETTERS_TXT));
+	REQUIRE(fs::exists(TESTFILE_NUMBERS_TXT)); //Untracked for now
+	REQUIRE(!fs::exists(TESTFILE_A_TXT));
+
+	//Add and try to commit file 3 but fail
+	argvadd[2] = strdup(TESTFILE_NUMBERS_TXT);
+	cmd = new AddCommand(argc,argvadd); 
+	REQUIRE(cmd->execute() == 0);
+	argc = 4;
+	cmd = new CommitCommand(argc,argvcommit);
+	REQUIRE(cmd->execute() != 0); //Error
+	REQUIRE(readFile(GitFilesystem::getIndexPath()).size() != 0); //Index is not emptied
+
+	//Checkout the top commit
+	argc = 3;
+	argvCheckout[argc- 1] = strdup(shaCommit2.c_str());
+	cmd = new CheckoutCommand(argc,argvCheckout);
+	REQUIRE(cmd->execute() == 0);
+	REQUIRE(!fs::exists(GitFilesystem::getTOPCOMMITPath()));
+	REQUIRE(readFile(GitFilesystem::getHEADPath()).compare(shaCommit2) == 0);
+	REQUIRE(fs::exists(TESTFILE_LETTERS_TXT));
+	REQUIRE(fs::exists(TESTFILE_NUMBERS_TXT)); //Untracked for now
+	REQUIRE(fs::exists(TESTFILE_A_TXT));
+
+	//Commit file 3
+	argc = 4;
+	cmd = new CommitCommand(argc,argvcommit);
+	REQUIRE(cmd->execute() == 0);
+	string shaCommit3 = readFile(GitFilesystem::getHEADPath());
+
+	//Checkout commit 1 again
+	argc = 3;
+	argvCheckout[argc-1] = strdup(shaCommit1.c_str());
+	cmd = new CheckoutCommand(argc,argvCheckout);
+	REQUIRE(cmd->execute() == 0);
+	REQUIRE(fs::exists(GitFilesystem::getTOPCOMMITPath()));
+	REQUIRE(readFile(GitFilesystem::getTOPCOMMITPath()).size() == 40);
+	REQUIRE(readFile(GitFilesystem::getHEADPath()).compare(shaCommit1) == 0);
+	REQUIRE(fs::exists(TESTFILE_LETTERS_TXT));
+	REQUIRE(!fs::exists(TESTFILE_NUMBERS_TXT));
+	REQUIRE(!fs::exists(TESTFILE_A_TXT));
+
+	//Checkout commit 2
+	argc = 3;
+	argvCheckout[argc-1] = strdup(shaCommit2.c_str());
+	cmd = new CheckoutCommand(argc,argvCheckout);
+	REQUIRE(cmd->execute() == 0);
+	REQUIRE(fs::exists(GitFilesystem::getTOPCOMMITPath()));
+	REQUIRE(readFile(GitFilesystem::getTOPCOMMITPath()).size() == 40);
+	REQUIRE(readFile(GitFilesystem::getHEADPath()).compare(shaCommit2) == 0);
+	REQUIRE(fs::exists(TESTFILE_LETTERS_TXT));
+	REQUIRE(!fs::exists(TESTFILE_NUMBERS_TXT));
+	REQUIRE(fs::exists(TESTFILE_A_TXT));
+
+	//Checkout commit 3
+	argc = 3;
+	argvCheckout[argc-1] = strdup(shaCommit3.c_str());
+	cmd = new CheckoutCommand(argc,argvCheckout);
+	REQUIRE(cmd->execute() == 0);
+	REQUIRE(!fs::exists(GitFilesystem::getTOPCOMMITPath()));
+	REQUIRE(readFile(GitFilesystem::getHEADPath()).compare(shaCommit3) == 0);
+	REQUIRE(fs::exists(TESTFILE_LETTERS_TXT));
+	REQUIRE(fs::exists(TESTFILE_NUMBERS_TXT));
+	REQUIRE(fs::exists(TESTFILE_A_TXT));
 
 	//Removing .git folder
 	fs::remove_all(".git");
