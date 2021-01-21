@@ -1,11 +1,9 @@
 #pragma once
-
 #include <string>
-#include <filesystem/GitFilesystem.hpp>
 
 //Base class for commands
 
-class BaseCommand: public GitFilesystem
+class BaseCommand
 {
     private:
         std::string sha1hash;

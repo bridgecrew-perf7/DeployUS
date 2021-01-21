@@ -1,10 +1,10 @@
 #include "AddCommand.hpp"
-#include "../objects/GitBlob.hpp"
+#include <objects/GitBlob.hpp>
 #include <iostream>
 #include <string>
 #include <sstream>
 #include <boost/filesystem.hpp>
-
+#include <filesystem/GitFilesystem.hpp>
 
 namespace fs = boost::filesystem;
 using namespace std;
@@ -21,7 +21,7 @@ AddCommand::~AddCommand()
 
 int AddCommand::execute() {
     //1. Verify that a git folder has been initiated
-    if (!fs::exists(this->getDotGitPath()) || !fs::is_directory(this->getDotGitPath()))
+    if (!fs::exists(GitFilesystem::getDotGitPath()) || !fs::is_directory(GitFilesystem::getDotGitPath()))
     {
         cout << "Error: No git repository has been found.\n";
         return 1;

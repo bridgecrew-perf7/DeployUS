@@ -42,7 +42,7 @@ int CheckoutCommand::execute()
     GitCommit* wantedCommitObj = GitCommit::createFromGitObject(commitID);
 
     //Get Current HEAD commit
-    string currentCommitID = readFile(getHEADPath());
+    string currentCommitID = readFile(GitFilesystem::getHEADPath());
     GitCommit* currentCommitObj = GitCommit::createFromGitObject(currentCommitID);
 
     //1. Remove all presently tracked files

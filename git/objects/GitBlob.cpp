@@ -1,5 +1,5 @@
 #include "GitBlob.hpp"
-#include "../common.hpp"
+#include <common.hpp>
 #include <boost/filesystem.hpp>
 #include <string>
 #include <iostream>

@@ -1,5 +1,5 @@
 #include "GitCommit.hpp"
-#include "../common.hpp"
+#include <common.hpp>
 #include <string>
 #include <sstream>
 #include <ctime>

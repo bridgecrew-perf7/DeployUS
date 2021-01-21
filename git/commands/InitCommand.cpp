@@ -1,6 +1,7 @@
 #include "InitCommand.hpp"
 #include <iostream>
 #include <boost/filesystem.hpp>
+#include <filesystem/GitFilesystem.hpp>
 
 namespace fs = boost::filesystem;
 using namespace std;

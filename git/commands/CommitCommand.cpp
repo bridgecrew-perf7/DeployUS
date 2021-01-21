@@ -1,7 +1,8 @@
 #include "CommitCommand.hpp"
-#include "../common.hpp"
-#include "../objects/GitTree.hpp"
-#include "../objects/GitCommit.hpp"
+#include <common.hpp>
+#include <objects/GitTree.hpp>
+#include <objects/GitCommit.hpp>
+#include <filesystem/GitFilesystem.hpp>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -28,7 +29,7 @@ int CommitCommand::execute()
 // Executes command. Returns non-zero if failure to do so.
 {
     //1. Verify that a git folder has been initiated
-    if (!fs::exists(this->getDotGitPath()) || !fs::is_directory(this->getDotGitPath()))
+    if (!fs::exists(GitFilesystem::getDotGitPath()) || !fs::is_directory(GitFilesystem::getDotGitPath()))
     {
         cout << "Error: No git repository has been found.\n";
         return 1;
@@ -44,16 +45,16 @@ int CommitCommand::execute()
     commitAuthor = args[3];
 
     //2.5. Verify that we are at the TOP_COMMIT
-    if(fs::exists(getTOPCOMMITPath()))
+    if(fs::exists(GitFilesystem::getTOPCOMMITPath()))
     {
         cout << "Error: HEAD is not at the most recent commit. Please checkout the most recent commit and try again.\n";
-        cout << "       Most recent commit: " << readFile(getTOPCOMMITPath()) << '\n'; 
+        cout << "       Most recent commit: " << readFile(GitFilesystem::getTOPCOMMITPath()) << '\n'; 
         return 1;
     }
 
 
     //3. Verify that there are staged files
-    if(readFile(this->getIndexPath().c_str()).size() == 0)
+    if(readFile(GitFilesystem::getIndexPath().c_str()).size() == 0)
     {
         cout << "Error: There are no staged files. You can stage some files using ./gitus add <pathspec>\n";
         return 1;
@@ -61,7 +62,7 @@ int CommitCommand::execute()
 
     //3. Fetch root tree
     GitTree *root = nullptr;
-    string parentCommitSHA1 = readFile(this->getHEADPath().c_str());
+    string parentCommitSHA1 = readFile(GitFilesystem::getHEADPath().c_str());
     if(parentCommitSHA1.size() != 0)
     {
         GitCommit* parentCommit = GitCommit::createFromGitObject(parentCommitSHA1);
@@ -70,7 +71,7 @@ int CommitCommand::execute()
     else root = new GitTree();
 
     //4. Read the index file.
-    string indexContents = readFile(this->getIndexPath().c_str());
+    string indexContents = readFile(GitFilesystem::getIndexPath().c_str());
 
     //5. For each line in the index file, insert blob into root tree.
     boost::char_separator<char> sep{"\n"};
@@ -117,14 +118,12 @@ void CommitCommand::help() {
 void CommitCommand::clearIndex()
 //Clears the content of the .index file
 {
-    ofstream file;
-    file.open(this->getIndexPath().c_str(), std::ofstream::out | std::ofstream::trunc);
-    file.close();
+    writeFile(GitFilesystem::getIndexPath(),string());
 }
 
 
 void CommitCommand::updateHEAD(GitCommit* obj)
 //Insert SHA1 of new commit to the HEAD file
 {
-    writeFile(getHEADPath(), obj->getSHA1Hash());
+    writeFile(GitFilesystem::getHEADPath(), obj->getSHA1Hash());
 }

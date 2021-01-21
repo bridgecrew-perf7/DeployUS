@@ -1,6 +1,6 @@
 #include "GitTree.hpp"
 #include "GitBlob.hpp"
-#include "../common.hpp"
+#include <common.hpp>
 #include <algorithm>
 #include <sstream>
 #include <iostream>
