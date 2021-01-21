@@ -76,3 +76,19 @@ string readGitObject(const string objSHA1)
     else                       return readFile(filepath.c_str());
 
 }
+
+int writeFile(fs::path path, string text)
+//Creates or overwrites content of file specified by path with text. Returns non-zero if failure, 0 if success.
+{
+    fstream file;
+	file.open(path.c_str(), ios::out);
+	if (!file) {
+        //File not created
+        return 1;
+	}
+	else {
+        file << text;
+		file.close(); 
+	}
+	return 0;
+}

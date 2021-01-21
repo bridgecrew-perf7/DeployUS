@@ -51,8 +51,15 @@ int CheckoutCommand::execute()
     //2. Restore tracked files
     wantedCommitObj->restoreTrackedFiles();
 
-
-
+    //3. Place hash of top commit in TOP_COMMIT file. If the top commit is being checked out, remove TOP_COMMIT file
+    if(!fs::exists(GitFilesystem::getTOPCOMMITPath()))
+    {
+        writeFile(GitFilesystem::getTOPCOMMITPath(), currentCommitObj->getSHA1Hash());
+    }
+    else if (readFile(GitFilesystem::getTOPCOMMITPath()).compare(wantedCommitObj->getSHA1Hash()) == 0)
+    {
+        fs::remove(GitFilesystem::getTOPCOMMITPath());
+    }
 
     return 0;
 }

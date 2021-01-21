@@ -43,6 +43,15 @@ int CommitCommand::execute()
     commitMessage = args[2];
     commitAuthor = args[3];
 
+    //2.5. Verify that we are at the TOP_COMMIT
+    if(fs::exists(getTOPCOMMITPath()))
+    {
+        cout << "Error: HEAD is not at the most recent commit. Please checkout the most recent commit and try again.\n";
+        cout << "       Most recent commit: " << readFile(getTOPCOMMITPath()) << '\n'; 
+        return 1;
+    }
+
+
     //3. Verify that there are staged files
     if(readFile(this->getIndexPath().c_str()).size() == 0)
     {
@@ -117,9 +126,5 @@ void CommitCommand::clearIndex()
 void CommitCommand::updateHEAD(GitCommit* obj)
 //Insert SHA1 of new commit to the HEAD file
 {
-    ofstream file;
-    file.open(this->getHEADPath().c_str(), std::ofstream::out | std::ofstream::trunc);
-    string commitSHA1 = obj->getSHA1Hash();
-    file.write(commitSHA1.c_str(), 40);
-    file.close();
+    writeFile(getHEADPath(), obj->getSHA1Hash());
 }

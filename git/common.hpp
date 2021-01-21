@@ -13,3 +13,5 @@ string readFile(const char* path);
 string readFile(const string path);
 string readFile(const fs::path path);
 string readGitObject(const string objSHA1);
+
+int writeFile(fs::path path, string text);
