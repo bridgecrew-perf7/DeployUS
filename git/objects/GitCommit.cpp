@@ -118,3 +118,9 @@ GitTree* GitCommit::getRootTree()
     return root;
 }
 
+int GitCommit::blobInTree(string path, string hash)
+//Returns non-zero if blob is already in tree
+{
+    return root->hasBlob(path,hash);
+}
+

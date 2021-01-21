@@ -1,4 +1,5 @@
 #include "GitBlob.hpp"
+#include "GitCommit.hpp"
 #include <common.hpp>
 #include <boost/filesystem.hpp>
 #include <string>
@@ -104,22 +105,64 @@ string GitBlob::generateContents()
     return blobcontents;
 }
 
+string GitBlob::generateReference()
+{
+    //Generate text to go in index file
+    string blobReference = string(this->relativePath);  //filename
+    blobReference += INDEX_FILE_DEMLIMETER;             //Delimeter
+    blobReference += this->sha1hash;                    //Hash
+    blobReference += "\n";
+
+    return blobReference;
+}
+
+int GitBlob::isinIndex()
+//returns non-zero if file is already staged
+{
+    int lengthBuffer = 200;
+    char buffer[lengthBuffer];
+
+    string blobReference = generateReference();
+    blobReference.erase(blobReference.find_last_not_of(" \n\r\t")+1); //strip new line
+
+    //Check to see if file is already added in index file
+    ifstream in_indexfile(this->getIndexPath().c_str());
+    while(!in_indexfile.eof())
+    {
+        
+        in_indexfile.getline(buffer, lengthBuffer);
+
+        //File already added
+        string indexfileEntry("");
+        indexfileEntry.append(buffer, strlen(buffer) + 41);
+        if(blobReference.compare(indexfileEntry) == 0)
+            return 1;
+    }
+    in_indexfile.close();
+
+    return 0;
+}
+
+int GitBlob::isTracked()
+//Returns non-zero if the file is already tacked
+{
+    string sha1Commit = readFile(getHEADPath());
+    //No commit = not being tracked!
+    if(sha1Commit.size() == 0)
+        return 0;
+
+    GitCommit* presentCommit = GitCommit::createFromGitObject(sha1Commit);
+    return presentCommit->blobInTree(this->relativePath, this->sha1hash);
+}
+
 int GitBlob::addInIndex() 
 // Adds reference to file blob to the Index file. Returns non-zero if unsuccessful.
 {
     //Fetch the end of the IndexFile
-    ofstream indexfile(this->getIndexPath().c_str(), ios_base::app);
+    ofstream out_indexfile(this->getIndexPath().c_str(), ios_base::app);
+    out_indexfile << generateReference();
 
-    //1. Add file name
-    indexfile << this->relativePath;
-
-    //2. Add a null-terminating character for seperating fields.
-    indexfile << INDEX_FILE_DEMLIMETER;
-
-    //3. Add sha1 hash of file.
-    indexfile << this->sha1hash << endl;
-
-    indexfile.close();
+    out_indexfile.close();
     return 0;
 }
 

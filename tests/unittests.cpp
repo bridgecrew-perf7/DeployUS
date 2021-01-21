@@ -24,6 +24,7 @@ namespace fs = boost::filesystem;
 using namespace std;
 
 #define TESTFILE_NUMBERS_TXT  			"testfolder1/numbers.txt"
+#define TESTFILE_NUMBERS_2_TXT  		"testfolder1/numbers2.txt"
 #define TESTFILE_LETTERS_TXT  			"testfolder1/letters.txt"
 #define TESTFILE_A_TXT        			"testfolder1/testfolder2/a.txt"
 #define TESTFILE_NONEXISTANT_TXT        "testfolder1/testfolder2/nonexistant.txt"
@@ -145,11 +146,20 @@ TEST_CASE("Init_Command")
 
 TEST_CASE("Add_Command") 
 {
+	//Removing .git folder
+	fs::remove_all(".git");
+
 	//Disabling cout
 	cout.setstate(ios_base::failbit);
 
-	//Removing .git folder
-	fs::remove_all(".git");
+	/*Test1: Add letters.txt for the first time. Fail because no .git folder*/
+	string letterspath(TESTFILE_LETTERS_TXT);
+	char* argvLetters[3] = {program_invocation_name, strdup("add"), strdup(letterspath.c_str())};
+	int argcLetters= 3;
+	BaseCommand* addcmd = parse_args(argcLetters,argvLetters);
+	REQUIRE(addcmd->execute() != 0); //Error: not .git folder
+
+	//create .git folder	
 	char* argv[2] = {program_invocation_name, strdup("init")};
 	int argc = 2;
 
@@ -159,10 +169,6 @@ TEST_CASE("Add_Command")
 
 	/*=======================*/
 	/*Test1: Add letters.txt for the first time */
-	string letterspath(TESTFILE_LETTERS_TXT);
-	char* argvLetters[3] = {program_invocation_name, strdup("add"), strdup(letterspath.c_str())};
-	int argcLetters= 3;
-	BaseCommand* addcmd = parse_args(argcLetters,argvLetters);
 	REQUIRE(addcmd->execute() == 0);
 
 	//Reading letters.txt file
@@ -205,7 +211,13 @@ TEST_CASE("Add_Command")
 	char* argvNumber[3] = {program_invocation_name, strdup("add"), strdup(numberspath.c_str())};
 	int argcNumber= 3;
 	BaseCommand* addcmd2 = parse_args(argcNumber,argvNumber);
-	addcmd2->execute();
+	REQUIRE(addcmd2->execute() == 0);
+
+	/*Test2.1: Add numbers2.txt for the first time. Same content as numbers.txt */
+	char* argvNumber2[3] = {program_invocation_name, strdup("add"), strdup(TESTFILE_NUMBERS_2_TXT)};
+	argcNumber= 3;
+	BaseCommand* addcmd2_numbers2 = parse_args(argcNumber,argvNumber2);
+	REQUIRE(addcmd2_numbers2->execute() == 0);
 
 	//Reading letters.txt file
     string numberscontents = readFile(numberspath.c_str());

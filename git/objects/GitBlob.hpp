@@ -29,9 +29,12 @@ class GitBlob: public BaseGitObject
 
         //Interface with database
         int addInIndex();
+        int isinIndex();
+        int isTracked();
         int restoreBlob();
 
         //String generation
+        string generateReference();
         virtual string generateContents();
         virtual string generateHash();
 

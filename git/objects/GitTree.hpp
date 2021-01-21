@@ -30,6 +30,7 @@ class GitTree: public BaseGitObject
         void restoreTrackedFiles(fs::path directory);
         void sort();
         virtual int addInObjects();
+        int hasBlob(string filepath, string hash);
 
         //String generation
         virtual string generateHash();

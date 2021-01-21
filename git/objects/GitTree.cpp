@@ -203,3 +203,26 @@ int GitTree::addInObjects()
 
     return BaseGitObject::addInObjects();
 }
+
+int GitTree::hasBlob(string filepath, string hash)
+//Returns non-zero if the tree contains the blob;
+{
+    //Find blob if in sub-directory
+    int firstDirectoryPos = filepath.find('/');
+    if(firstDirectoryPos != string::npos)
+    {
+        string firstDirectoryName = filepath.substr(0,firstDirectoryPos);
+        string remainingPath = filepath.substr(firstDirectoryPos + 1, filepath.size() - firstDirectoryPos - 1);
+
+        if(branches->count(firstDirectoryName))
+            return branches->at(firstDirectoryName)->hasBlob(remainingPath,hash);
+        else    
+            return 0;
+    }
+    
+    //Find blob in this directory
+    if((find(leaves->begin(), leaves->end(), pair<string,string>(filepath,hash)) != leaves->end()))
+        return 1;
+    else
+        return 0;
+}

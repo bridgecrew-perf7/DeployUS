@@ -48,12 +48,20 @@ int AddCommand::execute() {
     //4. Create GitBlob object
     GitBlob* gitblob = new GitBlob(args[2]);
 
-    //5. Add blob file in object directory
-    if( gitblob->addInObjects() )
+    //Verify that the file can be added
+    if( gitblob->isinIndex())
     {
-        cout << "Error: File is already added.\n";
+        cout << "Error: File is already staged.\n";
         return 1;
     }
+    if(gitblob->isTracked())
+    {
+        cout << "Error: File is already being tracked\n";
+        return 1;
+    }
+
+    //5. Add blob file in object directory
+    gitblob->addInObjects();
 
     //6. Add reference to blob file in the index file.
     if (gitblob->addInIndex())

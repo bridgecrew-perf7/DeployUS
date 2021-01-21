@@ -29,6 +29,8 @@ class GitCommit: public BaseGitObject
         virtual string generateContents();
         virtual string generateHash();
 
+        int blobInTree(string path, string hash);
+
         void rmTrackedFiles();
         void restoreTrackedFiles();
 
