@@ -14,6 +14,7 @@
 #include <commands/CommitCommand.hpp>
 #include <commands/CheckoutCommand.hpp>
 #include <objects/GitCommit.hpp>
+#include <objects/GitBlob.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 #include <iostream>
@@ -83,6 +84,16 @@ TEST_CASE("Help_Messages")
 	stream.read(buffer, buffSize);
 	stream.clear();
 	expected = "usage: gitus commit <msg> <author>\n";
+	REQUIRE( strcmp(expected, buffer) == 0);
+
+	//4. TESTING COMMMITCOMMAND HELP (from ./gitus commit --help)
+	for(int i = 0; i < buffSize; i++) buffer[i] = '\0'; //clearing buffer
+	CheckoutCommand* checkoutcmd = new CheckoutCommand(argc,argv);
+	helpcmd = new HelpCommand(checkoutcmd);
+	helpcmd->execute();
+	stream.read(buffer, buffSize);
+	stream.clear();
+	expected = "usage: gitus checkout <commitID>\n";
 	REQUIRE( strcmp(expected, buffer) == 0);
 
 
@@ -374,11 +385,23 @@ TEST_CASE("Checkout_Command")
 	//Removing .git folder
 	fs::remove_all(".git");
 
+	//Try Checking out with .git folder not initiated
+	argc = 3;
+	char* argvCheckout[argc] = {program_invocation_name, strdup("checkout"), strdup(generateSHA1(string("Something")).c_str())};
+	cmd = new CheckoutCommand(argc,argvCheckout);
+	REQUIRE(cmd->execute() != 0);
+
 	//Init
 	argc = 2;
 	char* argv[argc] = {program_invocation_name, strdup("init")};
 	cmd = new InitCommand(argc,argv); 
 	REQUIRE(cmd->execute() == 0);
+
+	//Try Checking out with HEAD file empty
+	argc = 3;
+	argvCheckout[argc-1] = strdup(string("Something").c_str());
+	cmd = new CheckoutCommand(argc,argvCheckout);
+	REQUIRE(cmd->execute() != 0);
 
 	//Add and commit file 1
 	argc = 3;
@@ -403,7 +426,7 @@ TEST_CASE("Checkout_Command")
 
 	//Checkout the first commit
 	argc = 3;
-	char* argvCheckout[argc] = {program_invocation_name, strdup("checkout"), strdup(shaCommit1.c_str())};
+	argvCheckout[argc-1] = strdup(shaCommit1.c_str());
 	cmd = new CheckoutCommand(argc,argvCheckout);
 	REQUIRE(cmd->execute() == 0);
 

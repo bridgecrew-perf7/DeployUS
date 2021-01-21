@@ -20,6 +20,11 @@ int CheckoutCommand::execute()
 //Performs checkout. Returns 0 if successful, non-zero otherwise.
 {
     //Argument verification
+    if(!fs::exists(GitFilesystem::getDotGitPath()))
+    {
+        cout << "Error: The git repository has not been initiated.\n";
+        return 1;
+    }
     if(numArgs != 3)
     {
         cout << "Error: Invalid usage of command\n";
@@ -38,11 +43,17 @@ int CheckoutCommand::execute()
         return 1;
     }
 
+    string currentCommitID = readFile(GitFilesystem::getHEADPath());
+    if(currentCommitID.size() == 0)
+    {
+        cout << "Error: The commit history is empty.\n";
+        return 1;
+    }
+
     //Get GitCommit obj described by commitID
     GitCommit* wantedCommitObj = GitCommit::createFromGitObject(commitID);
 
     //Get Current HEAD commit
-    string currentCommitID = readFile(GitFilesystem::getHEADPath());
     GitCommit* currentCommitObj = GitCommit::createFromGitObject(currentCommitID);
 
     //1. Remove all presently tracked files
