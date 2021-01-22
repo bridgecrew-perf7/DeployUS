@@ -3,14 +3,14 @@
 #include <string>
 #include <list>
 
+using namespace std;
+
 #define GITBLOB_OBJECT_BLOB_NAME "blob"
 #define GITBLOB_OBJECT_FILENAME_FIELD "Filename: "
 #define GITBLOB_OBJECT_FILESIZE_FIELD "Filesize: "
 #define GITBLOB_OBJECT_FILECONTENTS_FIELD "File contents: "
-#define GITBLOB_OBJECT_INTER_SEPERATOR '\n'
+#define GITBLOB_OBJECT_INTER_SEPERATOR string("\0\n",2)
 #define GITBLOB_OBJECT_INTRA_SEPERATOR '\0'
-
-using namespace std;
 
 class GitBlob: public BaseGitObject
 {

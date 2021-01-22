@@ -26,6 +26,7 @@ class GitIndexFile
         void produceIndexFile();
         ListBlobs parseIndexFile();
 
-        int contains(const string filepath);
+        int contains(const string filepath, const string hash);
+        int count(const string filepath);
 
 };

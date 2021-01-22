@@ -83,15 +83,27 @@ int GitIndexFile::addBlob(GitBlob blob)
     return 0;
 }
 
-int GitIndexFile::contains(string filepath)
+int GitIndexFile::contains(const string filepath, const string hash)
 //Looks if filepath is contained inside the index file.
 //Returns non-zero if the filepath is inside the index file.
 //Returns zero otherwise.
 {
     for(auto blob: blobs)
     {
-        if(blob.first.compare(filepath) == 0)
+        if(blob.first.compare(filepath) == 0 && blob.second.getSHA1Hash().compare(hash) == 0)
             return 1;
     }
     return 0;
+}
+
+int GitIndexFile::count(const string filepath)
+//Returns the number of occurance of filepath
+{
+    int count = 0;
+    for(auto blob: blobs)
+    {
+        if(blob.first.compare(filepath) == 0)
+            count++;
+    }
+    return count;
 }

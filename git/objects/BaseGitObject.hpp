@@ -1,10 +1,9 @@
 #pragma once
 #include <string>
-#include <filesystem/GitFilesystem.hpp>
 
 using namespace std;
 
-class BaseGitObject: public GitFilesystem
+class BaseGitObject
 {
     protected:
         string sha1hash;        //What the file will be named in the .git/objects folder

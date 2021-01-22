@@ -1,4 +1,5 @@
 #include "BaseGitObject.hpp"
+#include <filesystem/GitFilesystem.hpp>
 #include <string>
 #include <boost/filesystem.hpp>
 #include <fstream>
@@ -26,7 +27,7 @@ int BaseGitObject::addInObjects()
     string fileName = sha1hash.substr(2,38);
 
     //2. Create folder from two hash characters if it doesn't exists
-    auto folderPath = this->getObjectsPath().append(folderName);
+    auto folderPath = GitFilesystem::getObjectsPath().append(folderName);
     if(! fs::exists(folderPath))
     {
         fs::create_directory(folderPath);

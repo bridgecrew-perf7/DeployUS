@@ -5,6 +5,7 @@
 #include <ctime>
 #include <iostream>
 #include <boost/tokenizer.hpp>
+#include <filesystem/GitFilesystem.hpp>
 #include <map>
 
 typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
@@ -59,13 +60,13 @@ GitCommit* GitCommit::createFromGitObject(const string& sha1)
 void GitCommit::rmTrackedFiles()
 // Removes all files tracked in current commit object
 {
-    root->rmTrackedFiles(getDotGitPath().parent_path());
+    root->rmTrackedFiles(GitFilesystem::getDotGitPath().parent_path());
 }
 
 void GitCommit::restoreTrackedFiles()
 // Restores all files tracked in current commit object
 {
-    root->restoreTrackedFiles(getDotGitPath().parent_path());
+    root->restoreTrackedFiles(GitFilesystem::getDotGitPath().parent_path());
 }
 
 string GitCommit::generateContents()

@@ -3,6 +3,7 @@
 #include <common.hpp>
 #include <boost/filesystem.hpp>
 #include <filesystem/GitIndexFile.hpp>
+#include <filesystem/GitFilesystem.hpp>
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -61,14 +62,16 @@ GitBlob::~GitBlob()
 GitBlob GitBlob::createFromGitObject(const string sha1)
 //Create a valid GitBlob object from a file
 {
-    string commitContent = readGitObject(sha1);
+    string blobContent = readGitObject(sha1);
 
-    //Read in blob file
-    boost::char_separator<char> sepnewline{ string(1,GITBLOB_OBJECT_INTER_SEPERATOR).c_str()};
-    tokenizer newline{commitContent, sepnewline};
-    map<string, string> memberfields;
-    for(const auto& line: newline)
+
+    map<string, string> memberfields; //Fieldname,  field value
+    while(blobContent.find(GITBLOB_OBJECT_INTER_SEPERATOR) != string::npos)
     {
+        int sepIdx = blobContent.find(GITBLOB_OBJECT_INTER_SEPERATOR);
+        string line = blobContent.substr(0,sepIdx);
+        blobContent = blobContent.substr(sepIdx + GITBLOB_OBJECT_INTER_SEPERATOR.size());
+
         //Split line on null-terminating character
         auto nulltermPos = line.find(GITBLOB_OBJECT_INTRA_SEPERATOR);
         string fieldname = line.substr(0,nulltermPos);
@@ -90,19 +93,19 @@ string GitBlob::generateContents()
     blobcontents.append(GITBLOB_OBJECT_FILENAME_FIELD);
     blobcontents.push_back(GITBLOB_OBJECT_INTRA_SEPERATOR);
     blobcontents.append(this->relativePath);
-    blobcontents.push_back(GITBLOB_OBJECT_INTER_SEPERATOR);
+    blobcontents.append(GITBLOB_OBJECT_INTER_SEPERATOR);
 
     //2. Adding file size
     blobcontents.append(GITBLOB_OBJECT_FILESIZE_FIELD);
     blobcontents.push_back(GITBLOB_OBJECT_INTRA_SEPERATOR);
     blobcontents.append(to_string(this->verabtimFileContent.size()));
-    blobcontents.push_back(GITBLOB_OBJECT_INTER_SEPERATOR);
+    blobcontents.append(GITBLOB_OBJECT_INTER_SEPERATOR);
 
     //3. Adding file contents
     blobcontents.append(GITBLOB_OBJECT_FILECONTENTS_FIELD);
     blobcontents.push_back(GITBLOB_OBJECT_INTRA_SEPERATOR);
     blobcontents.append(this->verabtimFileContent);
-    blobcontents.push_back(GITBLOB_OBJECT_INTER_SEPERATOR);
+    blobcontents.append(GITBLOB_OBJECT_INTER_SEPERATOR);
 
     return blobcontents;
 }
@@ -122,13 +125,13 @@ int GitBlob::isinIndex()
 //returns non-zero if file is already staged
 {
     GitIndexFile index = GitIndexFile();
-    return index.contains(this->relativePath);
+    return index.contains(this->getRelativePath(), this->getSHA1Hash());
 }
 
 int GitBlob::isTracked()
 //Returns non-zero if the file is already tacked
 {
-    string sha1Commit = readFile(getHEADPath());
+    string sha1Commit = readFile(GitFilesystem::getHEADPath());
     //No commit = not being tracked!
     if(sha1Commit.size() == 0)
         return 0;

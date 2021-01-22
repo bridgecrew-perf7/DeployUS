@@ -1,6 +1,7 @@
 #include "CheckoutCommand.hpp"
 #include <common.hpp>
 #include <objects/GitCommit.hpp>
+#include <filesystem/GitFilesystem.hpp>
 #include <iostream>
 #include <string>
 
