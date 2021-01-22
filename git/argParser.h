@@ -1,6 +1,7 @@
 #pragma once
 
 #include "commands/BaseCommand.hpp"
+#include "commands/UnknownCommand.hpp"
 #include "commands/HelpCommand.hpp"
 #include "commands/InitCommand.hpp"
 #include "commands/AddCommand.hpp"

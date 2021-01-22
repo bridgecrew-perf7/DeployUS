@@ -17,6 +17,10 @@ BaseCommand* parse_args(int argc, char* argv[]){
 	else if( strcmp(argv[1], "add") == 0) ret = new AddCommand(argc, argv);
 	else if( strcmp(argv[1], "commit") == 0) ret = new CommitCommand(argc, argv);
 	else if( strcmp(argv[1], "checkout") == 0) ret = new CheckoutCommand(argc, argv);
+	else
+	{
+		return new UnknownCommand();
+	}
 	
 	//Verify if help is required. 
 	if(argc >= 3 && strcmp(argv[2], HELP_PARAM) == 0) ret = new HelpCommand(ret);

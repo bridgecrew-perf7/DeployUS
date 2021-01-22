@@ -17,6 +17,8 @@ add_library(git
     objects/GitCommit.cpp
     commands/BaseCommand.hpp
     commands/BaseCommand.cpp
+    commands/UnknownCommand.hpp
+    commands/UnknownCommand.cpp
     commands/HelpCommand.hpp
     commands/HelpCommand.cpp
     commands/InitCommand.hpp
