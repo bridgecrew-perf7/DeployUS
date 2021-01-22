@@ -1,6 +1,7 @@
 #pragma once
 #include "BaseGitObject.hpp"
 #include <string>
+#include <list>
 
 #define GITBLOB_OBJECT_BLOB_NAME "blob"
 #define GITBLOB_OBJECT_FILENAME_FIELD "Filename: "
@@ -26,6 +27,7 @@ class GitBlob: public BaseGitObject
 
         //Getters
         inline string getVerbatinContents() {return verabtimFileContent;};
+        inline string getRelativePath() {return relativePath;};
 
         //Interface with database
         int addInIndex();

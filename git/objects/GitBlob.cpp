@@ -2,11 +2,13 @@
 #include "GitCommit.hpp"
 #include <common.hpp>
 #include <boost/filesystem.hpp>
+#include <filesystem/GitIndexFile.hpp>
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <boost/tokenizer.hpp>
+#include <list>
 
 typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
 
@@ -119,28 +121,8 @@ string GitBlob::generateReference()
 int GitBlob::isinIndex()
 //returns non-zero if file is already staged
 {
-    int lengthBuffer = 200;
-    char buffer[lengthBuffer];
-
-    string blobReference = generateReference();
-    blobReference.erase(blobReference.find_last_not_of(" \n\r\t")+1); //strip new line
-
-    //Check to see if file is already added in index file
-    ifstream in_indexfile(this->getIndexPath().c_str());
-    while(!in_indexfile.eof())
-    {
-        
-        in_indexfile.getline(buffer, lengthBuffer);
-
-        //File already added
-        string indexfileEntry("");
-        indexfileEntry.append(buffer, strlen(buffer) + 41);
-        if(blobReference.compare(indexfileEntry) == 0)
-            return 1;
-    }
-    in_indexfile.close();
-
-    return 0;
+    GitIndexFile index = GitIndexFile();
+    return index.contains(this->relativePath);
 }
 
 int GitBlob::isTracked()
@@ -151,6 +133,7 @@ int GitBlob::isTracked()
     if(sha1Commit.size() == 0)
         return 0;
 
+    //Look in the commit's root tree for a reference to the blob
     GitCommit* presentCommit = GitCommit::createFromGitObject(sha1Commit);
     return presentCommit->blobInTree(this->relativePath, this->sha1hash);
 }
@@ -158,28 +141,16 @@ int GitBlob::isTracked()
 int GitBlob::addInIndex() 
 // Adds reference to file blob to the Index file. Returns non-zero if unsuccessful.
 {
-    //Fetch the end of the IndexFile
-    ofstream out_indexfile(this->getIndexPath().c_str(), ios_base::app);
-    out_indexfile << generateReference();
-
-    out_indexfile.close();
+    GitIndexFile index = GitIndexFile();
+    index.addBlob(*this);
+    index.produceIndexFile();
     return 0;
 }
 
 int GitBlob::restoreBlob()
 // Restores the file defined by the Blob. Returns 0 if successful. Returns non-zero otherwise.
 {
-    fstream originalFile;
-	originalFile.open(this->relativePath, ios::out);
-	if (!originalFile) {
-		//File not created!
-        return 1;
-	}
-	else {
-		originalFile << this->verabtimFileContent;
-		originalFile.close();
-	}
-    return 0;
+    return writeFile(fs::path(this->relativePath),this->verabtimFileContent);
 }
 
 string GitBlob::generateHash()
