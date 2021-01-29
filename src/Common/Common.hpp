@@ -7,7 +7,7 @@ namespace fs = boost::filesystem;
 using namespace std;
 
 /*
-Common functions that are used by FileSystem classes.
+Common functions.
 */
 
 stringstream readFile(fs::path filepath);
