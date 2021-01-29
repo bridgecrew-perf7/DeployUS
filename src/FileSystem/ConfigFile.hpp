@@ -37,13 +37,16 @@ public:
     string const toString();
 
     //YAML config related methods
-    vector<string> const getProjectName();
-    vector<string> const getCompileList();
-    vector<string> const getDepLibVars();
-    vector<string> const getDepLibList();
-    vector<string> const getDepInclVars();
+    StringList const getProjectName();
+    StringList const getCompileList();
+    StringList const getDepLibVars();
+    StringList const getDepLibList();
+    StringList const getDepInclVars();
+
+    //getters
+    inline fs::path getConfigPath() {return fs::path(filepath);};
 
 };
 
-vector<string> const vectorizeYAMLNode(const YAML::Node node);
+StringList const vectorizeYAMLNode(const YAML::Node node);
 

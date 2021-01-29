@@ -7,5 +7,5 @@ deps_library:
   - lib1
   - lib2
 compile:
- - f1: fichier1.cpp
- - f2: fichier2.cpp
+ - f1: ../prog1/main.cpp
+ - f2: ../prog1/utils.cpp

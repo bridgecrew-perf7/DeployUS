@@ -25,4 +25,5 @@ add_executable(BuildUS main.cpp)
 target_link_libraries(BuildUS
     PRIVATE
     FileSystem
+    GCCDriver
 )

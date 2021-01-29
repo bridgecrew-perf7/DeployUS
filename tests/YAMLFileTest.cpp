@@ -21,8 +21,8 @@ TEST_CASE("Valid_YAML")
     vector<string> expectedProjectName;
     expectedProjectName.push_back(string("app1"));
     vector<string> expectedCompileFiles;
-    expectedCompileFiles.push_back(string("fichier1.cpp"));
-    expectedCompileFiles.push_back(string("fichier2.cpp"));
+    expectedCompileFiles.push_back(string("../prog1/main.cpp"));
+    expectedCompileFiles.push_back(string("../prog1/util.cpp"));
 
     //Valid ConfigFiles
     REQUIRE_NOTHROW(cf = new ConfigFile(CONFIG1_PATH));

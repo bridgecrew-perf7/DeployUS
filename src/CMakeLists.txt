@@ -27,6 +27,7 @@ target_include_directories(BuildUSCommon
 #=================================
 add_library(    FileSystem
                 FileSystem/ConfigFile.cpp
+                FileSystem/BuildUSCache.cpp
 )
 
 target_include_directories(FileSystem 
@@ -38,6 +39,7 @@ target_link_libraries(FileSystem
     PUBLIC 
 		${Boost_LIBRARIES}
         yaml-cpp
+        BuildUSCommon
 )
 
 target_include_directories(FileSystem 
@@ -46,3 +48,19 @@ target_include_directories(FileSystem
 		${Boost_INCLUDE_DIRS}
 )
 
+#=================================
+# GCCDriver
+#=================================
+add_library(    GCCDriver
+                GCCDriver/GCCDriver.cpp
+)
+
+target_include_directories(GCCDriver 
+   	 PUBLIC 
+	${CMAKE_CURRENT_SOURCE_DIR}/GCCDriver
+)
+
+target_link_libraries(GCCDriver
+    PUBLIC
+    FileSystem
+)

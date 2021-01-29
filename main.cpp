@@ -1,5 +1,6 @@
 #include <iostream>
-#include <ConfigFile.hpp>
+#include <FileSystem/ConfigFile.hpp>
+#include <GCCDriver/GCCDriver.hpp>
 using namespace std;
 
 
@@ -20,7 +21,13 @@ int main(int argc, char const *argv[])
 
     //Load Config File
     ConfigFile config(configPath);
-    cout << config.toString() << endl;
+    
+
+    //Create GCCDriver Object
+    GCCDriver compiler(&config);
+
+    //1. Compiling step
+    compiler.compile();
 
     return 0;
 }

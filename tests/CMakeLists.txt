@@ -6,6 +6,10 @@ add_executable(BuildUSTests
 )
 
 file(COPY "config" DESTINATION ".")
+file(COPY "prog1" DESTINATION ".")
+configure_file("prog1/main.cpp" "prog1/main.cpp" COPYONLY)
+configure_file("prog1/utils.cpp" "prog1/utils.cpp" COPYONLY)
+configure_file("prog1/utils.hpp" "prog1/utils.hpp" COPYONLY)
 
 
 target_include_directories(BuildUSTests

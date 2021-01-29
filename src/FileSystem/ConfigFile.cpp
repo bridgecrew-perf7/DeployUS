@@ -19,8 +19,6 @@ ConfigFile::ConfigFile(const char* filepath)
     {
         throw std::runtime_error("Error: Configuration file is not valid.");
     }
-
-
 }
 
 ConfigFile::~ConfigFile()
@@ -58,7 +56,7 @@ bool const ConfigFile::isYAMLInvalid()
     return ret;
 }
 
-vector<string> const ConfigFile::getProjectName()
+StringList const ConfigFile::getProjectName()
 /*
     Returns project name.
 */
@@ -66,12 +64,12 @@ vector<string> const ConfigFile::getProjectName()
     return vectorizeYAMLNode(this->config[CONFIG_FILE_PROJECT]);
 }
 
-vector<string> const ConfigFile::getCompileList()
+StringList const ConfigFile::getCompileList()
 /*
     Returns list of filepaths to compile.
 */
 {
-    vector<string> toCompile;
+    StringList toCompile;
     char item[5];
     for(int i = 0; i < this->config[CONFIG_FILE_COMPILE].size(); i++ )
     {
@@ -84,7 +82,7 @@ vector<string> const ConfigFile::getCompileList()
     return toCompile;
 }
 
-vector<string> const ConfigFile::getDepLibVars()
+StringList const ConfigFile::getDepLibVars()
 /* 
     Returns vector of dependencies from environment variables
 */
@@ -92,14 +90,14 @@ vector<string> const ConfigFile::getDepLibVars()
     return vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_VARS]);
 }
 
-vector<string> const ConfigFile::getDepLibList()
+StringList const ConfigFile::getDepLibList()
 /*
     Returns list of libraries to link.
 */
 {
     return vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_LIBS]);
 }
-vector<string> const ConfigFile::getDepInclVars()
+StringList const ConfigFile::getDepInclVars()
 /* 
     Returns vector of dependencies from environment variables
 */
@@ -167,10 +165,10 @@ string const ConfigFile::toString()
     ====================================
 */
 
-vector<string> const vectorizeYAMLNode(const YAML::Node node)
+StringList const vectorizeYAMLNode(const YAML::Node node)
 //Returns vector of string contained in Node. Must be the last containing node.
 {
-    vector<string> vectorized;
+    StringList vectorized;
     switch (node.Type())
     {
         case YAML::NodeType::Scalar : 
