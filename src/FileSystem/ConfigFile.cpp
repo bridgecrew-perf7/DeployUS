@@ -8,11 +8,17 @@ ConfigFile::ConfigFile(const char* filepath)
     auto configfilepath = fs::path(filepath);
     if(!fs::exists(configfilepath))
     {
-        throw std::runtime_error("Configuration file does not exists.");
+        throw std::runtime_error("Error: Configuration file does not exists.");
     }
 
     //2. Parsing. Sets config attribute
     parseYAML();
+
+    //3. Verify that config is valid
+    if(this->isYAMLInvalid())
+    {
+        throw std::runtime_error("Error: Configuration file is not valid.");
+    }
 
 
 }
@@ -38,7 +44,7 @@ bool const ConfigFile::isYAMLInvalid()
     bool ret = false;
 
     //Only allowed 1 project name
-    if(this->getProjectName().size() > 1)
+    if(this->getProjectName().size() != 1)
     {
         ret = true;
     }
@@ -70,7 +76,10 @@ vector<string> const ConfigFile::getCompileList()
     for(int i = 0; i < this->config[CONFIG_FILE_COMPILE].size(); i++ )
     {
         sprintf(item,"f%d",i + 1);
-        toCompile.push_back(this->config[CONFIG_FILE_COMPILE][i][item].as<string>());
+        for(auto elem: vectorizeYAMLNode(this->config[CONFIG_FILE_COMPILE][i][item]))
+        {
+            toCompile.push_back(elem);
+        }
     }
     return toCompile;
 }

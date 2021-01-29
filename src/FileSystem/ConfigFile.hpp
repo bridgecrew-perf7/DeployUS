@@ -23,24 +23,26 @@ using namespace std;
 class ConfigFile
 {
 private:
-   fs::path filepath;
-   YAML::Node config; 
+    fs::path filepath;
+    YAML::Node config; 
 
-   //YAML config related methods
-   void parseYAML();
-   bool const isYAMLInvalid();
-   vector<string> const getProjectName();
-   vector<string> const getCompileList();
-   vector<string> const getDepLibVars();
-   vector<string> const getDepLibList();
-   vector<string> const getDepInclVars();
-
+    //YAML config related methods
+    void parseYAML();
+    bool const isYAMLInvalid();
 public:
     //Can throw an error! (ex: If configfile does not exists)
     ConfigFile(const char* filepath);
     ~ConfigFile();
 
     string const toString();
+
+    //YAML config related methods
+    vector<string> const getProjectName();
+    vector<string> const getCompileList();
+    vector<string> const getDepLibVars();
+    vector<string> const getDepLibList();
+    vector<string> const getDepInclVars();
+
 };
 
 vector<string> const vectorizeYAMLNode(const YAML::Node node);

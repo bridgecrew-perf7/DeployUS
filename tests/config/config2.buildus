@@ -1,4 +1,4 @@
-project: app2
+project: app1
 deps_include:
  var: BOOST_INCLUDEDIR
 deps_library:
