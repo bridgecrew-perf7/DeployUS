@@ -1,5 +1,5 @@
 #pragma once
-#include "Common.hpp"
+#include <Common/Common.hpp>
 #include <yaml-cpp/yaml.h> //https://github.com/jbeder/yaml-cpp.git. MIT licence
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
