@@ -113,7 +113,7 @@ string GitBlob::generateReference()
 {
     //Generate text to go in index file
     string blobReference = string(this->relativePath);  //filename
-    blobReference += INDEX_FILE_DEMLIMETER;             //Delimeter
+    blobReference += INDEX_FILE_DELIMETER;             //Delimeter
     blobReference += this->sha1hash;                    //Hash
     blobReference += "\n";
 
