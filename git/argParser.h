@@ -1,12 +1,4 @@
 #pragma once
-
-// AB - includes inutiles pour ce fichier
 #include "commands/BaseCommand.hpp"
-#include "commands/UnknownCommand.hpp"
-#include "commands/HelpCommand.hpp"
-#include "commands/InitCommand.hpp"
-#include "commands/AddCommand.hpp"
-#include "commands/CommitCommand.hpp"
-#include "commands/CheckoutCommand.hpp"
 
 BaseCommand* parse_args(int argc, char* argv[]);

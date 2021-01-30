@@ -1,4 +1,10 @@
 #include "argParser.h"
+#include "commands/UnknownCommand.hpp"
+#include "commands/HelpCommand.hpp"
+#include "commands/InitCommand.hpp"
+#include "commands/AddCommand.hpp"
+#include "commands/CommitCommand.hpp"
+#include "commands/CheckoutCommand.hpp"
 #include <iostream>
 #include <string.h>
 

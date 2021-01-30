@@ -5,9 +5,8 @@
 #include <string>
 #include <boost/tokenizer.hpp>
 
-// AB - const
-#define GITINDEXFILE_INTER_SEPERATOR '\n'
-#define GITINDEXFILE_INTRA_SEPERATOR '\0'
+const char GITINDEXFILE_INTER_SEPERATOR = '\n';
+const char GITINDEXFILE_INTRA_SEPERATOR = '\0';
 
 typedef std::list<std::pair<string,GitBlob>> ListBlobs;
 typedef boost::tokenizer<boost::char_separator<char>> tokenizer;

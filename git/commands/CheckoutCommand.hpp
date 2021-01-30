@@ -4,6 +4,7 @@
 class CheckoutCommand: public BaseCommand
 {
 private:
+    std::string sha1hash;
     int numArgs;
     char** args;
 

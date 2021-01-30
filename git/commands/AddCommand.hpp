@@ -6,6 +6,7 @@
 class AddCommand: public BaseCommand
 {
 private:
+    std::string sha1hash;
     int numArgs;
     char** args;
 public:

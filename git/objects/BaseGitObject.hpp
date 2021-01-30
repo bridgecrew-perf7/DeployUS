@@ -2,8 +2,6 @@
 #include <string>
 #include <common.hpp>
 
-// AB - Arrete de penser trop OO.
-
 class BaseGitObject
 {
     protected:
@@ -12,7 +10,7 @@ class BaseGitObject
 
     public:
         BaseGitObject();
-        ~BaseGitObject();
+        virtual ~BaseGitObject();
 
         //Interfacing with database
         virtual int addInObjects();

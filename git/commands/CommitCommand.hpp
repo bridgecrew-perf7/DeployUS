@@ -12,6 +12,7 @@ using namespace std;
 class CommitCommand: public BaseCommand
 {
     private:
+        std::string sha1hash;
         int numArgs;
         char** args;
         string commitMessage;

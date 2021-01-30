@@ -80,8 +80,8 @@ int CommitCommand::execute()
         //Split line of index file into its filename and hash components according to delimeter. 
         stringstream fileref(token);
         string filePath,fileHash;
-        getline(fileref,filePath,INDEX_FILE_DEMLIMETER);
-        getline(fileref,fileHash,INDEX_FILE_DEMLIMETER);
+        getline(fileref,filePath,INDEX_FILE_DELIMETER);
+        getline(fileref,fileHash,INDEX_FILE_DELIMETER);
 
         //Adding the versioned file to the GitTree
         root->addBlob(filePath, fileHash);
