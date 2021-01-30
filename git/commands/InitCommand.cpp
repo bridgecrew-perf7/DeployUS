@@ -31,7 +31,7 @@ int InitCommand::execute() {
     }
     else 
     {
-        if(!fs::create_directory(gitDirectory))
+        if(!fs::create_directory(gitDirectory)) // AB - exception possible
         {
             std::cout << "Failed to create .git folder." << std::endl;
             return 1;
@@ -39,7 +39,7 @@ int InitCommand::execute() {
     }
 
     //2. Create empty object folder
-    if(!fs::create_directory(objectsDirectory))
+    if(!fs::create_directory(objectsDirectory)) // AB - exception possible
     {
         std::cout << "Failed to create "<< objectsDirectory.c_str() << "folder." << std::endl;
         return 1;
@@ -48,12 +48,12 @@ int InitCommand::execute() {
     //3. Create empty files index and HEAD files
     std::ofstream file(headDirectory.c_str());
     file.close();
-    file.open(indexDirectory.c_str());
+    file.open(indexDirectory.c_str()); // AB - c'est une mauvaise pratique. Refait un autre object
     file.close();
 
     return 0;
 }
 
-void InitCommand::help() {
+void InitCommand::help() { // AB - constance dans les accolades
     std::cout << "usage: gitus init\n";
 }

@@ -14,6 +14,7 @@ namespace fs = boost::filesystem;
 class GitTree: public BaseGitObject
 {
     private:
+        // AB - je n'avais pas demandé de supporter des arbres récursifs
         std::map<string, GitTree*> *branches;                  //Other Trees (dirname,GitTree object). The GitTree object contaisn the SHA1
         std::list<std::pair<string, string>>  *leaves;              //Files in folder represented by tree (filename, sha1)
 

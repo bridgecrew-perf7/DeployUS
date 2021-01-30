@@ -53,7 +53,7 @@ GitTree::GitTree(const string& rootSHA1)
 
 GitTree::~GitTree()
 {
-    if(branches != nullptr) delete branches;
+    if(branches != nullptr) delete branches; // AB - fuite de mémoire (les GitTree* dans l'attribut)
     if(leaves != nullptr) delete leaves;
 }
 

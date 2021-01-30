@@ -38,6 +38,11 @@ int AddCommand::execute() {
     }
 
     //3. Verify that the file specified exists
+
+    // AB - quand je vois un chiffre, je me pose beaucoup de question (surtout quand c'est utilisé comme un index).
+    //      Le but est d'avoir du code auto-documenté. Par exemple:
+    auto fileNameToAdd = args[2]; // ca dit exactement ce que c'est et à quoi le chiffre sert.
+
     if (!fs::is_regular_file(args[2])) 
     {
         std::cout << "Error: File does not exists.\n";

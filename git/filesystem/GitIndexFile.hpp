@@ -5,6 +5,7 @@
 #include <string>
 #include <boost/tokenizer.hpp>
 
+// AB - const
 #define GITINDEXFILE_INTER_SEPERATOR '\n'
 #define GITINDEXFILE_INTRA_SEPERATOR '\0'
 

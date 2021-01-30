@@ -2,6 +2,8 @@
 #include <string>
 #include <boost/filesystem.hpp>
 
+// AB - orthographe
+//      et utilise un const char
 #define INDEX_FILE_DEMLIMETER '\0'
 
 namespace fs = boost::filesystem;

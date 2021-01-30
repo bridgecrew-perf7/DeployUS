@@ -25,11 +25,13 @@ string Common::generateSHA1(string text)
     //Converting to hexadecimal
     std::stringstream bytestream;
     char* result = new char[41];
+
+    // AB - très difficile à lire
     for(int i=0; i < 5; i++) bytestream << std::setfill('0') << std::setw(sizeof(unsigned int)*2) << std::hex <<hash[i];
 
     //Storing in result buffer
     bytestream.read(result,40);
-    result[40] = '\0'; //null-terminated
+    result[40] = '\0'; //null-terminated -- AB - pourquoi est-ce qu'on en a besoin? - un commentaire serait apprécié
 
     return string(result);
 }
