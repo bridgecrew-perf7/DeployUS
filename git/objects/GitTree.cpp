@@ -10,7 +10,6 @@
 typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
 
 namespace fs = boost::filesystem;
-using namespace std;
 
 GitTree::GitTree()
 {
@@ -22,7 +21,7 @@ GitTree::GitTree(const string& rootSHA1)
     initialize();
 
     //Read in file referenced by SHA1
-    string contents = readGitObject(rootSHA1);
+    string contents = Common::readGitObject(rootSHA1);
     boost::char_separator<char> sepnewline{"\n"};
     tokenizer newline{contents, sepnewline};
     for(const auto& line: newline)
@@ -61,8 +60,8 @@ GitTree::~GitTree()
 void GitTree::initialize()
 //Initializes member attributes.
 {
-    branches = new map<string, GitTree*>();
-    leaves = new list<pair<string, string>>();
+    branches = new std::map<string, GitTree*>();
+    leaves = new std::list<std::pair<string, string>>();
 }
 
 void GitTree::addBlob(const string& filepath, const string& sha1hash)
@@ -71,7 +70,7 @@ void GitTree::addBlob(const string& filepath, const string& sha1hash)
     //If the blob stems from a file in the root folder, add it to the root tree's leaves.
     if(count(filepath.begin(),filepath.end(),'/') == 0)
     {
-        pair<string, string> blobpair(filepath,sha1hash);
+        std::pair<string, string> blobpair(filepath,sha1hash);
         this->leaves->push_back(blobpair);
     }
     //Else, add it to the branch associated with the next directory
@@ -94,7 +93,7 @@ void GitTree::addBlob(const string& filepath, const string& sha1hash)
 std::string GitTree::generateHash()
 //Generate SHA1 from tree object
 {
-    stringstream bytestream; //Used to calculate tree hash.
+    std::stringstream bytestream; //Used to calculate tree hash.
 
     //Adding references from branches (sub-directories)
     for(auto branch = branches->begin(); branch != branches->end(); branch++)
@@ -109,7 +108,7 @@ std::string GitTree::generateHash()
     }
 
     ///Save hash value of tree
-    sha1hash = generateSHA1(bytestream.str());
+    sha1hash = Common::generateSHA1(bytestream.str());
 
     return sha1hash;
 }
@@ -172,7 +171,7 @@ void GitTree::sort()
 std::string GitTree::generateContents()
 //Formats the content of a tree object
 {
-    stringstream bytestream; //filecontents
+    std::stringstream bytestream; //filecontents
 
     //Adding references from branches (sub-directories)
     for(auto branch = branches->begin(); branch != branches->end(); branch++)
@@ -221,7 +220,7 @@ int GitTree::hasBlob(string filepath, string hash)
     }
     
     //Find blob in this directory
-    if((find(leaves->begin(), leaves->end(), pair<string,string>(filepath,hash)) != leaves->end()))
+    if((find(leaves->begin(), leaves->end(), std::pair<string,string>(filepath,hash)) != leaves->end()))
         return 1;
     else
         return 0;

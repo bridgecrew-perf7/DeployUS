@@ -9,7 +9,6 @@
 #define GITFILESYSTEM_TOPCOMMIT_FILE_NAME "TOP_COMMIT"
 
 namespace fs = boost::filesystem;
-using namespace std;
 
 class GitFilesystem
 {

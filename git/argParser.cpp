@@ -1,7 +1,6 @@
 #include "argParser.h"
 #include <iostream>
 #include <string.h>
-using namespace std;
 
 const char* HELP_PARAM = "--help";
 

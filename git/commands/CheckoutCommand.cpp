@@ -5,8 +5,6 @@
 #include <iostream>
 #include <string>
 
-using namespace std;
-
 CheckoutCommand::CheckoutCommand(int argc, char* argv[])
 {
     numArgs = argc;
@@ -23,31 +21,31 @@ int CheckoutCommand::execute()
     //Argument verification
     if(!fs::exists(GitFilesystem::getDotGitPath()))
     {
-        cout << "Error: The git repository has not been initiated.\n";
+        std::cout << "Error: The git repository has not been initiated.\n";
         return 1;
     }
     if(numArgs != 3)
     {
-        cout << "Error: Invalid usage of command\n";
+        std::cout << "Error: Invalid usage of command\n";
         help();
         return 1;
     }
     string commitID = args[2];
     if(commitID.size() != 40)
     {
-        cout << "Error: Not a valid commitID\n";
+        std::cout << "Error: Not a valid commitID\n";
         return 1;
     }
     if(commitID.find_first_not_of("0123456789abcdefABCDEF") != string::npos)
     {
-        cout << "Error: commitID is not a hex string.\n";
+        std::cout << "Error: commitID is not a hex string.\n";
         return 1;
     }
 
-    string currentCommitID = readFile(GitFilesystem::getHEADPath());
+    string currentCommitID = Common::readFile(GitFilesystem::getHEADPath());
     if(currentCommitID.size() == 0)
     {
-        cout << "Error: The commit history is empty.\n";
+        std::cout << "Error: The commit history is empty.\n";
         return 1;
     }
 
@@ -66,19 +64,19 @@ int CheckoutCommand::execute()
     //3. Place hash of top commit in TOP_COMMIT file. If the top commit is being checked out, remove TOP_COMMIT file
     if(!fs::exists(GitFilesystem::getTOPCOMMITPath()))
     {
-        writeFile(GitFilesystem::getTOPCOMMITPath(), currentCommitObj->getSHA1Hash());
+        Common::writeFile(GitFilesystem::getTOPCOMMITPath(), currentCommitObj->getSHA1Hash());
     }
-    else if (readFile(GitFilesystem::getTOPCOMMITPath()).compare(wantedCommitObj->getSHA1Hash()) == 0)
+    else if (Common::readFile(GitFilesystem::getTOPCOMMITPath()).compare(wantedCommitObj->getSHA1Hash()) == 0)
     {
         fs::remove(GitFilesystem::getTOPCOMMITPath());
     }
 
     //4. Update HEAD
-    writeFile(GitFilesystem::getHEADPath(), wantedCommitObj->getSHA1Hash());
+    Common::writeFile(GitFilesystem::getHEADPath(), wantedCommitObj->getSHA1Hash());
 
     return 0;
 }
 
 void CheckoutCommand::help() {
-    cout << "usage: gitus checkout <commitID>\n";
+    std::cout << "usage: gitus checkout <commitID>\n";
 }

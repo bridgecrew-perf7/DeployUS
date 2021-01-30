@@ -8,8 +8,7 @@
 #define GITINDEXFILE_INTER_SEPERATOR '\n'
 #define GITINDEXFILE_INTRA_SEPERATOR '\0'
 
-using namespace std;
-typedef list<pair<string,GitBlob>> ListBlobs;
+typedef std::list<std::pair<string,GitBlob>> ListBlobs;
 typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
 
 class GitIndexFile

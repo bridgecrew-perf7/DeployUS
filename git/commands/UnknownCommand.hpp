@@ -1,7 +1,6 @@
 #pragma once
 #include "BaseCommand.hpp"
 #include <iostream>
-using namespace std;
 
 class UnknownCommand: public BaseCommand
 {
@@ -10,5 +9,5 @@ public:
     UnknownCommand();
     ~UnknownCommand();
 
-    inline virtual int execute() {cout<<"Unknown command.\n"; return 1;};
+    inline virtual int execute() {std::cout<<"Unknown command.\n"; return 1;};
 };
