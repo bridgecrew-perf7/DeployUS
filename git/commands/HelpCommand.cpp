@@ -1,5 +1,4 @@
 #include "HelpCommand.hpp"
-#include <iostream>
 
 HelpCommand::HelpCommand(BaseCommand* bcptr)
 {

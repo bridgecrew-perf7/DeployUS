@@ -10,8 +10,6 @@
 
 typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
 
-using namespace std;
-
 GitCommit::GitCommit(GitTree *tree, const string& author, const string& message, const string& parentSHA1, const string& dt)
 {
     root = tree;
@@ -31,12 +29,12 @@ GitCommit::~GitCommit()
 GitCommit* GitCommit::createFromGitObject(const string& sha1)
 // Reads file specified by SHA1 and returns a valid GitCommit object of the commit object specified by parentCommitSHA1
 {
-    string commitContent = readGitObject(sha1);
+    string commitContent = Common::readGitObject(sha1);
 
     //Read in commit file
     boost::char_separator<char> sepnewline{ string(1,GITCOMMIT_OBJECT_INTER_SEPERATOR).c_str()};
     tokenizer newline{commitContent, sepnewline};
-    map<string, string> memberfields;
+    std::map<string, string> memberfields;
     for(const auto& line: newline)
     {
         //Split line on null-terminating character
@@ -72,7 +70,7 @@ void GitCommit::restoreTrackedFiles()
 string GitCommit::generateContents()
 //Generate the content of the commit object to be stored in the .git/objects folder.
 {
-    stringstream bytestream; //filecontents
+    std::stringstream bytestream; //filecontents
 
     //Adding tree reference
     bytestream << GITTREE_OBJECT_TREE_NAME << GITCOMMIT_OBJECT_INTRA_SEPERATOR << root->getSHA1Hash() << GITCOMMIT_OBJECT_INTER_SEPERATOR;
@@ -110,7 +108,7 @@ string GitCommit::generateHash()
     if(filecontents.size() == 0)
         filecontents = generateContents();
 
-    sha1hash = generateSHA1(filecontents);
+    sha1hash = Common::generateSHA1(filecontents);
     return sha1hash;
 }
 

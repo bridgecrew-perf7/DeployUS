@@ -21,7 +21,7 @@ ListBlobs GitIndexFile::parseIndexFile()
     ListBlobs indexBlobs = ListBlobs();
 
     //Read Indexfile
-    string indexContents = readFile(GitFilesystem::getIndexPath());
+    string indexContents = Common::readFile(GitFilesystem::getIndexPath());
 
     //Parsing...
     boost::char_separator<char> sepnewline{ string(1,GITINDEXFILE_INTER_SEPERATOR).c_str()};
@@ -33,7 +33,7 @@ ListBlobs GitIndexFile::parseIndexFile()
         string filepath = line.substr(0,nulltermPos);
         string hash = line.substr(nulltermPos + 1, line.size() - nulltermPos - 1);
 
-        indexBlobs.push_back(pair<string, GitBlob>(filepath, GitBlob::createFromGitObject(hash)));
+        indexBlobs.push_back(std::pair<string, GitBlob>(filepath, GitBlob::createFromGitObject(hash)));
     }
 
     return indexBlobs;
@@ -54,7 +54,7 @@ void GitIndexFile::produceIndexFile()
     }
 
     //Fetch the end of the IndexFile
-    ofstream out_indexfile(GitFilesystem::getIndexPath().c_str(), ios_base::out);
+    std::ofstream out_indexfile(GitFilesystem::getIndexPath().c_str(), std::ios_base::out);
     out_indexfile << output;
 
     out_indexfile.close();
@@ -78,7 +78,7 @@ int GitIndexFile::addBlob(GitBlob blob)
     }
 
     //We are now guaranteed that there is no reference in GitIndexFile for this blob, we can add it.
-    blobs.push_back(pair<string,GitBlob>(relativePath,blob));
+    blobs.push_back(std::pair<string,GitBlob>(relativePath,blob));
 
     return 0;
 }

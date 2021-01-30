@@ -10,13 +10,12 @@
 #define GITTREE_OBJECT_BLOB_NAME "blob"
 
 namespace fs = boost::filesystem;
-using namespace std;
 
 class GitTree: public BaseGitObject
 {
     private:
-        map<string, GitTree*> *branches;                  //Other Trees (dirname,GitTree object). The GitTree object contaisn the SHA1
-        list<pair<string, string>>  *leaves;              //Files in folder represented by tree (filename, sha1)
+        std::map<string, GitTree*> *branches;                  //Other Trees (dirname,GitTree object). The GitTree object contaisn the SHA1
+        std::list<std::pair<string, string>>  *leaves;              //Files in folder represented by tree (filename, sha1)
 
         void initialize();
     public:

@@ -3,7 +3,6 @@
 #include <string>
 #include <list>
 
-using namespace std;
 
 #define GITBLOB_OBJECT_BLOB_NAME "blob"
 #define GITBLOB_OBJECT_FILENAME_FIELD "Filename: "

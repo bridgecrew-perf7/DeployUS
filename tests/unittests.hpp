@@ -48,13 +48,13 @@ string testSuccessfulAddFile(string filepath)
 	REQUIRE(addcmd->execute() == 0);
 
 	//Reading letters.txt file
-    string contents = readFile(filepath);
+    string contents = Common::readFile(filepath);
 
 	//Finding SHA1 of file. SHA1 must be 40 bytes in size.
 	string header = "blob ";
 	header += to_string(contents.size());
 	header += '\0';
-	string sha1 = generateSHA1(header + contents);
+	string sha1 = Common::generateSHA1(header + contents);
 	REQUIRE(sha1.size() == 40);
 
 	//Hash must be the same as real git

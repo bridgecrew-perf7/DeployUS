@@ -10,8 +10,6 @@
 #define GITCOMMIT_OBJECT_PARENT_FIELD "Parent"
 #define GITCOMMIT_OBJECT_TIME_FIELD "Time(UTC)"
 
-using namespace std;
-
 
 class GitCommit: public BaseGitObject
 {

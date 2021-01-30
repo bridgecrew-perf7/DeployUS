@@ -6,7 +6,6 @@
 #include <stdexcept>
 
 namespace fs = boost::filesystem;
-using namespace std;
 
 BaseGitObject::BaseGitObject()
 {
@@ -40,7 +39,7 @@ int BaseGitObject::addInObjects()
         //The file has already been added
         return 1;
     }
-    ofstream blob(filePath.c_str());
+    std::ofstream blob(filePath.c_str());
 
     //4. Fill the blob with relevant content. 
     //      In git, this would be compressed.
@@ -53,13 +52,13 @@ int BaseGitObject::addInObjects()
 
 string BaseGitObject::generateHash()
 {
-    throw exception();
+    throw std::exception();
     return string("");
 }
 
 string BaseGitObject::generateContents()
 {
-    throw exception();
+    throw std::exception();
     return string("");
 }
 

@@ -4,7 +4,6 @@
 #include <filesystem/GitFilesystem.hpp>
 
 namespace fs = boost::filesystem;
-using namespace std;
 
 InitCommand::InitCommand(int argc, char* argv[])
 {
@@ -27,14 +26,14 @@ int InitCommand::execute() {
     //1. If .git folder already exists, then print to screen that a local git repo already exists. Else, create folder
     if(fs::exists(gitDirectory)) 
     {
-        cout << "Error: A git repo already exists here."<< endl;
+        std::cout << "Error: A git repo already exists here."<< std::endl;
         return 1;
     }
     else 
     {
         if(!fs::create_directory(gitDirectory))
         {
-            cout << "Failed to create .git folder." <<endl;
+            std::cout << "Failed to create .git folder." << std::endl;
             return 1;
         }
     }
@@ -42,12 +41,12 @@ int InitCommand::execute() {
     //2. Create empty object folder
     if(!fs::create_directory(objectsDirectory))
     {
-        cout << "Failed to create "<< objectsDirectory.c_str() << "folder." <<endl;
+        std::cout << "Failed to create "<< objectsDirectory.c_str() << "folder." << std::endl;
         return 1;
     }
     
     //3. Create empty files index and HEAD files
-    ofstream file(headDirectory.c_str());
+    std::ofstream file(headDirectory.c_str());
     file.close();
     file.open(indexDirectory.c_str());
     file.close();

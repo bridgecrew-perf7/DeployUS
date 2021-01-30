@@ -14,7 +14,6 @@
 typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
 
 namespace fs = boost::filesystem;
-using namespace std;
 
 GitBlob::GitBlob(const char* path)
 {
@@ -26,7 +25,7 @@ GitBlob::GitBlob(const char* path)
         this->relativePath = this->relativePath.substr(2, this->relativePath.size() - 2);
 
     //Open file & read all contents
-    this->verabtimFileContent = readFile(path);
+    this->verabtimFileContent = Common::readFile(path);
 
     //Get SHA-1 digest of header + file content 
     this->sha1hash = generateHash();
@@ -62,10 +61,10 @@ GitBlob::~GitBlob()
 GitBlob GitBlob::createFromGitObject(const string sha1)
 //Create a valid GitBlob object from a file
 {
-    string blobContent = readGitObject(sha1);
+    string blobContent = Common::readGitObject(sha1);
 
 
-    map<string, string> memberfields; //Fieldname,  field value
+    std::map<string, string> memberfields; //Fieldname,  field value
     while(blobContent.find(GITBLOB_OBJECT_INTER_SEPERATOR) != string::npos)
     {
         int sepIdx = blobContent.find(GITBLOB_OBJECT_INTER_SEPERATOR);
@@ -98,7 +97,7 @@ string GitBlob::generateContents()
     //2. Adding file size
     blobcontents.append(GITBLOB_OBJECT_FILESIZE_FIELD);
     blobcontents.push_back(GITBLOB_OBJECT_INTRA_SEPERATOR);
-    blobcontents.append(to_string(this->verabtimFileContent.size()));
+    blobcontents.append(std::to_string(this->verabtimFileContent.size()));
     blobcontents.append(GITBLOB_OBJECT_INTER_SEPERATOR);
 
     //3. Adding file contents
@@ -131,7 +130,7 @@ int GitBlob::isinIndex()
 int GitBlob::isTracked()
 //Returns non-zero if the file is already tacked
 {
-    string sha1Commit = readFile(GitFilesystem::getHEADPath());
+    string sha1Commit = Common::readFile(GitFilesystem::getHEADPath());
     //No commit = not being tracked!
     if(sha1Commit.size() == 0)
         return 0;
@@ -153,7 +152,7 @@ int GitBlob::addInIndex()
 int GitBlob::restoreBlob()
 // Restores the file defined by the Blob. Returns 0 if successful. Returns non-zero otherwise.
 {
-    return writeFile(fs::path(this->relativePath),this->verabtimFileContent);
+    return Common::writeFile(fs::path(this->relativePath),this->verabtimFileContent);
 }
 
 string GitBlob::generateHash()
@@ -162,8 +161,8 @@ string GitBlob::generateHash()
     string header;
     header += GITBLOB_OBJECT_BLOB_NAME;
     header += " ";
-    header += to_string(this->verabtimFileContent.size());
+    header += std::to_string(this->verabtimFileContent.size());
     header += '\0';
 
-    return generateSHA1(header + this->verabtimFileContent);
+    return Common::generateSHA1(header + this->verabtimFileContent);
 }

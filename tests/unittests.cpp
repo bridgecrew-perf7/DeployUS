@@ -260,7 +260,7 @@ TEST_CASE("Add_Command_Success")
 	string lettersSHA1 = testSuccessfulAddFile(letterspath);
 
 	//The file must be referenced at the first line of the Index file.
-	string indexContents = readFile(GitFilesystem::getIndexPath().c_str());
+	string indexContents = Common::readFile(GitFilesystem::getIndexPath().c_str());
 	int offset = 0;
 	int sepPos = indexContents.find('\0',offset);
 	string lettersFilenameIndex = indexContents.substr(offset,sepPos-offset);
@@ -278,7 +278,7 @@ TEST_CASE("Add_Command_Success")
 	string numbersSHA1 = testSuccessfulAddFile(numberspath);
 
 	//The file must be referenced at the first line of the Index file.
-	indexContents = readFile(GitFilesystem::getIndexPath().c_str());
+	indexContents = Common::readFile(GitFilesystem::getIndexPath().c_str());
 	offset = indexContents.find('\n');
 	sepPos = indexContents.find('\0',offset);
 	string numbersFilenameIndex = indexContents.substr(offset+1,sepPos-offset-1);
@@ -367,10 +367,10 @@ TEST_CASE("Commit_Command")
 	REQUIRE(cmd->execute() == 0);
 
 	//1. Verify empty index file
-	REQUIRE(readFile(".git/index").size() == 0); 	
+	REQUIRE(Common::readFile(".git/index").size() == 0); 	
 
 	//2. HEAD contains SHA of commit
-	string commitSHA1 = readFile(GitFilesystem::getHEADPath().c_str());
+	string commitSHA1 = Common::readFile(GitFilesystem::getHEADPath().c_str());
 	REQUIRE(commitSHA1.size() == 40);  
 
 	//3. Verify Commit
@@ -397,10 +397,10 @@ TEST_CASE("Commit_Command")
 	REQUIRE(cmd->execute() == 0);
 
 	//4. Verify empty index file
-	REQUIRE(readFile(GitFilesystem::getIndexPath().c_str()).size() == 0); 	
+	REQUIRE(Common::readFile(GitFilesystem::getIndexPath().c_str()).size() == 0); 	
 
 	//5. HEAD contains SHA of commit
-	string commitSHA2 = readFile(GitFilesystem::getHEADPath().c_str());
+	string commitSHA2 = Common::readFile(GitFilesystem::getHEADPath().c_str());
 	REQUIRE(commitSHA2.size() == 40);  
 	
 	//6. Verify Commit
@@ -438,7 +438,7 @@ TEST_CASE("Checkout_Command")
 
 	//Try Checking out with .git folder not initiated
 	argc = 3;
-	char* argvCheckout[argc] = {program_invocation_name, strdup("checkout"), strdup(generateSHA1(string("Something")).c_str())};
+	char* argvCheckout[argc] = {program_invocation_name, strdup("checkout"), strdup(Common::generateSHA1(string("Something")).c_str())};
 	cmd = new CheckoutCommand(argc,argvCheckout);
 	REQUIRE(cmd->execute() != 0);
 
@@ -463,7 +463,7 @@ TEST_CASE("Checkout_Command")
 	char* argvcommit[argc] = {program_invocation_name, strdup("commit"), strdup("The Message"),strdup("The Author")};
 	cmd = new CommitCommand(argc,argvcommit);
 	REQUIRE(cmd->execute() == 0);
-	string shaCommit1 = readFile(GitFilesystem::getHEADPath());
+	string shaCommit1 = Common::readFile(GitFilesystem::getHEADPath());
 
 	//Add and commit file 2
 	argc = 3;
@@ -473,7 +473,7 @@ TEST_CASE("Checkout_Command")
 	argc = 4;
 	cmd = new CommitCommand(argc,argvcommit);
 	REQUIRE(cmd->execute() == 0);
-	string shaCommit2 = readFile(GitFilesystem::getHEADPath());
+	string shaCommit2 = Common::readFile(GitFilesystem::getHEADPath());
 
 	//Checkout the first commit
 	argc = 3;
@@ -483,8 +483,8 @@ TEST_CASE("Checkout_Command")
 
 	//Verify that the checkout worked
 	REQUIRE(fs::exists(GitFilesystem::getTOPCOMMITPath()));
-	REQUIRE(readFile(GitFilesystem::getTOPCOMMITPath()).size() == 40);
-	REQUIRE(readFile(GitFilesystem::getHEADPath()).compare(shaCommit1) == 0);
+	REQUIRE(Common::readFile(GitFilesystem::getTOPCOMMITPath()).size() == 40);
+	REQUIRE(Common::readFile(GitFilesystem::getHEADPath()).compare(shaCommit1) == 0);
 	REQUIRE(fs::exists(TESTFILE_LETTERS_TXT));
 	REQUIRE(fs::exists(TESTFILE_NUMBERS_TXT)); //Untracked for now
 	REQUIRE(!fs::exists(TESTFILE_A_TXT));
@@ -496,7 +496,7 @@ TEST_CASE("Checkout_Command")
 	argc = 4;
 	cmd = new CommitCommand(argc,argvcommit);
 	REQUIRE(cmd->execute() != 0); //Error
-	REQUIRE(readFile(GitFilesystem::getIndexPath()).size() != 0); //Index is not emptied
+	REQUIRE(Common::readFile(GitFilesystem::getIndexPath()).size() != 0); //Index is not emptied
 
 	//Checkout the top commit
 	argc = 3;
@@ -504,7 +504,7 @@ TEST_CASE("Checkout_Command")
 	cmd = new CheckoutCommand(argc,argvCheckout);
 	REQUIRE(cmd->execute() == 0);
 	REQUIRE(!fs::exists(GitFilesystem::getTOPCOMMITPath()));
-	REQUIRE(readFile(GitFilesystem::getHEADPath()).compare(shaCommit2) == 0);
+	REQUIRE(Common::readFile(GitFilesystem::getHEADPath()).compare(shaCommit2) == 0);
 	REQUIRE(fs::exists(TESTFILE_LETTERS_TXT));
 	REQUIRE(fs::exists(TESTFILE_NUMBERS_TXT)); //Untracked for now
 	REQUIRE(fs::exists(TESTFILE_A_TXT));
@@ -513,7 +513,7 @@ TEST_CASE("Checkout_Command")
 	argc = 4;
 	cmd = new CommitCommand(argc,argvcommit);
 	REQUIRE(cmd->execute() == 0);
-	string shaCommit3 = readFile(GitFilesystem::getHEADPath());
+	string shaCommit3 = Common::readFile(GitFilesystem::getHEADPath());
 
 	//Checkout commit 1 again
 	argc = 3;
@@ -521,8 +521,8 @@ TEST_CASE("Checkout_Command")
 	cmd = new CheckoutCommand(argc,argvCheckout);
 	REQUIRE(cmd->execute() == 0);
 	REQUIRE(fs::exists(GitFilesystem::getTOPCOMMITPath()));
-	REQUIRE(readFile(GitFilesystem::getTOPCOMMITPath()).size() == 40);
-	REQUIRE(readFile(GitFilesystem::getHEADPath()).compare(shaCommit1) == 0);
+	REQUIRE(Common::readFile(GitFilesystem::getTOPCOMMITPath()).size() == 40);
+	REQUIRE(Common::readFile(GitFilesystem::getHEADPath()).compare(shaCommit1) == 0);
 	REQUIRE(fs::exists(TESTFILE_LETTERS_TXT));
 	REQUIRE(!fs::exists(TESTFILE_NUMBERS_TXT));
 	REQUIRE(!fs::exists(TESTFILE_A_TXT));
@@ -533,8 +533,8 @@ TEST_CASE("Checkout_Command")
 	cmd = new CheckoutCommand(argc,argvCheckout);
 	REQUIRE(cmd->execute() == 0);
 	REQUIRE(fs::exists(GitFilesystem::getTOPCOMMITPath()));
-	REQUIRE(readFile(GitFilesystem::getTOPCOMMITPath()).size() == 40);
-	REQUIRE(readFile(GitFilesystem::getHEADPath()).compare(shaCommit2) == 0);
+	REQUIRE(Common::readFile(GitFilesystem::getTOPCOMMITPath()).size() == 40);
+	REQUIRE(Common::readFile(GitFilesystem::getHEADPath()).compare(shaCommit2) == 0);
 	REQUIRE(fs::exists(TESTFILE_LETTERS_TXT));
 	REQUIRE(!fs::exists(TESTFILE_NUMBERS_TXT));
 	REQUIRE(fs::exists(TESTFILE_A_TXT));
@@ -545,7 +545,7 @@ TEST_CASE("Checkout_Command")
 	cmd = new CheckoutCommand(argc,argvCheckout);
 	REQUIRE(cmd->execute() == 0);
 	REQUIRE(!fs::exists(GitFilesystem::getTOPCOMMITPath()));
-	REQUIRE(readFile(GitFilesystem::getHEADPath()).compare(shaCommit3) == 0);
+	REQUIRE(Common::readFile(GitFilesystem::getHEADPath()).compare(shaCommit3) == 0);
 	REQUIRE(fs::exists(TESTFILE_LETTERS_TXT));
 	REQUIRE(fs::exists(TESTFILE_NUMBERS_TXT));
 	REQUIRE(fs::exists(TESTFILE_A_TXT));
