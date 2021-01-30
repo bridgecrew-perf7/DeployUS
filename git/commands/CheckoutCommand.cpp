@@ -74,6 +74,10 @@ int CheckoutCommand::execute()
     //4. Update HEAD
     Common::writeFile(GitFilesystem::getHEADPath(), wantedCommitObj->getSHA1Hash());
 
+    //Reclaim memory
+    delete currentCommitObj;
+    delete wantedCommitObj;
+
     return 0;
 }
 

@@ -23,7 +23,8 @@ GitCommit::GitCommit(GitTree *tree, const string& author, const string& message,
 
 GitCommit::~GitCommit()
 {
-    
+    if(root != nullptr)
+        delete root;
 }
 
 GitCommit* GitCommit::createFromGitObject(const string& sha1)
