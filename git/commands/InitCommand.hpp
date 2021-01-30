@@ -9,7 +9,7 @@ private:
     char** args;
 public:
     InitCommand(int argc, char* argv[]);
-    virtual ~InitCommand();
+    ~InitCommand();
 
     virtual int execute();
     virtual void help();

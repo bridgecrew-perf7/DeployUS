@@ -107,6 +107,9 @@ int CommitCommand::execute()
     //11. Update the .git/HEAD file
     updateHEAD(commitobj);
 
+    //Reclaim memory
+    delete commitobj;
+
     return 0;
 }
 

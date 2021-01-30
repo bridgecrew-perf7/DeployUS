@@ -3,12 +3,12 @@
 #include "GitTree.hpp"
 #include <string>
 
-#define GITCOMMIT_OBJECT_INTRA_SEPERATOR '\0'
-#define GITCOMMIT_OBJECT_INTER_SEPERATOR '\n'
-#define GITCOMMIT_OBJECT_AUTHOR_FIELD "Author"
-#define GITCOMMIT_OBJECT_MSG_FIELD "Message"
-#define GITCOMMIT_OBJECT_PARENT_FIELD "Parent"
-#define GITCOMMIT_OBJECT_TIME_FIELD "Time(UTC)"
+const char GITCOMMIT_OBJECT_INTRA_SEPERATOR = '\0';
+const char GITCOMMIT_OBJECT_INTER_SEPERATOR = '\n';
+const std::string GITCOMMIT_OBJECT_AUTHOR_FIELD = std::string("Author");
+const std::string GITCOMMIT_OBJECT_MSG_FIELD = std::string("Message");
+const std::string GITCOMMIT_OBJECT_PARENT_FIELD = std::string("Parent");
+const std::string GITCOMMIT_OBJECT_TIME_FIELD = std::string("Time(UTC)");
 
 
 class GitCommit: public BaseGitObject

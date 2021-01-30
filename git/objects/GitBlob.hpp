@@ -4,12 +4,12 @@
 #include <list>
 
 
-#define GITBLOB_OBJECT_BLOB_NAME "blob"
-#define GITBLOB_OBJECT_FILENAME_FIELD "Filename: "
-#define GITBLOB_OBJECT_FILESIZE_FIELD "Filesize: "
-#define GITBLOB_OBJECT_FILECONTENTS_FIELD "File contents: "
-#define GITBLOB_OBJECT_INTER_SEPERATOR string("\0\n",2)
-#define GITBLOB_OBJECT_INTRA_SEPERATOR '\0'
+const string GITBLOB_OBJECT_BLOB_NAME("blob");
+const string GITBLOB_OBJECT_FILENAME_FIELD("Filename: ");
+const string GITBLOB_OBJECT_FILESIZE_FIELD("Filesize: ");
+const string GITBLOB_OBJECT_FILECONTENTS_FIELD("File contents: ");
+const string GITBLOB_OBJECT_INTER_SEPERATOR("\0\n",2);
+const char GITBLOB_OBJECT_INTRA_SEPERATOR('\0');
 
 class GitBlob: public BaseGitObject
 {
