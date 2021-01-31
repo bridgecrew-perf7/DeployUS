@@ -13,12 +13,8 @@ add_library(git
     objects/GitTree.cpp
     objects/GitCommit.hpp
     objects/GitCommit.cpp
-    commands/BaseCommand.hpp
-    commands/BaseCommand.cpp
     commands/InitCommand.hpp
     commands/InitCommand.cpp
-    commands/HelpCommand.hpp
-    commands/HelpCommand.cpp
     commands/AddCommand.hpp
     commands/AddCommand.cpp
     commands/CommitCommand.hpp

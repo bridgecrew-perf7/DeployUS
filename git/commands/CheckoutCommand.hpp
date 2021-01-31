@@ -14,6 +14,4 @@ namespace CheckoutCommand
     //Sends usage message to stdout. Always returns 0;
     int help();
 
-    int updateTOPCOMMIT(GitCommit* wantedCommitObj, GitCommit* currentCommitObj);
-
 } // namespace CheckoutCommand

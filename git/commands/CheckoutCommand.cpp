@@ -83,9 +83,25 @@ int CheckoutCommand::execute(int argc, char* argv[])
             return 1;
         }
     }
-    //Update TOP_COMMIT
-    else if(updateTOPCOMMIT(wantedCommitObj,currentCommitObj))
-            return 1;
+    //Verify if still in Detached HEAD mode
+    else 
+    {
+        string topcommitContents = Common::readFile(GitFilesystem::getTOPCOMMITPath());
+        // No longer in Detached HEAD mode. Remove TOP_COMMIT file
+        if (topcommitContents.compare(wantedCommitObj->getSHA1Hash()) == 0)
+        {
+            //Safely remove TOP_COMMIT
+            if(Common::safeRemove(GitFilesystem::getTOPCOMMITPath())) //No longer in Detached HEAD mode.
+            {
+                std::cout << "Error: Could not write to TOP_COMMIT file.\n";
+                //Restore state
+                wantedCommitObj->rmTrackedFiles();
+                currentCommitObj->restoreTrackedFiles();
+                Common::writeFile(GitFilesystem::getTOPCOMMITPath(), currentCommitObj->getSHA1Hash());
+                return 1;
+            }
+        }
+    }
 
     //5. Update HEAD
     if(Common::writeFile(GitFilesystem::getHEADPath(), wantedCommitObj->getSHA1Hash()))
@@ -109,41 +125,5 @@ int CheckoutCommand::help()
 //Sends usage message to stdout. Always returns 0;
 {
     std::cout << "usage: gitus checkout <commitID>\n";
-    return 0;
-}
-
-int CheckoutCommand::updateTOPCOMMIT(GitCommit* wantedCommitObj, GitCommit* currentCommitObj)
-//Attempt to safely write to TOP_COMMIT file. 
-//Returns 0 for success, non-zero for failure
-{
-    string topcommitContents = Common::readFile(GitFilesystem::getTOPCOMMITPath());
-
-    // No longer in Detached HEAD mode. Remove TOP_COMMIT file
-    if (topcommitContents.compare(wantedCommitObj->getSHA1Hash()) == 0)
-    {
-        //Safely remove TOP_COMMIT
-        if(Common::safeRemove(GitFilesystem::getTOPCOMMITPath())) //No longer in Detached HEAD mode.
-        {
-            std::cout << "Error: Could not write to TOP_COMMIT file.\n";
-            //Restore state
-            wantedCommitObj->rmTrackedFiles();
-            currentCommitObj->restoreTrackedFiles();
-            Common::writeFile(GitFilesystem::getTOPCOMMITPath(), currentCommitObj->getSHA1Hash());
-            return 1;
-        }
-    }
-    else //Still in Detached HEAD mode. Update TOP_COMMIT
-    {
-        if(Common::writeFile(GitFilesystem::getTOPCOMMITPath(), currentCommitObj->getSHA1Hash()))
-        {
-            std::cout << "Error: Could not write to TOP_COMMIT file.\n";
-            //Restore state
-            wantedCommitObj->rmTrackedFiles();
-            currentCommitObj->restoreTrackedFiles();
-            Common::writeFile(GitFilesystem::getTOPCOMMITPath(), currentCommitObj->getSHA1Hash());
-            return 1;
-        }
-    }
-
     return 0;
 }
