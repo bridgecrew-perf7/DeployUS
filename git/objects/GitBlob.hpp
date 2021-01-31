@@ -25,8 +25,8 @@ class GitBlob: public BaseGitObject
         static GitBlob createFromGitObject(const string sha1); 
 
         //Getters
-        inline string getVerbatinContents() {return verabtimFileContent;};
-        inline string getRelativePath() {return relativePath;};
+        string getVerbatinContents() {return verabtimFileContent;};
+        string getRelativePath() {return relativePath;};
 
         //Interface with database
         int addInIndex();

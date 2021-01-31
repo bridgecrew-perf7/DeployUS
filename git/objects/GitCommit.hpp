@@ -26,11 +26,12 @@ class GitCommit: public BaseGitObject
 
         virtual string generateContents();
         virtual string generateHash();
+        virtual int addInObjects();
 
         int blobInTree(string path, string hash);
 
-        void rmTrackedFiles();
-        void restoreTrackedFiles();
+        int rmTrackedFiles();
+        int restoreTrackedFiles();
 
         static GitCommit* createFromGitObject(const string& sha1);
 

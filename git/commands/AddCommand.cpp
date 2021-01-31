@@ -20,14 +20,22 @@ int AddCommand::help()
 //Returns:  non-zero if an error occured
 //          zero otherwise
 int AddCommand::execute(int argc, char* argv[]) {
-    //1. Verify that a git folder has been initiated
+    //1. Verify if help is needed
+    if(argc > 2)
+    {
+        string option = argv[2];
+        if(option.compare(Common::HELP_PARAM) == 0)
+            return help();
+    }
+
+    //2. Verify that a git folder has been initiated
     if (!fs::exists(GitFilesystem::getDotGitPath()) || !fs::is_directory(GitFilesystem::getDotGitPath()))
     {
         std::cout << "Error: No git repository has been found.\n";
         return 1;
     }
     
-    //2. Verify that there is one file to be added.
+    //3. Verify that there is one file to be added.
     if (argc < 3)
     {
         std::cout << "Error: no filepath specified.\n";
@@ -38,20 +46,18 @@ int AddCommand::execute(int argc, char* argv[]) {
         std::cout << "Warning: only adding first file specified.\n";
     }
 
-    //3. Verify that the file specified exists or --help 
+    //4. Verify that the file specified exists
     string argument = argv[2]; 
-    if(argument.compare(Common::HELP_PARAM) == 0)      //3.1 option --help is not a file!
-        return help();
-    else if (!fs::is_regular_file(argument))           //3.2 Any other argument is considered a file
+    if (!fs::is_regular_file(argument))           
     {
         std::cout << "Error: File does not exists.\n";
         return 1;
     }
 
-    //4. Create GitBlob object
+    //5. Create GitBlob object
     GitBlob gitblob(argument);
 
-    //5. Verify that the file can be added
+    //6. Verify that the file can be added
     if( gitblob.isinIndex())
     {
         std::cout << "Error: File is already staged.\n";
@@ -63,16 +69,15 @@ int AddCommand::execute(int argc, char* argv[]) {
         return 1;
     }
 
-    //6. Add blob file in object directory
+    //7. Add blob file in object directory
     gitblob.addInObjects();
 
-    //7. Add reference to blob file in the index file.
+    //8. Add reference to blob file in the index file.
     if (gitblob.addInIndex())
     {
         std::cout << "Error: File could not be added in Index file.\n";
         return 1;
     }
-    
 
     return 0;
 }

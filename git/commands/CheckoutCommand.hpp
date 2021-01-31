@@ -1,17 +1,19 @@
 #pragma once
-#include "BaseCommand.hpp"
+#include <objects/GitCommit.hpp>
 
-class CheckoutCommand: public BaseCommand
+namespace CheckoutCommand
 {
-private:
-    std::string sha1hash;
-    int numArgs;
-    char** args;
+    //Removes tracked files from current HEAD commit
+    //Restores files in checked out commit
+    //Updates HEAD
+    //Creates TOP_COMMIT file that will store reference of most recent commit. Used in Detached HEAD mode
+    //Returns:  non-zero if an error occured
+    //          zero otherwise
+    int execute(int argc, char* argv[]);
 
-public:
-    CheckoutCommand(int argc, char* argv[]);
-    ~CheckoutCommand();
+    //Sends usage message to stdout. Always returns 0;
+    int help();
 
-    virtual int execute();
-    virtual void help();
-};
+    int updateTOPCOMMIT(GitCommit* wantedCommitObj, GitCommit* currentCommitObj);
+
+} // namespace CheckoutCommand

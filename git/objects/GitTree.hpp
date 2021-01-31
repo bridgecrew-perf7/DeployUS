@@ -23,15 +23,17 @@ class GitTree: public BaseGitObject
     public:
         GitTree();
         GitTree(const string& rootSHA1);
+        static GitTree* createGitTreeFromIndexFile();
         ~GitTree();
 
         //Tree manipulation function
         void addBlob(const string& filepath, const string& sha1hash);
-        void rmTrackedFiles(fs::path directory);
-        void restoreTrackedFiles(fs::path directory);
+        int hasBlob(string filepath, string hash);
+        void updateFromIndex();
+        int rmTrackedFiles(fs::path directory);
+        int restoreTrackedFiles(fs::path directory);
         void sort();
         virtual int addInObjects();
-        int hasBlob(string filepath, string hash);
 
         //String generation
         virtual string generateHash();

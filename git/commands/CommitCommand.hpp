@@ -1,30 +1,24 @@
 #pragma once
-
-#include "BaseCommand.hpp"
-#include "../objects/GitCommit.hpp"
-#include <map>
-#include <utility>
-#include <string>
-#include <list>
-
+#include <objects/GitCommit.hpp>
 using namespace std;
 
-class CommitCommand: public BaseCommand
+
+namespace CommitCommand
 {
-    private:
-        std::string sha1hash;
-        int numArgs;
-        char** args;
-        string commitMessage;
-        string commitAuthor;
+    //Creates commit object and necessary tree objects
+    //Clears index file
+    //Updates HEAD
+    //Returns:  non-zero if an error occured
+    //          zero otherwise
+    int execute(int argc, char* argv[]);
 
-    public:
-        CommitCommand(int argc, char* argv[]);
-        ~CommitCommand();
+    //Sends usage message to stdout. Always returns 0;
+    int help();
 
-        virtual int execute();
-        virtual void help();
+    //Remove content of Index file
+    void clearIndex();
 
-        void clearIndex();
-        void updateHEAD(GitCommit* obj);
-};
+    //Update HEAD to contain SHA1 of GitCommit obj
+    void updateHEAD(GitCommit* obj);
+
+} // namespace CommitCommand

@@ -12,7 +12,8 @@ namespace fs = boost::filesystem;
 using boost::uuids::detail::sha1;
 
 const char* Common::HELP_PARAM = "--help";
-const char Common::INDEX_FILE_DELIMETER  = '\0';
+const char Common::INDEX_FILE_DELIMETER_INTER  = '\0';
+const char* Common::INDEX_FILE_DELIMETER_INTRA  = "\n";
 
 string Common::generateSHA1(string text)
 /* Returns SHA-1 of given text*/
@@ -40,6 +41,12 @@ string Common::generateSHA1(string text)
     result[40] = '\0'; //null-terminated -- AB - pourquoi est-ce qu'on en a besoin? - un commentaire serait appr�ci�
 
     return string(result);
+}
+
+bool Common::isValidSHA1(string text)
+//Returns true if text is 40 bytes and is in hexadecimal form. False otherwise.
+{
+    return (text.size() == 40) &&  (text.find_first_not_of("0123456789abcdefABCDEF") == string::npos);
 }
 
 string Common::readFile(const char* path)
@@ -100,22 +107,36 @@ int Common::writeFile(fs::path path, string text)
 	return 0;
 }
 
-int Common::safeCreateFolder(fs::path folderpath, string errorMsg)
+int Common::safeCreateFolder(fs::path folderpath)
 //Safely creates folder. Sends error to stderr if one occurs and returns non-zero.
-//Returns:  Non-zero if an error occurs or folder not-created, zero otherwise
+//Returns:  Non-zero if an error occurs or folder not created, zero otherwise
 {
     try
     {
         if(!fs::create_directory(folderpath))
         {
-            std::cout << errorMsg << std::endl;
             return 1;
         }
     }
     catch(const std::exception& e)
     {
         std::cerr << e.what() << '\n';
-        std::cout << errorMsg << std::endl;
+        return 1;
+    }
+    return 0;
+}
+
+int Common::safeRemove(fs::path path)
+//Safely removes file specified by path. Sends error to stderr if one occurs and returns non-zero.
+//Returns:  Non-zero if an error occurs or file not removed, zero otherwise
+{
+    try
+    {
+        fs::remove(path);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
         return 1;
     }
     return 0;

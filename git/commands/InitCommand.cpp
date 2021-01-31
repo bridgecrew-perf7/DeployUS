@@ -35,13 +35,20 @@ int InitCommand::execute(int argc, char* argv[])
     else 
     {
         //Create .git folder
-        std::string errMsg = "Failed to create .git folder.";
-        Common::safeCreateFolder(GitFilesystem::getDotGitPath(), errMsg);
+        if(Common::safeCreateFolder(GitFilesystem::getDotGitPath()))
+        {
+            std::cout << "Failed to create .git folder." << std::endl;
+            return 1;
+        }
     }
 
     //2. Create empty object folder
-    std::string errMsg = std::string("Failed to create ") + GitFilesystem::getObjectsPath().string() + std::string(" folder.");
-    Common::safeCreateFolder(GitFilesystem::getObjectsPath(), errMsg);
+    if(Common::safeCreateFolder(GitFilesystem::getObjectsPath()))
+    {
+        std::string errMsg = std::string("Failed to create ") + GitFilesystem::getObjectsPath().string() + std::string(" folder.");
+        std::cout << errMsg << std::endl;
+        return 1;
+    }
     
     //3. Create empty files index and HEAD files
     std::ofstream fileHEAD(GitFilesystem::getHEADPath().c_str());

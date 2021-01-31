@@ -5,74 +5,98 @@
 #include <iostream>
 #include <string>
 
-CheckoutCommand::CheckoutCommand(int argc, char* argv[])
-{
-    numArgs = argc;
-    args = argv;
-}
 
-CheckoutCommand::~CheckoutCommand()
+int CheckoutCommand::execute(int argc, char* argv[])
+//Removes tracked files from current HEAD commit
+//Restores files in checked out commit
+//Updates HEAD
+//Creates TOP_COMMIT file that will store reference of most recent commit. Used in Detached HEAD mode
+//Returns:  non-zero if an error occured
+//          zero otherwise
 {
-}
+    //Verify if help is wanted
+    if(argc > 2)
+    {
+        string option = argv[2];
+        if(option.compare(Common::HELP_PARAM) == 0)
+            return help();
+    }
 
-int CheckoutCommand::execute()
-//Performs checkout. Returns 0 if successful, non-zero otherwise.
-{
-    //Argument verification
+    //1. Argument verification
     if(!fs::exists(GitFilesystem::getDotGitPath()))
     {
         std::cout << "Error: The git repository has not been initiated.\n";
         return 1;
     }
-    if(numArgs != 3)
+    if(argc != 3)
     {
         std::cout << "Error: Invalid usage of command\n";
         help();
         return 1;
     }
-    string commitID = args[2];
-    if(commitID.size() != 40)
+
+    //2. Get GitCommit obj of commit that will be checkout-ed. 
+    string wantedCommitID = argv[2];
+    if( !Common::isValidSHA1(wantedCommitID))   //Valid SHA1
     {
         std::cout << "Error: Not a valid commitID\n";
         return 1;
     }
-    if(commitID.find_first_not_of("0123456789abcdefABCDEF") != string::npos)
-    {
-        std::cout << "Error: commitID is not a hex string.\n";
-        return 1;
-    }
+    GitCommit* wantedCommitObj = GitCommit::createFromGitObject(wantedCommitID);
 
+    //3. Get current HEAD commit obj.
     string currentCommitID = Common::readFile(GitFilesystem::getHEADPath());
     if(currentCommitID.size() == 0)
     {
         std::cout << "Error: The commit history is empty.\n";
         return 1;
     }
-
-    //Get GitCommit obj described by commitID
-    GitCommit* wantedCommitObj = GitCommit::createFromGitObject(commitID);
-
-    //Get Current HEAD commit
     GitCommit* currentCommitObj = GitCommit::createFromGitObject(currentCommitID);
 
-    //1. Remove all presently tracked files
-    currentCommitObj->rmTrackedFiles();
+    //3. Remove currently tracked files
+    if(currentCommitObj->rmTrackedFiles())
+    {
+        std::cout << "Error: Could not remove files.\n";
+        currentCommitObj->restoreTrackedFiles();
+        return 1;
+    }         
 
-    //2. Restore tracked files
-    wantedCommitObj->restoreTrackedFiles();
+    //4. Restore wanted (i.e. checked out) version of repository
+    if(wantedCommitObj->restoreTrackedFiles())
+    {
+        std::cout << "Error: Could not restore files.\n";
+        //Restore state
+        wantedCommitObj->rmTrackedFiles();
+        currentCommitObj->restoreTrackedFiles();
+        return 1;
+    }
 
-    //3. Place hash of top commit in TOP_COMMIT file. If the top commit is being checked out, remove TOP_COMMIT file
+    //4. Place hash of top commit in TOP_COMMIT file. The existence of the TOP_COMMIT file means we are in Detached HEAD mode
     if(!fs::exists(GitFilesystem::getTOPCOMMITPath()))
     {
-        Common::writeFile(GitFilesystem::getTOPCOMMITPath(), currentCommitObj->getSHA1Hash());
+        if(Common::writeFile(GitFilesystem::getTOPCOMMITPath(), currentCommitObj->getSHA1Hash()))
+        {
+            std::cout << "Error: Could not write to TOP_COMMIT file.\n";
+            //Restore state
+            wantedCommitObj->rmTrackedFiles();
+            currentCommitObj->restoreTrackedFiles();
+            return 1;
+        }
     }
-    else if (Common::readFile(GitFilesystem::getTOPCOMMITPath()).compare(wantedCommitObj->getSHA1Hash()) == 0)
-    {
-        fs::remove(GitFilesystem::getTOPCOMMITPath());
-    }
+    //Update TOP_COMMIT
+    else if(updateTOPCOMMIT(wantedCommitObj,currentCommitObj))
+            return 1;
 
-    //4. Update HEAD
-    Common::writeFile(GitFilesystem::getHEADPath(), wantedCommitObj->getSHA1Hash());
+    //5. Update HEAD
+    if(Common::writeFile(GitFilesystem::getHEADPath(), wantedCommitObj->getSHA1Hash()))
+    {
+        std::cout << "Error: Could not write to HEAD file.\n";
+        //Restore state
+        wantedCommitObj->rmTrackedFiles();
+        currentCommitObj->restoreTrackedFiles();
+        Common::writeFile(GitFilesystem::getTOPCOMMITPath(), currentCommitObj->getSHA1Hash());
+        return 1;
+    }
 
     //Reclaim memory
     delete currentCommitObj;
@@ -81,6 +105,45 @@ int CheckoutCommand::execute()
     return 0;
 }
 
-void CheckoutCommand::help() {
+int CheckoutCommand::help()
+//Sends usage message to stdout. Always returns 0;
+{
     std::cout << "usage: gitus checkout <commitID>\n";
+    return 0;
+}
+
+int CheckoutCommand::updateTOPCOMMIT(GitCommit* wantedCommitObj, GitCommit* currentCommitObj)
+//Attempt to safely write to TOP_COMMIT file. 
+//Returns 0 for success, non-zero for failure
+{
+    string topcommitContents = Common::readFile(GitFilesystem::getTOPCOMMITPath());
+
+    // No longer in Detached HEAD mode. Remove TOP_COMMIT file
+    if (topcommitContents.compare(wantedCommitObj->getSHA1Hash()) == 0)
+    {
+        //Safely remove TOP_COMMIT
+        if(Common::safeRemove(GitFilesystem::getTOPCOMMITPath())) //No longer in Detached HEAD mode.
+        {
+            std::cout << "Error: Could not write to TOP_COMMIT file.\n";
+            //Restore state
+            wantedCommitObj->rmTrackedFiles();
+            currentCommitObj->restoreTrackedFiles();
+            Common::writeFile(GitFilesystem::getTOPCOMMITPath(), currentCommitObj->getSHA1Hash());
+            return 1;
+        }
+    }
+    else //Still in Detached HEAD mode. Update TOP_COMMIT
+    {
+        if(Common::writeFile(GitFilesystem::getTOPCOMMITPath(), currentCommitObj->getSHA1Hash()))
+        {
+            std::cout << "Error: Could not write to TOP_COMMIT file.\n";
+            //Restore state
+            wantedCommitObj->rmTrackedFiles();
+            currentCommitObj->restoreTrackedFiles();
+            Common::writeFile(GitFilesystem::getTOPCOMMITPath(), currentCommitObj->getSHA1Hash());
+            return 1;
+        }
+    }
+
+    return 0;
 }

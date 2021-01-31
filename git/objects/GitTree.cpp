@@ -6,6 +6,7 @@
 #include <iostream>
 #include <boost/tokenizer.hpp>
 #include <boost/filesystem.hpp>
+#include <filesystem/GitFilesystem.hpp>
 
 typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
 
@@ -49,6 +50,16 @@ GitTree::GitTree(const string& rootSHA1)
 
     //Must find SHA1 again
     this->generateHash();
+}
+
+GitTree* GitTree::createGitTreeFromIndexFile()
+/*
+    Reads Index File and returns a valid GitTree object from its contents.
+*/
+{
+    GitTree* tree = new GitTree();
+    tree->updateFromIndex();
+    return tree;
 }
 
 GitTree::~GitTree()
@@ -120,7 +131,9 @@ std::string GitTree::generateHash()
     return sha1hash;
 }
 
-void GitTree::rmTrackedFiles(fs::path parentDirectory)
+int GitTree::rmTrackedFiles(fs::path parentDirectory)
+//Removes tracked files specified by this GitTree obj
+//Returns non-zero if an error occurs. Zero otherwise.
 {
     //Removing folders
     for(auto branch = branches->begin(); branch != branches->end(); branch++)
@@ -132,18 +145,35 @@ void GitTree::rmTrackedFiles(fs::path parentDirectory)
         auto childDirectory = fs::path(parentDirectory).append(branch->first);
         if(fs::exists(childDirectory))
             if(fs::is_empty(childDirectory))
-                fs::remove(childDirectory);
+            {
+                if(Common::safeRemove(childDirectory))
+                {
+                    std::cout << "Error: Could not remove " << childDirectory.string() << std::endl;
+                    return 1;
+                }
+                  
+            }
+                
     }
 
     //Removing files in parentDirectory
     for(auto leaf = leaves->begin(); leaf != leaves->end(); leaf++)
     {
-        fs::remove(fs::path(parentDirectory).append(leaf->first));
+        fs::path filepath = fs::path(parentDirectory).append(leaf->first);
+        
+        if(Common::safeRemove(filepath))
+        {
+            std::cout << "Error: Could not remove " << filepath.string() << std::endl;
+            return 1;
+        }
     }
+
+    return 0;
 }
 
-void GitTree::restoreTrackedFiles(fs::path parentDirectory)
+int GitTree::restoreTrackedFiles(fs::path parentDirectory)
 //Restores all tracked files.
+//Returns non-zero if an error occured. Returns zero otherwise.
 {
     //Restoring folders
     for(auto branch = branches->begin(); branch != branches->end(); branch++)
@@ -162,8 +192,14 @@ void GitTree::restoreTrackedFiles(fs::path parentDirectory)
     {
         //Restore Blob
         GitBlob fileBlobObj = GitBlob::createFromGitObject(leaf->second);
-        fileBlobObj.restoreBlob();
+        if(fileBlobObj.restoreBlob())
+        {
+            std::cout << "Error: Could not write file " << fileBlobObj.getRelativePath() << std::endl;
+            return 1;
+        }
     }
+
+    return 0;
 }
 
 void GitTree::sort()
@@ -231,4 +267,28 @@ int GitTree::hasBlob(string filepath, string hash)
         return 1;
     else
         return 0;
+}
+
+void GitTree::updateFromIndex()
+{
+    //1. Read the index file.
+    string indexContents = Common::readFile(GitFilesystem::getIndexPath());
+
+    if(indexContents.size() != 0)
+    {
+        //2. For each line in the index file, insert blob into root tree.
+        boost::char_separator<char> sep{Common::INDEX_FILE_DELIMETER_INTRA};
+        tokenizer tokenized{indexContents, sep};
+        for(const auto& token: tokenized)
+        {
+            //Split line of index file into its filename and hash components according to delimeter. 
+            std::stringstream fileref(token);
+            string filePath,fileHash;
+            getline(fileref,filePath,Common::INDEX_FILE_DELIMETER_INTER);
+            getline(fileref,fileHash,Common::INDEX_FILE_DELIMETER_INTER);
+
+            //Adding the versioned file to the GitTree
+            this->addBlob(filePath, fileHash);
+        }
+    }
 }

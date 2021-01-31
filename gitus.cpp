@@ -38,8 +38,8 @@ int main(int argc, char *argv[])
 	if (command.compare(Common::HELP_PARAM)  == 0) return GitUS::help();
 	else if( command.compare(INIT_CMD) == 0) ret = InitCommand::execute(argc, argv);
 	else if( command.compare(ADD_CMD) == 0) ret = AddCommand::execute(argc, argv);
-	//else if( command.compare(COMMIT_CMD)  == 0) ret = CommitCommand::execute(argc, argv);
-	//else if( command.compare(CHECKOUT_CMD) == 0) ret = CheckoutCommand::execute(argc, argv);
+	else if( command.compare(COMMIT_CMD)  == 0) ret = CommitCommand::execute(argc, argv);
+	else if( command.compare(CHECKOUT_CMD) == 0) ret = CheckoutCommand::execute(argc, argv);
 	else
 	{
 		std::cout << "Unknown command\n";
