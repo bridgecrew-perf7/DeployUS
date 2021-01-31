@@ -1,7 +1,19 @@
 # EQ02
 
 Auteur: Shawn Vosburg  
-Travail Réalisé: Les commandes **init, add, commit, checkout**
+Travail Réalisé: Les commandes **init, add, commit, checkout**  
+
+# Pour rouler les test
+```
+cd gitus
+mkdir build
+cd build
+cmake ..
+make
+cd tests
+./gittests
+```
+Le terminal doit absolument être au niveau de gitus/<build folder>/tests/ car il y a des fichiers relatifs qui sont utilisés.   
 
 # Format d'un ficher objet representant un ficher 
 ```
