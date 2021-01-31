@@ -8,72 +8,76 @@
 
 namespace fs = boost::filesystem;
 
-AddCommand::AddCommand(int argc, char* argv[])
+//Sends usage message to stdout. Always returns 0;
+int AddCommand::help() 
 {
-    numArgs = argc;
-    args = argv;
+    std::cout << "usage: gitus add <pathspec>\n";
+    return 0;
 }
 
-AddCommand::~AddCommand()
-{
-}
+//Adds file to the object folder.
+//Updates index file.
+//Returns:  non-zero if an error occured
+//          zero otherwise
+int AddCommand::execute(int argc, char* argv[]) {
+    //1. Verify if help is needed
+    if(argc > 2)
+    {
+        string option = argv[2];
+        if(option.compare(Common::HELP_PARAM) == 0)
+            return help();
+    }
 
-int AddCommand::execute() {
-    //1. Verify that a git folder has been initiated
+    //2. Verify that a git folder has been initiated
     if (!fs::exists(GitFilesystem::getDotGitPath()) || !fs::is_directory(GitFilesystem::getDotGitPath()))
     {
         std::cout << "Error: No git repository has been found.\n";
         return 1;
     }
     
-    //2. Verify that there is one file to be added.
-    if (numArgs < 3)
+    //3. Verify that there is one file to be added.
+    if (argc < 3)
     {
         std::cout << "Error: no filepath specified.\n";
         return 1;
     }
-    else if (numArgs > 3)
+    else if (argc > 3)
     {
-        std::cout << "Warning, only adding first file specified.\n";
+        std::cout << "Warning: only adding first file specified.\n";
     }
 
-    //3. Verify that the file specified exists
-    auto fileNameToAdd = args[2]; 
-    if (!fs::is_regular_file(fileNameToAdd)) 
+    //4. Verify that the file specified exists
+    string argument = argv[2]; 
+    if (!fs::is_regular_file(argument))           
     {
-        std::cout << "Error: File does not exists.\n";
+        std::cout << "Error: File is not a regular file.\n";
         return 1;
     }
 
-    //4. Create GitBlob object
-    GitBlob* gitblob = new GitBlob(fileNameToAdd);
+    //5. Create GitBlob object
+    GitBlob gitblob(argument);
 
-    //Verify that the file can be added
-    if( gitblob->isinIndex())
+    //6. Verify that the file can be added
+    if(gitblob.isinIndex())
     {
         std::cout << "Error: File is already staged.\n";
         return 1;
     }
-    if(gitblob->isTracked())
+    if(gitblob.isTracked())
     {
         std::cout << "Error: File is already being tracked\n";
         return 1;
     }
 
-    //5. Add blob file in object directory
-    gitblob->addInObjects();
+    //7. Add blob file in object directory
+    gitblob.addInObjects();
 
-    //6. Add reference to blob file in the index file.
-    if (gitblob->addInIndex())
+    //8. Add reference to blob file in the index file.
+    if (gitblob.addInIndex())
     {
         std::cout << "Error: File could not be added in Index file.\n";
         return 1;
     }
-    
 
     return 0;
-}
-
-void AddCommand::help() {
-    std::cout << "usage: gitus add <pathspec>\n";
 }

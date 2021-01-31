@@ -6,555 +6,404 @@
 #include "catch.hpp"
 #include "unittests.hpp"
 #include <common.hpp>
-#include <argParser.h>
+#include <start.hpp>
 #include <filesystem/GitFilesystem.hpp>
 #include <filesystem/GitIndexFile.hpp>
-#include <commands/BaseCommand.hpp>
-#include <commands/HelpCommand.hpp>
-#include <commands/InitCommand.hpp>
-#include <commands/AddCommand.hpp>
-#include <commands/CommitCommand.hpp>
-#include <commands/CheckoutCommand.hpp>
 #include <objects/GitCommit.hpp>
-#include <objects/GitBlob.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
 #include <iostream>
 #include <string>
 
 namespace fs = boost::filesystem;
-using namespace std;
+using namespace GitUSTest;
 
-#define TESTFILE_NUMBERS_TXT  			"testfolder1/numbers.txt"
-#define TESTFILE_NUMBERS_2_TXT  		"testfolder1/numbers2.txt"
-#define TESTFILE_LETTERS_TXT  			"testfolder1/letters.txt"
-#define TESTFILE_A_TXT        			"testfolder1/testfolder2/a.txt"
-#define TESTFILE_B_TXT        			"testfolder1/testfolder2/b.txt"
-#define TESTFILE_NONEXISTANT_TXT        "testfolder1/testfolder2/nonexistant.txt"
+const fs::path TESTFILE_NUMBERS_TXT = "testfolder1/numbers.txt";
+const fs::path TESTFILE_NUMBERS_2_TXT = "testfolder1/numbers2.txt";
+const fs::path TESTFILE_LETTERS_TXT  = "testfolder1/letters.txt";
+const fs::path TESTFILE_A_TXT  = "testfolder1/testfolder2/a.txt";
+const fs::path TESTFILE_B_TXT  = "testfolder1/testfolder2/b.txt";
+const fs::path TESTFILE_NONEXISTANT_TXT = "testfolder1/testfolder2/nonexistant.txt";
+
+const string msg1 = "The Message";
+const string author1 = "The Author";
+const string msg2 = "The Second Message";
+const string author2 = "The Second Author";
 
 
 TEST_CASE("Help_Messages") 
 {
-	char* argv[3] = {program_invocation_name, strdup("init"), strdup("--help")};
+	setup();
+
 	int argc = 3;
+	int commandIdx = 1;
+	int optionIdx = 2;
+	char* argv[argc] = {program_invocation_name, strdup("--help"), strdup("")};
 
-	//Catching cout output to see if messages are working
-	int buffSize = 300;
-	stringstream stream;
-	char* buffer = new char[buffSize]();
-	// Saving cout's buffer
-	streambuf *sbuf = cout.rdbuf();
-	// Redirect cout to our stringstream buffer or any other ostream
-	cout.rdbuf(stream.rdbuf());
+	//Base Help
+	REQUIRE(GitUS::GitUSStart(argc,argv) == 0);
 
-	//1. TESTING BASECOMMAND HELP (from ./gitus --help or ./gitus)
-	HelpCommand* helpcmd = new HelpCommand(new BaseCommand());
-	helpcmd->execute();
-	stream.read(buffer, buffSize);
-	stream.clear();
-	const char* expected =   "usage: gitus <command> [<args>]\n"
-                "These are common gitus commands used in various situations:\n"
-                "init Create an empty Git repository or reinitialize an existing one\n"
-                "add Add file contents to the index\n"
-                "commit Record changes to the repository\n";
-	REQUIRE( strcmp(expected, buffer) == 0);
+	//Init Help
+	argv[commandIdx] = strdup("init");
+	argv[optionIdx] = strdup("--help");
+	REQUIRE(GitUS::GitUSStart(argc,argv) == 0);
+
+	//Add Help
+	argv[commandIdx] = strdup("add");
+	REQUIRE(GitUS::GitUSStart(argc,argv) == 0);
 	
+	//Commit Help
+	argv[commandIdx] = strdup("commit");
+	REQUIRE(GitUS::GitUSStart(argc,argv) == 0);
 
-	//2. TESTING INITCOMMAND HELP (from ./gitus init --help)
-	for(int i = 0; i < buffSize; i++) buffer[i] = '\0'; //clearing buffer
-	InitCommand* initcmd = new InitCommand(argc,argv);
-	helpcmd = new HelpCommand(initcmd);
-	helpcmd->execute();
-	stream.read(buffer, buffSize);
-	stream.clear();
-	expected = "usage: gitus init\n";
-	REQUIRE( strcmp(expected, buffer) == 0);
+	//Checkout Help
+	argv[commandIdx] = strdup("checkout");
+	REQUIRE(GitUS::GitUSStart(argc,argv) == 0);
 
-	//3. TESTING ADDCOMMAND HELP (from ./gitus add --help)
-	for(int i = 0; i < buffSize; i++) buffer[i] = '\0'; //clearing buffer
-	AddCommand* addcmd = new AddCommand(argc,argv);
-	helpcmd = new HelpCommand(addcmd);
-	helpcmd->execute();
-	stream.read(buffer, buffSize);
-	stream.clear();
-	expected = "usage: gitus add <pathspec>\n";
-	REQUIRE( strcmp(expected, buffer) == 0);
-
-	//4. TESTING COMMMITCOMMAND HELP (from ./gitus commit --help)
-	for(int i = 0; i < buffSize; i++) buffer[i] = '\0'; //clearing buffer
-	CommitCommand* commitcmd = new CommitCommand(argc,argv);
-	helpcmd = new HelpCommand(commitcmd);
-	helpcmd->execute();
-	stream.read(buffer, buffSize);
-	stream.clear();
-	expected = "usage: gitus commit <msg> <author>\n";
-	REQUIRE( strcmp(expected, buffer) == 0);
-
-	//4. TESTING COMMMITCOMMAND HELP (from ./gitus commit --help)
-	for(int i = 0; i < buffSize; i++) buffer[i] = '\0'; //clearing buffer
-	CheckoutCommand* checkoutcmd = new CheckoutCommand(argc,argv);
-	helpcmd = new HelpCommand(checkoutcmd);
-	helpcmd->execute();
-	stream.read(buffer, buffSize);
-	stream.clear();
-	expected = "usage: gitus checkout <commitID>\n";
-	REQUIRE( strcmp(expected, buffer) == 0);
-
-
-	// Redirecting cout to its saved buffer
-	cout.rdbuf(sbuf);
+    teardown();
 }
 
 TEST_CASE("Init_Command") 
 {
-	//Disabling cout
-	cout.setstate(ios_base::failbit);
+    setup();
 
-	//Removing .git folder
-	fs::remove_all(".git");
-
+    int argc = 2;
 	char* argv[2] = {program_invocation_name, strdup("init")};
-	int argc = 2;
-	
-	//Path to needed files/folders
-    const fs::path gitDirectory(".git");
-    const fs::path objectsDirectory = fs::path(".git").append("objects");
-    const fs::path indexDirectory = fs::path(".git").append("index");
-    const fs::path headDirectory = fs::path(".git").append("HEAD");
-
-	//Delete .git folder if it exists
-	if(fs::exists(".git")) fs::remove_all(".git");
 
 	//Init the .git folder
-	BaseCommand* cmd = parse_args(argc,argv);
-	cmd->execute();
+	REQUIRE(GitUS::GitUSStart(argc,argv) == 0);
 
 	//Assertions that proper files/folders exists
-	REQUIRE(fs::is_directory(gitDirectory));
-	REQUIRE(fs::is_directory(objectsDirectory));
-	REQUIRE(fs::is_regular_file(indexDirectory));
-	REQUIRE(fs::is_regular_file(headDirectory));
+	REQUIRE(fs::is_directory(GitFilesystem::getDotGitPath()));
+	REQUIRE(fs::is_directory(GitFilesystem::getObjectsPath()));
+	REQUIRE(fs::is_regular_file(GitFilesystem::getIndexPath()));
+	REQUIRE(fs::is_regular_file(GitFilesystem::getHEADPath()));
 
 	//Testing message that .git folder already exists
-	InitCommand* initcmd = new InitCommand(argc,argv);
-	REQUIRE(initcmd->execute() != 0) ;
+	REQUIRE(GitUS::GitUSStart(argc,argv) != 0);
 
-	//Removing .git folder
-	fs::remove_all(".git");
-
-	//Reenabling cout
-	cout.clear();
-
+    teardown();
 }
 
 TEST_CASE("Add_Command_Failing")
 {
-	//Removing .git folder
-	fs::remove_all(".git");
-	fs::remove_all(TESTFILE_B_TXT); //Removing B file
+	setup();
 
-	//Disabling cout
-	cout.setstate(ios_base::failbit);
-
-	/*Test1: Add letters.txt for the first time. Fail because no .git folder*/
-	string letterspath(TESTFILE_LETTERS_TXT);
-	char* argvLetters[3] = {program_invocation_name, strdup("add"), strdup(letterspath.c_str())};
-	int argcLetters= 3;
-	BaseCommand* addcmd = parse_args(argcLetters,argvLetters);
-	REQUIRE(addcmd->execute() != 0); //Error: not .git folder
-
-	//create .git folder	
-	char* argv[2] = {program_invocation_name, strdup("init")};
-	int argc = 2;
-
-	//Testing message that .git folder already exists
-	InitCommand* initcmd = new InitCommand(argc,argv);
-	initcmd->execute() == 0;
-
-	/*=======================*/
-	/*Add letters.txt for the first time */
-	addcmd->execute();
-
-	/*=======================*/
-	/*Add numbers.txt for the first time */
-	string numberspath(TESTFILE_NUMBERS_TXT);
-	char* argvNumber[3] = {program_invocation_name, strdup("add"), strdup(numberspath.c_str())};
-	int argcNumber= 3;
-	BaseCommand* addcmd2 = parse_args(argcNumber,argvNumber);
-	addcmd2->execute();
-
-	/*Add numbers2.txt for the first time. Same content as numbers.txt */
-	char* argvNumber2[3] = {program_invocation_name, strdup("add"), strdup(TESTFILE_NUMBERS_2_TXT)};
-	argcNumber= 3;
-	BaseCommand* addcmd2_numbers2 = parse_args(argcNumber,argvNumber2);
-	addcmd2_numbers2->execute();
-
-	/*Test1. Add B.txt, modify file and add again, there should only be one reference of B in index file*/
-	execSystemCommand(string("echo qwety > ") + TESTFILE_B_TXT);
-	char* argvB[3] = {program_invocation_name, strdup("add"), strdup(TESTFILE_B_TXT)};
-	argcNumber= 3;
-	BaseCommand* addcmdB= parse_args(argcNumber,argvB);
-	addcmdB->execute();
-	REQUIRE(addcmdB->execute() != 0); //Should fail as file already inside index
-
+    /*======================*/
+	//Test setup: Remove reference of b.txt
+	REQUIRE(Common::safeRemoveAll(TESTFILE_B_TXT) == 0);
 	/*======================*/
-	//Test2: Adding numbers.txt again to see it fail
-	REQUIRE(addcmd2->execute() != 0);
+
+    /*======================*/
+	/*Test: Add letters.txt for the first time. Fail because no .git folder*/
+	int argcAdd = 3;
+	char* argvAdd[argcAdd] = {program_invocation_name, strdup("add"), strdup(TESTFILE_LETTERS_TXT.c_str())};
+	REQUIRE(GitUS::GitUSStart(argcAdd,argvAdd) != 0); //Should fail as .git not initiated
+    /*======================*/
+
+	//create .git folder
+	int argcInit = 2;	
+	char* argvInit[2] = {program_invocation_name, strdup("init")};
+	REQUIRE(GitUS::GitUSStart(argcInit,argvInit) == 0);
+	
+	/*Add letters.txt for the first time */
+	GitUS::GitUSStart(argcAdd,argvAdd);
+
+
+    /*======================*/
+	/*Test:Add letters.txt for the second time. Should fail as already staged. */
+	REQUIRE(GitUS::GitUSStart(argcAdd,argvAdd) != 0);
+	/*======================*/
+	
+	/*======================*/
+	/*Test: Commit files, and try to add file again. Should fail as file is already tracked and no changes has been made*/
+	int argcCommit = 4;
+	char* argvCommit[] = {program_invocation_name, strdup("commit"), strdup("The Message"), strdup("The Author")};
+	REQUIRE(GitUS::GitUSStart(argcCommit,argvCommit) == 0);
+	REQUIRE(GitUS::GitUSStart(argcAdd,argvAdd) != 0);
+	/*======================*/
+
+	 /*======================*/
+	/*Test: Adding a folder, not a file*/
+	argvAdd[argcAdd - 1] = strdup(TESTFILE_LETTERS_TXT.parent_path().c_str()); 
+	REQUIRE(GitUS::GitUSStart(argcAdd,argvAdd) != 0); //Should fail, not a regular file
 	/*======================*/
 
 	/*======================*/
 	//Test3: Adding a non existant file to see it fail
-	string nonexistantpath(TESTFILE_NONEXISTANT_TXT);
-	char* argvnonexistant[3] = {program_invocation_name, strdup("add"), strdup(nonexistantpath.c_str())};
-	int argcnonexistant= 3;
-	AddCommand* addcmd3 = new AddCommand(argcnonexistant,argvnonexistant);
-	REQUIRE(addcmd3->execute() != 0);
+	argvAdd[argcAdd - 1] = strdup(TESTFILE_NONEXISTANT_TXT.c_str()); 
+	REQUIRE(GitUS::GitUSStart(argcAdd,argvAdd) != 0); //Should fail as file does not exists
 	/*======================*/
 
 	//Test4: fail when not specifying a file
-	char* argvnofile[2] = {program_invocation_name, strdup("add")};
 	int argcnofile= 2;
-	AddCommand* addcmd4 = new AddCommand(argcnofile,argvnofile);
-	REQUIRE(addcmd4->execute() != 0);
+	char* argvnofile[argcnofile] = {program_invocation_name, strdup("add")};
+	REQUIRE(GitUS::GitUSStart(argcnofile,argvnofile) != 0); //Should fail as no file specified
 	/*======================*/
 
-	//Removing .git folder
-	fs::remove_all(".git");
-	fs::remove_all(TESTFILE_B_TXT); //Removing B file
-
-	//Last test: fail when no .git folder
-	REQUIRE(addcmd3->execute() != 0);
-	/*======================*/
-
-
-	// Redirecting cout to its saved buffer
-	cout.clear();
-
+    //General Teardown
+    REQUIRE(Common::safeRemoveAll(TESTFILE_B_TXT) == 0);
+	teardown();
 
 }
 
 TEST_CASE("Add_Command_Success") 
 {
-	//Removing .git folder
-	fs::remove_all(".git");
-	fs::remove_all(TESTFILE_B_TXT); //Removing B file
+	//General Setup
+	setup();
+	REQUIRE(Common::safeRemoveAll(TESTFILE_B_TXT) == 0); //Removing B file
 
-	//Disabling cout
-	cout.setstate(ios_base::failbit);
-
-	/*Test1: Add letters.txt for the first time. Fail because no .git folder*/
-	string letterspath(TESTFILE_LETTERS_TXT);
-	char* argvLetters[3] = {program_invocation_name, strdup("add"), strdup(letterspath.c_str())};
-	int argcLetters= 3;
-	BaseCommand* addcmd = parse_args(argcLetters,argvLetters);
-	REQUIRE(addcmd->execute() != 0); //Error: not .git folder
-
-	//create .git folder	
-	char* argv[2] = {program_invocation_name, strdup("init")};
-	int argc = 2;
-	InitCommand* initcmd = new InitCommand(argc,argv);
-	REQUIRE(initcmd->execute() == 0 );
+	//create .git folder
+	int argcInit = 2;	
+	char* argvInit[2] = {program_invocation_name, strdup("init")};
+	REQUIRE(GitUS::GitUSStart(argcInit,argvInit) == 0);
 
 	/*=======================*/
-	/*Test1: Add letters.txt for the first time */
-	string lettersSHA1 = testSuccessfulAddFile(letterspath);
+	/*Test: Add letters.txt for the first time */
+	string lettersSHA1 = testSuccessfulAddFile(TESTFILE_LETTERS_TXT);
+	REQUIRE(Common::isValidSHA1(lettersSHA1));
 
-	//The file must be referenced at the first line of the Index file.
-	string indexContents = Common::readFile(GitFilesystem::getIndexPath().c_str());
-	int offset = 0;
-	int sepPos = indexContents.find('\0',offset);
-	string lettersFilenameIndex = indexContents.substr(offset,sepPos-offset);
-	REQUIRE(lettersFilenameIndex.compare(letterspath) == 0); 	//Testing file name
-	int newlinePos = indexContents.find('\n',offset);
-	string lettersSHA1Index = indexContents.substr(sepPos+1,newlinePos - sepPos-1);
-	REQUIRE(lettersSHA1Index.compare(lettersSHA1) == 0);		//Testing sha1
-	REQUIRE(lettersSHA1Index.size() == 40);						//Testing sha1 size
+	//The file must be referenced in index file
+	GitIndexFile indexfile = GitIndexFile();
+	testFileInIndexFile(indexfile, TESTFILE_LETTERS_TXT);
 	/*======================*/
-
 
 	/*=======================*/
-	/*Test2: Add numbers.txt for the first time */
-	string numberspath(TESTFILE_NUMBERS_TXT);
-	string numbersSHA1 = testSuccessfulAddFile(numberspath);
+	/*Test: Add numbers.txt for the first time */
+	string numbersSHA1 = testSuccessfulAddFile(TESTFILE_NUMBERS_TXT);
 
-	//The file must be referenced at the first line of the Index file.
-	indexContents = Common::readFile(GitFilesystem::getIndexPath().c_str());
-	offset = indexContents.find('\n');
-	sepPos = indexContents.find('\0',offset);
-	string numbersFilenameIndex = indexContents.substr(offset+1,sepPos-offset-1);
-	REQUIRE(numbersFilenameIndex.compare(numberspath) == 0); 	//Testing file name
-	newlinePos = indexContents.find('\n',offset+1);
-	string numbersSHA1Index = indexContents.substr(sepPos+1,newlinePos - sepPos-1);
-	REQUIRE(numbersSHA1Index.compare(numbersSHA1) == 0);		//Testing sha1
-	REQUIRE(numbersSHA1Index.size() == 40);						//Testing sha1 size
+	//The file must be referenced in index file. Letters.txt should still be in index file
+	indexfile = GitIndexFile();
+	testFileInIndexFile(indexfile, TESTFILE_LETTERS_TXT);
+	testFileInIndexFile(indexfile, TESTFILE_NUMBERS_TXT);
 	/*======================*/
 
 	/*======================*/
-	/*Test2.1: Add numbers2.txt for the first time. Same content as numbers.txt */
-	string numbers2path(TESTFILE_NUMBERS_2_TXT);
-	string numbers2SHA1 = testSuccessfulAddFile(numbers2path);
+	/*Test: Add numbers2.txt for the first time. Same content as numbers.txt */
+	string numbers2SHA1 = testSuccessfulAddFile(TESTFILE_NUMBERS_2_TXT);
 
-	/*Test2.2: Both numbers.txt and numbers2.txt should have the same sha1 hash*/
+	/*Test: Both numbers.txt and numbers2.txt should have the same sha1 hash*/
 	REQUIRE(numbersSHA1.compare(numbers2SHA1) == 0);
 
+	//The file must be referenced in index file. Letters.txt and Numbers.txt should still be in index file
+	indexfile = GitIndexFile();
+	testFileInIndexFile(indexfile, TESTFILE_LETTERS_TXT);
+	testFileInIndexFile(indexfile, TESTFILE_NUMBERS_TXT);
+	testFileInIndexFile(indexfile, TESTFILE_NUMBERS_2_TXT);
+
 
 	/*======================*/
-	/*Test2.3: Add B.txt, modify file and add again, there should only be one reference of B in index file*/
-	execSystemCommand(string("echo qwety > ") + TESTFILE_B_TXT);
-	char* argvB[3] = {program_invocation_name, strdup("add"), strdup(TESTFILE_B_TXT)};
-	int argcNumber= 3;
-	BaseCommand* addcmdB= parse_args(argcNumber,argvB);
-	REQUIRE(addcmdB->execute() == 0);
+	/*Test: Add B.txt, modify file and add again, there should only be one reference of B in index file*/
+	REQUIRE(!fs::exists(TESTFILE_B_TXT));
+	execSystemCommand(string("echo qwety > ") + TESTFILE_B_TXT.string());
+	REQUIRE(fs::exists(TESTFILE_B_TXT));
+	testSuccessfulAddFile(TESTFILE_B_TXT);
 
-	GitIndexFile indexFile = GitIndexFile();
-	REQUIRE(indexFile.count(string(TESTFILE_B_TXT)) == 1);
+	execSystemCommand(string("echo \"qwety for the second time \"> ") + TESTFILE_B_TXT.string());
+	REQUIRE(fs::exists(TESTFILE_B_TXT));
+	testSuccessfulAddFile(TESTFILE_B_TXT);
 
-	execSystemCommand(string("echo asdfghjkl; > ") + TESTFILE_B_TXT);
-	REQUIRE(addcmdB->execute() == 0); //Should pass as B.txt is replaced in index file
+    indexfile = GitIndexFile();
+	testFileInIndexFile(indexfile, TESTFILE_LETTERS_TXT);
+	testFileInIndexFile(indexfile, TESTFILE_NUMBERS_TXT);
+	testFileInIndexFile(indexfile, TESTFILE_NUMBERS_2_TXT);
+	testFileInIndexFile(indexfile, TESTFILE_B_TXT);
+	/*======================*/
 
-	indexFile = GitIndexFile();
-	REQUIRE(indexFile.count(string(TESTFILE_B_TXT)) == 1);
-
-	//Removing .git folder
-	fs::remove_all(".git");
-	fs::remove_all(TESTFILE_B_TXT); //Removing B file
-
-
-	// Redirecting cout to its saved buffer
-	cout.clear();
-
+	//General Teardown
+    REQUIRE(Common::safeRemoveAll(TESTFILE_B_TXT) == 0);
+	teardown();
 }
 
 TEST_CASE("Commit_Command")
 {
-	//Disabling cout
-	cout.setstate(ios_base::failbit);
+	//General Setup
+	setup();
 
-	//Removing .git folder
-	fs::remove_all(".git");
+	//Commit failing for wrong number of args
+	int argcCommitWrongArgs = 5;
+	char* argvcommitWrongArgs[argcCommitWrongArgs] = {program_invocation_name, strdup("commit"), strdup(msg1.c_str()),strdup(author1.c_str()), strdup("WrongArgs")};
+	REQUIRE(GitUS::GitUSStart(argcCommitWrongArgs,argvcommitWrongArgs) != 0);
+
+	int argcCommitWrongArgs2 = 3;
+	char* argvcommitWrongArgs2[argcCommitWrongArgs] = {program_invocation_name, strdup("commit"), strdup(msg1.c_str())};
+	REQUIRE(GitUS::GitUSStart(argcCommitWrongArgs2,argvcommitWrongArgs2) != 0);
 
 	//Commit Failing because not .git folder
-	int argc = 4;
-	char* argvcommit[argc] = {program_invocation_name, strdup("commit"), strdup("The Message"),strdup("The Author")};
-	BaseCommand* cmd = new CommitCommand(argc,argvcommit);
-	REQUIRE(cmd->execute() == 1); // Error
+	int argcCommit = 4;
+	char* argvcommit[argcCommit] = {program_invocation_name, strdup("commit"), strdup(msg1.c_str()),strdup(author1.c_str())};
+	REQUIRE(GitUS::GitUSStart(argcCommit,argvcommit) != 0);
 
-	//Init
-	argc = 2;
-	char* argv[argc] = {program_invocation_name, strdup("init")};
-	cmd = new InitCommand(argc,argv); 
-	REQUIRE(cmd->execute() == 0);
+	//create .git folder
+	int argcInit = 2;	
+	char* argvInit[2] = {program_invocation_name, strdup("init")};
+	REQUIRE(GitUS::GitUSStart(argcInit,argvInit) == 0);
 
 	//Commit Failing because of no staged files
-	argc = 4;
-	cmd = new CommitCommand(argc,argvcommit);
-	REQUIRE(cmd->execute() == 1); // Error
+	REQUIRE(GitUS::GitUSStart(argcCommit,argvcommit) != 0);
 
-	//Add test files
-	argc = 3;
-	char* argvadd[argc] = {program_invocation_name, strdup("add"), strdup(TESTFILE_LETTERS_TXT)};
-	cmd = new AddCommand(argc,argvadd); 
-	REQUIRE(cmd->execute() == 0);
-	argvadd[2] = strdup(TESTFILE_A_TXT);
-	cmd = new AddCommand(argc,argvadd); 
-	REQUIRE(cmd->execute() == 0);
+	/*=======================*/
+	/*Test: Add letters.txt for the first time */
+	string lettersSHA1 = testSuccessfulAddFile(TESTFILE_LETTERS_TXT);
 
+	//The file must be referenced in index file
+	GitIndexFile indexfile = GitIndexFile();
+	testFileInIndexFile(indexfile, TESTFILE_LETTERS_TXT);
+	/*======================*/
+	/*======================*/
 	//Commit Files
-	argc = 4;
-	argvcommit[2] = strdup("The Message");
-	argvcommit[3] = strdup("The Author");
-	cmd = new CommitCommand(argc,argvcommit);
-	REQUIRE(cmd->execute() == 0);
-
-	//1. Verify empty index file
-	REQUIRE(Common::readFile(".git/index").size() == 0); 	
-
-	//2. HEAD contains SHA of commit
-	string commitSHA1 = Common::readFile(GitFilesystem::getHEADPath().c_str());
-	REQUIRE(commitSHA1.size() == 40);  
-
+	REQUIRE(GitUS::GitUSStart(argcCommit,argvcommit) == 0); //Successful since a file is staged
+	/*======================*/
+	// Verify empty index file
+	indexfile = GitIndexFile();
+	REQUIRE(indexfile.size() == 0);
+	/*======================*/
+	/*======================*/
+	// HEAD contains SHA of commit
+	string commitSHA1 = Common::readFile(GitFilesystem::getHEADPath());
+	REQUIRE(Common::isValidSHA1(commitSHA1));  
+	/*======================*/
+	/*======================*/
 	//3. Verify Commit
 	GitCommit* commitobj1 = GitCommit::createFromGitObject(commitSHA1);
-	REQUIRE(commitobj1->getSHA1Hash().size() == 40);
+	REQUIRE(Common::isValidSHA1(commitobj1->getSHA1Hash()));  
 	REQUIRE(commitobj1->getSHA1Hash().compare(commitSHA1) == 0);
-	REQUIRE(commitobj1->getMsg().compare("The Message") == 0);
-	REQUIRE(commitobj1->getAuthor().compare("The Author") == 0);
+	REQUIRE(commitobj1->getMsg().compare(msg1) == 0);
+	REQUIRE(commitobj1->getAuthor().compare(author1) == 0);
 	REQUIRE(commitobj1->getCommitTime().size() > 0);
-	REQUIRE(commitobj1->getParentSHA().size() == 0);
-
-
-	//Adding a third file
-	argc = 3;
-	argvadd[2] = strdup(TESTFILE_NUMBERS_TXT);
-	cmd = new AddCommand(argc,argvadd); 
-	REQUIRE(cmd->execute() == 0);
+	REQUIRE(commitobj1->getParentSHA().size() == 0); //No parent as initial commit
+	/*======================*/
+	/*======================*/
+	//Adding a second file
+	string numbersSHA1 = testSuccessfulAddFile(TESTFILE_NUMBERS_TXT);
 
 	//Committing new file
-	argc = 4;
-	argvcommit[2] = strdup("The Second Message");
-	argvcommit[3] = strdup("The Second Author");
-	cmd = new CommitCommand(argc,argvcommit);
-	REQUIRE(cmd->execute() == 0);
+	int argcCommit2 = 4;
+	char* argvCommit2[argcCommit2] = {program_invocation_name, strdup("commit"), strdup(msg2.c_str()),strdup(author2.c_str())};
+	REQUIRE(GitUS::GitUSStart(argcCommit2,argvCommit2) == 0);
 
 	//4. Verify empty index file
-	REQUIRE(Common::readFile(GitFilesystem::getIndexPath().c_str()).size() == 0); 	
+	indexfile = GitIndexFile();
+	REQUIRE(indexfile.size() == 0);
 
 	//5. HEAD contains SHA of commit
-	string commitSHA2 = Common::readFile(GitFilesystem::getHEADPath().c_str());
-	REQUIRE(commitSHA2.size() == 40);  
+	string commitSHA2 = Common::readFile(GitFilesystem::getHEADPath());
+	REQUIRE(Common::isValidSHA1(commitSHA2));
 	
-	//6. Verify Commit
+	// //6. Verify Commit
 	GitCommit* commitobj2 = GitCommit::createFromGitObject(commitSHA2);
-	REQUIRE(commitobj2->getSHA1Hash().size() == 40);
+	REQUIRE(Common::isValidSHA1(commitobj2->getSHA1Hash()));
 	REQUIRE(commitobj2->getSHA1Hash().compare(commitSHA2) == 0);
-	REQUIRE(commitobj2->getMsg().compare("The Second Message") == 0);
-	REQUIRE(commitobj2->getAuthor().compare("The Second Author") == 0);
+	REQUIRE(commitobj2->getMsg().compare(msg2) == 0);
+	REQUIRE(commitobj2->getAuthor().compare(author2) == 0);
 	REQUIRE(commitobj2->getCommitTime().size() > 0);
+	REQUIRE(Common::isValidSHA1(commitobj2->getParentSHA()));
 	REQUIRE(commitobj2->getParentSHA().compare(commitSHA1) == 0);
 
 	//Commit Failing because of no staged files
-	argc = 4;
-	cmd = new CommitCommand(argc,argvcommit);
-	REQUIRE(cmd->execute() != 0); // Error
+	REQUIRE(GitUS::GitUSStart(argcCommit2,argvCommit2) != 0);
 
-	//Removing .git folder
-	fs::remove_all(".git");
-
-	//Reenabling cout
-	cout.clear();
+	//General Teardown
+	teardown();
 	
 }
 
 TEST_CASE("Checkout_Command")
 {
-	int argc;
-	BaseCommand* cmd;
+	//General setup
+	setup();
 
-	//Disabling cout
-	cout.setstate(ios_base::failbit);
+	//Should fail as no .git folder and SHA1 of not a commit object
+	int argcCheckout = 3;
+	char* argvCheckout[argcCheckout] = {program_invocation_name, strdup("checkout"), strdup(Common::generateSHA1(string("Something")).c_str())};
+	REQUIRE(GitUS::GitUSStart(argcCheckout,argvCheckout) != 0);
 
-	//Removing .git folder
-	fs::remove_all(".git");
+	//create .git folder
+	int argcInit = 2;	
+	char* argvInit[2] = {program_invocation_name, strdup("init")};
+	REQUIRE(GitUS::GitUSStart(argcInit,argvInit) == 0);
 
-	//Try Checking out with .git folder not initiated
-	argc = 3;
-	char* argvCheckout[argc] = {program_invocation_name, strdup("checkout"), strdup(Common::generateSHA1(string("Something")).c_str())};
-	cmd = new CheckoutCommand(argc,argvCheckout);
-	REQUIRE(cmd->execute() != 0);
-
-	//Init
-	argc = 2;
-	char* argv[argc] = {program_invocation_name, strdup("init")};
-	cmd = new InitCommand(argc,argv); 
-	REQUIRE(cmd->execute() == 0);
-
-	//Try Checking out with HEAD file empty
-	argc = 3;
-	argvCheckout[argc-1] = strdup(string("Something").c_str());
-	cmd = new CheckoutCommand(argc,argvCheckout);
-	REQUIRE(cmd->execute() != 0);
+	//Should fail as HEAD empty and No SHA1 of commit
+	REQUIRE(GitUS::GitUSStart(argcCheckout,argvCheckout) != 0);
 
 	//Add and commit file 1
-	argc = 3;
-	char* argvadd[argc] = {program_invocation_name, strdup("add"), strdup(TESTFILE_LETTERS_TXT)};
-	cmd = new AddCommand(argc,argvadd); 
-	REQUIRE(cmd->execute() == 0);
-	argc = 4;
-	char* argvcommit[argc] = {program_invocation_name, strdup("commit"), strdup("The Message"),strdup("The Author")};
-	cmd = new CommitCommand(argc,argvcommit);
-	REQUIRE(cmd->execute() == 0);
+	string lettersSHA1 = testSuccessfulAddFile(TESTFILE_LETTERS_TXT);
+	int argcCommit = 4;
+	char* argvCommit[argcCommit] = {program_invocation_name, strdup("commit"), strdup(msg1.c_str()), strdup(author1.c_str())};
+	REQUIRE(GitUS::GitUSStart(argcCommit,argvCommit) == 0);
 	string shaCommit1 = Common::readFile(GitFilesystem::getHEADPath());
 
 	//Add and commit file 2
-	argc = 3;
-	argvadd[2] = strdup(TESTFILE_A_TXT);
-	cmd = new AddCommand(argc,argvadd); 
-	REQUIRE(cmd->execute() == 0);
-	argc = 4;
-	cmd = new CommitCommand(argc,argvcommit);
-	REQUIRE(cmd->execute() == 0);
+	string aSHA1 = testSuccessfulAddFile(TESTFILE_A_TXT);
+	argvCommit[argcCommit - 2] = strdup(msg2.c_str());
+	argvCommit[argcCommit - 1] = strdup(author2.c_str());
+	REQUIRE(GitUS::GitUSStart(argcCommit,argvCommit) == 0);
 	string shaCommit2 = Common::readFile(GitFilesystem::getHEADPath());
 
 	//Checkout the first commit
-	argc = 3;
-	argvCheckout[argc-1] = strdup(shaCommit1.c_str());
-	cmd = new CheckoutCommand(argc,argvCheckout);
-	REQUIRE(cmd->execute() == 0);
+	argcCheckout = 3;
+	argvCheckout[argcCheckout-1] = strdup(shaCommit1.c_str());
+	REQUIRE(GitUS::GitUSStart(argcCheckout,argvCheckout) == 0);
 
 	//Verify that the checkout worked
 	REQUIRE(fs::exists(GitFilesystem::getTOPCOMMITPath()));
-	REQUIRE(Common::readFile(GitFilesystem::getTOPCOMMITPath()).size() == 40);
+	string topCommit = Common::readFile(GitFilesystem::getTOPCOMMITPath());
+	REQUIRE(Common::isValidSHA1(topCommit));
 	REQUIRE(Common::readFile(GitFilesystem::getHEADPath()).compare(shaCommit1) == 0);
 	REQUIRE(fs::exists(TESTFILE_LETTERS_TXT));
 	REQUIRE(fs::exists(TESTFILE_NUMBERS_TXT)); //Untracked for now
 	REQUIRE(!fs::exists(TESTFILE_A_TXT));
 
 	//Add and try to commit file 3 but fail
-	argvadd[2] = strdup(TESTFILE_NUMBERS_TXT);
-	cmd = new AddCommand(argc,argvadd); 
-	REQUIRE(cmd->execute() == 0);
-	argc = 4;
-	cmd = new CommitCommand(argc,argvcommit);
-	REQUIRE(cmd->execute() != 0); //Error
+	string numbersSHA1 = testSuccessfulAddFile(TESTFILE_NUMBERS_TXT);
+	REQUIRE(GitUS::GitUSStart(argcCommit,argvCommit) != 0);
 	REQUIRE(Common::readFile(GitFilesystem::getIndexPath()).size() != 0); //Index is not emptied
 
 	//Checkout the top commit
-	argc = 3;
-	argvCheckout[argc- 1] = strdup(shaCommit2.c_str());
-	cmd = new CheckoutCommand(argc,argvCheckout);
-	REQUIRE(cmd->execute() == 0);
+	argvCheckout[argcCheckout- 1] = strdup(shaCommit2.c_str());
+	REQUIRE(GitUS::GitUSStart(argcCheckout,argvCheckout) == 0);
 	REQUIRE(!fs::exists(GitFilesystem::getTOPCOMMITPath()));
 	REQUIRE(Common::readFile(GitFilesystem::getHEADPath()).compare(shaCommit2) == 0);
 	REQUIRE(fs::exists(TESTFILE_LETTERS_TXT));
-	REQUIRE(fs::exists(TESTFILE_NUMBERS_TXT)); //Untracked for now
+	REQUIRE(fs::exists(TESTFILE_NUMBERS_TXT)); //Not commited for now
 	REQUIRE(fs::exists(TESTFILE_A_TXT));
+	REQUIRE(Common::readFile(GitFilesystem::getIndexPath()).size() != 0); //Index is not emptied
 
 	//Commit file 3
-	argc = 4;
-	cmd = new CommitCommand(argc,argvcommit);
-	REQUIRE(cmd->execute() == 0);
+	REQUIRE(GitUS::GitUSStart(argcCommit,argvCommit) == 0);
 	string shaCommit3 = Common::readFile(GitFilesystem::getHEADPath());
 
 	//Checkout commit 1 again
-	argc = 3;
-	argvCheckout[argc-1] = strdup(shaCommit1.c_str());
-	cmd = new CheckoutCommand(argc,argvCheckout);
-	REQUIRE(cmd->execute() == 0);
+	argvCheckout[argcCheckout-1] = strdup(shaCommit1.c_str());
+	REQUIRE(GitUS::GitUSStart(argcCheckout,argvCheckout) == 0);
 	REQUIRE(fs::exists(GitFilesystem::getTOPCOMMITPath()));
-	REQUIRE(Common::readFile(GitFilesystem::getTOPCOMMITPath()).size() == 40);
+	topCommit = Common::readFile(GitFilesystem::getTOPCOMMITPath());
+	REQUIRE(Common::isValidSHA1(topCommit));
 	REQUIRE(Common::readFile(GitFilesystem::getHEADPath()).compare(shaCommit1) == 0);
 	REQUIRE(fs::exists(TESTFILE_LETTERS_TXT));
 	REQUIRE(!fs::exists(TESTFILE_NUMBERS_TXT));
 	REQUIRE(!fs::exists(TESTFILE_A_TXT));
 
 	//Checkout commit 2
-	argc = 3;
-	argvCheckout[argc-1] = strdup(shaCommit2.c_str());
-	cmd = new CheckoutCommand(argc,argvCheckout);
-	REQUIRE(cmd->execute() == 0);
+	argvCheckout[argcCheckout-1] = strdup(shaCommit2.c_str());
+	REQUIRE(GitUS::GitUSStart(argcCheckout,argvCheckout) == 0);
 	REQUIRE(fs::exists(GitFilesystem::getTOPCOMMITPath()));
-	REQUIRE(Common::readFile(GitFilesystem::getTOPCOMMITPath()).size() == 40);
+	topCommit = Common::readFile(GitFilesystem::getTOPCOMMITPath());
+	REQUIRE(Common::isValidSHA1(topCommit));
 	REQUIRE(Common::readFile(GitFilesystem::getHEADPath()).compare(shaCommit2) == 0);
 	REQUIRE(fs::exists(TESTFILE_LETTERS_TXT));
 	REQUIRE(!fs::exists(TESTFILE_NUMBERS_TXT));
 	REQUIRE(fs::exists(TESTFILE_A_TXT));
 
 	//Checkout commit 3
-	argc = 3;
-	argvCheckout[argc-1] = strdup(shaCommit3.c_str());
-	cmd = new CheckoutCommand(argc,argvCheckout);
-	REQUIRE(cmd->execute() == 0);
+	argvCheckout[argcCheckout-1] = strdup(shaCommit3.c_str());
+	REQUIRE(GitUS::GitUSStart(argcCheckout,argvCheckout) == 0);
 	REQUIRE(!fs::exists(GitFilesystem::getTOPCOMMITPath()));
 	REQUIRE(Common::readFile(GitFilesystem::getHEADPath()).compare(shaCommit3) == 0);
 	REQUIRE(fs::exists(TESTFILE_LETTERS_TXT));
 	REQUIRE(fs::exists(TESTFILE_NUMBERS_TXT));
 	REQUIRE(fs::exists(TESTFILE_A_TXT));
 
-	//Removing .git folder
-	fs::remove_all(".git");
-
-	//Reenabling cout
-	cout.clear();
-	
+	//General teardown
+	teardown();	
 }
 

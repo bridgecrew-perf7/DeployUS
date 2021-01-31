@@ -17,8 +17,6 @@ GitCommit::GitCommit(GitTree *tree, const string& author, const string& message,
     msg = message;
     commitTime = dt;
     parentCommitSHA1 = parentSHA1;
-
-    filecontents = generateContents();
 }
 
 GitCommit::~GitCommit()
@@ -28,10 +26,20 @@ GitCommit::~GitCommit()
 }
 
 GitCommit* GitCommit::createFromGitObject(const string& sha1)
-// Reads file specified by SHA1 and returns a valid GitCommit object of the commit object specified by parentCommitSHA1
+// Reads file specified by SHA1 and returns a valid GitCommit object of the commit object specified by sha1 argument
 {
-    string commitContent = Common::readGitObject(sha1);
-
+    //Read contents of commit obj
+    string commitContent;
+    try
+    {
+        commitContent = Common::readGitObject(sha1);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        return nullptr;
+    }
+    
     //Read in commit file
     boost::char_separator<char> sepnewline{ string(1,GITCOMMIT_OBJECT_INTER_SEPERATOR).c_str()};
     tokenizer newline{commitContent, sepnewline};
@@ -56,16 +64,18 @@ GitCommit* GitCommit::createFromGitObject(const string& sha1)
     return out;
 }
 
-void GitCommit::rmTrackedFiles()
+int GitCommit::rmTrackedFiles()
 // Removes all files tracked in current commit object
+// Returns non-zero if an error occured. Zero otherwise.
 {
-    root->rmTrackedFiles(GitFilesystem::getDotGitPath().parent_path());
+    return root->rmTrackedFiles(GitFilesystem::getDotGitPath().parent_path());
 }
 
-void GitCommit::restoreTrackedFiles()
+int GitCommit::restoreTrackedFiles()
 // Restores all files tracked in current commit object
+// Returns non-zero if an error occured. Zero otherwise.
 {
-    root->restoreTrackedFiles(GitFilesystem::getDotGitPath().parent_path());
+    return root->restoreTrackedFiles(GitFilesystem::getDotGitPath().parent_path());
 }
 
 string GitCommit::generateContents()
@@ -124,3 +134,17 @@ int GitCommit::blobInTree(string path, string hash)
     return root->hasBlob(path,hash);
 }
 
+
+int GitCommit::addInObjects()
+//Adds the commit object to the objects folder.
+//Returns 0 if successful, non-zero otherwise
+{
+    //1. Add the GitTree to the objects folder
+    if(this->root->addInObjects())
+        return 1; 
+
+    //2. Add the GitCommit to the objects folder
+    this->generateContents();
+    this->generateHash();
+    return  GitObjectCommon::addInObjects(this->sha1hash, this->filecontents);
+}

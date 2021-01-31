@@ -21,11 +21,15 @@ class GitIndexFile
         ~GitIndexFile();
 
         int addBlob(GitBlob blob);
+        GitBlob getBlobReference(const string filepath);
+        GitBlob getBlobReference(const fs::path filepath);
         
         void produceIndexFile();
         ListBlobs parseIndexFile();
 
         int contains(const string filepath, const string hash);
         int count(const string filepath);
+        int count(const fs::path filepath);
 
+        int size();
 };

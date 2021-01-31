@@ -1,5 +1,4 @@
 add_executable(gittests 
-    unittests.hpp
     unittests.cpp
 	catch.hpp
 )

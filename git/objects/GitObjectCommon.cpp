@@ -1,24 +1,12 @@
-#include "BaseGitObject.hpp"
+#include "GitObjectCommon.hpp"
+#include <common.hpp>
 #include <filesystem/GitFilesystem.hpp>
-#include <string>
 #include <boost/filesystem.hpp>
-#include <fstream>
-#include <stdexcept>
 
 namespace fs = boost::filesystem;
 
-BaseGitObject::BaseGitObject()
-{
-    sha1hash = string("");
-    filecontents = string("");
-}
 
-BaseGitObject::~BaseGitObject()
-{
-
-}
-
-int BaseGitObject::addInObjects()
+int GitObjectCommon::addInObjects(string sha1hash, string filecontents)
 /*Adds file in the objects folder. Returns 1 if the file already exists*/
 {
     //1. Seperate SHA1 hash into two parts. First part contains the first two characters, second part contains remaining 38 characters. 
@@ -49,16 +37,3 @@ int BaseGitObject::addInObjects()
     blob.close();
     return 0;
 }
-
-string BaseGitObject::generateHash()
-{
-    throw std::exception();
-    return string("");
-}
-
-string BaseGitObject::generateContents()
-{
-    throw std::exception();
-    return string("");
-}
-

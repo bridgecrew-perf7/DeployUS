@@ -1,18 +1,13 @@
 #pragma once
 
-#include "BaseCommand.hpp"
-#include <string>
-
-class AddCommand: public BaseCommand
+namespace AddCommand
 {
-private:
-    std::string sha1hash;
-    int numArgs;
-    char** args;
-public:
-    AddCommand(int argc, char* argv[]);
-    ~AddCommand();
+    //Adds file to the object folder.
+    //Updates index file.
+    //Returns:  non-zero if an error occured
+    //          zero otherwise
+    int execute(int argc, char* argv[]);
 
-    virtual int execute();
-    virtual void help();
-};
+    //Sends usage message to stdout. Always returns 0;
+    int help();
+}

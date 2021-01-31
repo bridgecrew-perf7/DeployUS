@@ -3,47 +3,43 @@
 #include <objects/GitTree.hpp>
 #include <objects/GitCommit.hpp>
 #include <filesystem/GitFilesystem.hpp>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <algorithm>
 #include <boost/filesystem.hpp>
 #include <boost/tokenizer.hpp>
+#include <iostream>
 
 typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
-
 namespace fs = boost::filesystem;
 
-CommitCommand::CommitCommand(int argc, char* argv[])
-{
-    numArgs = argc;
-    args = argv;
-}
-CommitCommand::~CommitCommand()
-{
-    
-}
 
-int CommitCommand::execute()
+int CommitCommand::execute(int argc, char* argv[])
 // Executes command. Returns non-zero if failure to do so.
 {
-    //1. Verify that a git folder has been initiated
+    //1. Verify if help is needed
+    if(argc > 2)
+    {
+        string option = argv[2];
+        if(option.compare(Common::HELP_PARAM) == 0)
+            return help();
+    }
+
+    //2. Verify that a git folder has been initiated
     if (!fs::exists(GitFilesystem::getDotGitPath()) || !fs::is_directory(GitFilesystem::getDotGitPath()))
     {
         std::cout << "Error: No git repository has been found.\n";
         return 1;
     }
-    //2. Argument verification
-    if(numArgs != 4)
+
+    //3. Argument verification
+    if(argc != 4)
     {
-        std::cout << "Error: Was expecting 2 arguments. Got " << std::to_string(numArgs - 2)<<"."  <<endl;
+        std::cout << "Error: Was expecting 2 arguments. Got " << std::to_string(argc - 2)<<"."  <<endl;
         help();
         return 1;
     }
-    commitMessage = args[2];
-    commitAuthor = args[3];
+    string commitMessage = argv[2];
+    string commitAuthor = argv[3];
 
-    //2.5. Verify that we are at the TOP_COMMIT
+    //4. Verify that we are at the TOP_COMMIT. This file is related to the checkout command.
     if(fs::exists(GitFilesystem::getTOPCOMMITPath()))
     {
         std::cout << "Error: HEAD is not at the most recent commit. Please checkout the most recent commit and try again.\n";
@@ -51,70 +47,50 @@ int CommitCommand::execute()
         return 1;
     }
 
-
-    //3. Verify that there are staged files
-    if(Common::readFile(GitFilesystem::getIndexPath().c_str()).size() == 0)
+    //5. Verify that there are staged files
+    string indexPathstr = GitFilesystem::getIndexPath().string();
+    if(Common::readFile(indexPathstr).size() == 0)
     {
-        std::cout << "Error: There are no staged files. You can stage some files using ./gitus add <pathspec>\n";
+        std::cout << "Error: There are no staged files.\n";
         return 1;
     }
 
-    //3. Fetch root tree
+    //6. Fetch root tree. The root tree represents the repo directory with the tracked files. Untracked files are not included.
     GitTree *root = nullptr;
-    string parentCommitSHA1 = Common::readFile(GitFilesystem::getHEADPath().c_str());
+    string parentCommitSHA1 = Common::readFile(GitFilesystem::getHEADPath());
     if(parentCommitSHA1.size() != 0)
     {
         GitCommit* parentCommit = GitCommit::createFromGitObject(parentCommitSHA1);
         root = parentCommit->getRootTree();
+        root->updateFromIndex();
     }
-    else root = new GitTree();
+    else root = GitTree::createGitTreeFromIndexFile();
 
-    //4. Read the index file.
-    string indexContents = Common::readFile(GitFilesystem::getIndexPath().c_str());
-
-    //5. For each line in the index file, insert blob into root tree.
-    boost::char_separator<char> sep{"\n"};
-    tokenizer tokenized{indexContents, sep};
-    for(const auto& token: tokenized)
-    {
-        //Split line of index file into its filename and hash components according to delimeter. 
-        stringstream fileref(token);
-        string filePath,fileHash;
-        getline(fileref,filePath,INDEX_FILE_DELIMETER);
-        getline(fileref,fileHash,INDEX_FILE_DELIMETER);
-
-        //Adding the versioned file to the GitTree
-        root->addBlob(filePath, fileHash);
-    }
-
-    //6. Sort root tree to produce deterministic results
-    root->sort();
-
-    //7. Generate the tree SHA1 hash;
-    root->generateHash();
-    root->addInObjects(); 
-
-    //8. Create commit object 
+    //11. Create commit object and add it the the object file
     GitCommit* commitobj = new GitCommit(root, commitAuthor, commitMessage, parentCommitSHA1);
+    if(commitobj->addInObjects())
+    {
+        std::cout << "Error: Could not commit files.\n";
+        return 1;
+    }
 
-    //9. Save commit object to the .git/objects folder
-    commitobj->generateHash();
-    commitobj->addInObjects();
-
-    //10. Delete content on .git/index file
+    //13. Delete content of .git/index file
     clearIndex();
 
-    //11. Update the .git/HEAD file
+    //14. Update the .git/HEAD file
     updateHEAD(commitobj);
 
     //Reclaim memory
-    delete commitobj;
+    delete commitobj; //Will also delete GitTree* root obj
 
     return 0;
 }
 
-void CommitCommand::help() {
+int CommitCommand::help()
+//Sends usage message to stdout. Always returns 0;
+{
     std::cout << "usage: gitus commit <msg> <author>" << endl;
+    return 0;
 }
 
 void CommitCommand::clearIndex()

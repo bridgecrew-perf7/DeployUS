@@ -1,26 +1,18 @@
 add_library(git
     common.hpp
     common.cpp
-    argParser.h 
-    argParser.cpp
     filesystem/GitFilesystem.hpp
     filesystem/GitFilesystem.cpp
     filesystem/GitIndexFile.hpp
     filesystem/GitIndexFile.cpp
-    objects/BaseGitObject.hpp
-    objects/BaseGitObject.cpp
+    objects/GitObjectCommon.hpp
+    objects/GitObjectCommon.cpp
     objects/GitBlob.hpp
     objects/GitBlob.cpp
     objects/GitTree.hpp
     objects/GitTree.cpp
     objects/GitCommit.hpp
     objects/GitCommit.cpp
-    commands/BaseCommand.hpp
-    commands/BaseCommand.cpp
-    commands/UnknownCommand.hpp
-    commands/UnknownCommand.cpp
-    commands/HelpCommand.hpp
-    commands/HelpCommand.cpp
     commands/InitCommand.hpp
     commands/InitCommand.cpp
     commands/AddCommand.hpp
@@ -28,7 +20,9 @@ add_library(git
     commands/CommitCommand.hpp
     commands/CommitCommand.cpp
     commands/CheckoutCommand.hpp
-    commands/CheckoutCommand.cpp)
+    commands/CheckoutCommand.cpp
+    start.hpp
+    start.cpp)
 
 if (UNIX)
 target_link_libraries(git 

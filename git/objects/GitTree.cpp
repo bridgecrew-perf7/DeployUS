@@ -6,6 +6,7 @@
 #include <iostream>
 #include <boost/tokenizer.hpp>
 #include <boost/filesystem.hpp>
+#include <filesystem/GitFilesystem.hpp>
 
 typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
 
@@ -22,7 +23,7 @@ GitTree::GitTree(const string& rootSHA1)
 
     //Read in file referenced by SHA1
     string contents = Common::readGitObject(rootSHA1);
-    boost::char_separator<char> sepnewline{"\n"};
+    boost::char_separator<char> sepnewline{string(1,GITTREE_OBJECT_SEPERATOR_INTRA).c_str()};
     tokenizer newline{contents, sepnewline};
     for(const auto& line: newline)
     {
@@ -51,8 +52,19 @@ GitTree::GitTree(const string& rootSHA1)
     this->generateHash();
 }
 
+GitTree* GitTree::createGitTreeFromIndexFile()
+/*
+    Reads Index File and returns a valid GitTree object from its contents.
+*/
+{
+    GitTree* tree = new GitTree();
+    tree->updateFromIndex();
+    return tree;
+}
+
 GitTree::~GitTree()
 {
+    //Sub-directories
     if(branches != nullptr)
     {
         for(auto it = branches->begin(); it != branches->end(); it++)
@@ -61,6 +73,8 @@ GitTree::~GitTree()
         }
         delete branches;
     }
+
+    //files contained within directories
     if(leaves != nullptr) delete leaves;
 }
 
@@ -102,27 +116,32 @@ std::string GitTree::generateHash()
 {
     std::stringstream bytestream; //Used to calculate tree hash.
 
-    //Adding references from branches (sub-directories)
+    //1. For deterministic results, must sort tree first
+    this->sort();
+
+    //2. Adding references from branches (sub-directories)
     for(auto branch = branches->begin(); branch != branches->end(); branch++)
     {
         bytestream << branch->first << branch->second->generateHash();
     }
 
-    //Adding references to leaves (files in this directory)
+    //3. Adding references to leaves (files in this directory)
     for(auto leaf = leaves->begin(); leaf != leaves->end(); leaf++)
     {
         bytestream << leaf->first << leaf->second;
     }
 
-    ///Save hash value of tree
+    //4. Save hash value of tree
     sha1hash = Common::generateSHA1(bytestream.str());
 
     return sha1hash;
 }
 
-void GitTree::rmTrackedFiles(fs::path parentDirectory)
+int GitTree::rmTrackedFiles(fs::path parentDirectory)
+//Removes tracked files specified by this GitTree obj
+//Returns non-zero if an error occurs. Zero otherwise.
 {
-    //Removing folders
+    //1. Removing sub directories and their contents
     for(auto branch = branches->begin(); branch != branches->end(); branch++)
     {
         //Removing folder contents
@@ -132,20 +151,34 @@ void GitTree::rmTrackedFiles(fs::path parentDirectory)
         auto childDirectory = fs::path(parentDirectory).append(branch->first);
         if(fs::exists(childDirectory))
             if(fs::is_empty(childDirectory))
-                fs::remove(childDirectory);
+            {
+                if(Common::safeRemove(childDirectory))
+                {
+                    std::cout << "Error: Could not remove " << childDirectory.string() << std::endl;
+                    return 1;
+                }
+            }     
     }
 
-    //Removing files in parentDirectory
+    //2. Removing files in directory
     for(auto leaf = leaves->begin(); leaf != leaves->end(); leaf++)
     {
-        fs::remove(fs::path(parentDirectory).append(leaf->first));
+        fs::path filepath = fs::path(parentDirectory).append(leaf->first);
+        
+        if(Common::safeRemove(filepath))
+        {
+            std::cout << "Error: Could not remove " << filepath.string() << std::endl;
+            return 1;
+        }
     }
+    return 0;
 }
 
-void GitTree::restoreTrackedFiles(fs::path parentDirectory)
+int GitTree::restoreTrackedFiles(fs::path parentDirectory)
 //Restores all tracked files.
+//Returns non-zero if an error occured. Returns zero otherwise.
 {
-    //Restoring folders
+    //1. Restoring sub-directories
     for(auto branch = branches->begin(); branch != branches->end(); branch++)
     {
         //Restoring folder if it does not exists
@@ -157,22 +190,32 @@ void GitTree::restoreTrackedFiles(fs::path parentDirectory)
         branch->second->restoreTrackedFiles(fs::path(parentDirectory).append(branch->first));
     }
 
-    //Restoring files in parentDirectory
+    //2. Restoring files in directory
     for(auto leaf = leaves->begin(); leaf != leaves->end(); leaf++)
     {
         //Restore Blob
         GitBlob fileBlobObj = GitBlob::createFromGitObject(leaf->second);
-        fileBlobObj.restoreBlob();
+        if(fileBlobObj.restoreBlob())
+        {
+            std::cout << "Error: Could not write file " << fileBlobObj.getRelativePath() << std::endl;
+            return 1;
+        }
     }
+
+    return 0;
 }
 
 void GitTree::sort()
 //Sorts branches and leaves to produce deterministic results
 {
-    //Sorting files
+    //1. Sorting files
     leaves->sort();
 
-    //No need to sort branches (folders) as the std::map object is already sorted 
+    //2. Sorting sub-trees
+    for(auto branch = branches->begin(); branch != branches->end(); branch++)
+    {
+        branch->second->sort();
+    }
 }
 
 std::string GitTree::generateContents()
@@ -180,16 +223,26 @@ std::string GitTree::generateContents()
 {
     std::stringstream bytestream; //filecontents
 
-    //Adding references from branches (sub-directories)
+    //1. Adding references from branches (sub-directories)
     for(auto branch = branches->begin(); branch != branches->end(); branch++)
     {
-        bytestream << GITTREE_OBJECT_TREE_NAME << GITTREE_OBJECT_SEPERATOR << branch->second->getSHA1Hash() << GITTREE_OBJECT_SEPERATOR << branch->first <<'\n';
+        bytestream << GITTREE_OBJECT_TREE_NAME;         //tree
+        bytestream << GITTREE_OBJECT_SEPERATOR_INTER;
+    bytestream << branch->second->getSHA1Hash();        //hash
+        bytestream << GITTREE_OBJECT_SEPERATOR_INTER;
+        bytestream << branch->first;                    //dirname
+        bytestream << GITTREE_OBJECT_SEPERATOR_INTRA;
     }
 
-    //Adding references to leaves (files in this directory)
+    //2. Adding references to leaves (files in this directory)
     for(auto leaf = leaves->begin(); leaf != leaves->end(); leaf++)
     {
-        bytestream << GITTREE_OBJECT_BLOB_NAME << GITTREE_OBJECT_SEPERATOR << leaf->second << GITTREE_OBJECT_SEPERATOR << leaf->first <<'\n';
+        bytestream << GITTREE_OBJECT_BLOB_NAME;         //blob
+        bytestream << GITTREE_OBJECT_SEPERATOR_INTER;
+        bytestream << leaf->second;                     //hash
+        bytestream << GITTREE_OBJECT_SEPERATOR_INTER;
+        bytestream << leaf->first;                      //filename
+        bytestream << GITTREE_OBJECT_SEPERATOR_INTRA;
     }
 
     //Returning contents
@@ -199,15 +252,18 @@ std::string GitTree::generateContents()
 int GitTree::addInObjects()
 //Adds all necessary tree objects to the .git/objects folder. Return 0 if successful. Non-zero otherwise.
 {
-    //Adding sub-trees in the .git/object folders
+    //1. Generate SHA1 hash
+    string sha1 = this->generateHash();
+
+    //2. Adding sub-trees in the .git/object folders
     for(auto branch = branches->begin(); branch != branches->end(); branch++)
     {
         branch->second->addInObjects();
     }
-    //Adds the tree object to the .git/objects folder
+    //3. Adds the tree object to the .git/objects folder
     this->filecontents = generateContents();
 
-    return BaseGitObject::addInObjects();
+    return GitObjectCommon::addInObjects(sha1, this->filecontents);
 }
 
 int GitTree::hasBlob(string filepath, string hash)
@@ -231,4 +287,28 @@ int GitTree::hasBlob(string filepath, string hash)
         return 1;
     else
         return 0;
+}
+
+void GitTree::updateFromIndex()
+{
+    //1. Read the index file.
+    string indexContents = Common::readFile(GitFilesystem::getIndexPath());
+
+    if(indexContents.size() != 0)
+    {
+        //2. For each line in the index file, insert blob into root tree.
+        boost::char_separator<char> sep{Common::INDEX_FILE_DELIMETER_INTRA};
+        tokenizer tokenized{indexContents, sep};
+        for(const auto& token: tokenized)
+        {
+            //Split line of index file into its filename and hash components according to delimeter. 
+            std::stringstream fileref(token);
+            string filePath,fileHash;
+            getline(fileref,filePath,Common::INDEX_FILE_DELIMETER_INTER);
+            getline(fileref,fileHash,Common::INDEX_FILE_DELIMETER_INTER);
+
+            //Adding the versioned file to the GitTree
+            this->addBlob(filePath, fileHash);
+        }
+    }
 }

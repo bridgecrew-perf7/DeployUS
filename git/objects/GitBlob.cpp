@@ -12,10 +12,14 @@
 #include <list>
 
 typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
-
 namespace fs = boost::filesystem;
 
-GitBlob::GitBlob(const char* path)
+GitBlob::GitBlob()
+{
+
+}
+
+GitBlob::GitBlob(const string path)
 {
     //Saving path of file.
     this->relativePath = string(path);
@@ -112,10 +116,10 @@ string GitBlob::generateContents()
 string GitBlob::generateReference()
 {
     //Generate text to go in index file
-    string blobReference = string(this->relativePath);  //filename
-    blobReference += INDEX_FILE_DELIMETER;             //Delimeter
-    blobReference += this->sha1hash;                    //Hash
-    blobReference += "\n";
+    string blobReference = string(this->relativePath);      //filename
+    blobReference += Common::INDEX_FILE_DELIMETER_INTER;    //Delimeter
+    blobReference += this->sha1hash;                        //Hash
+    blobReference += Common::INDEX_FILE_DELIMETER_INTRA;
 
     return blobReference;
 }
