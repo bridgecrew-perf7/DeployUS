@@ -18,7 +18,7 @@ class GitBlob: public BaseGitObject
         string verabtimFileContent;
 
     public:
-        GitBlob(const char* path);
+        GitBlob(const string path);
         GitBlob(const string path,const string filecontents);
         ~GitBlob();
 

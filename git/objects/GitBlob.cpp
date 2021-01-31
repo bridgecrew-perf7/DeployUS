@@ -15,7 +15,7 @@ typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
 
 namespace fs = boost::filesystem;
 
-GitBlob::GitBlob(const char* path)
+GitBlob::GitBlob(const string path)
 {
     //Saving path of file.
     this->relativePath = string(path);
