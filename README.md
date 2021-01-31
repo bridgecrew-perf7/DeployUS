@@ -3,7 +3,7 @@
 Auteur: Shawn Vosburg  
 Travail Réalisé: Les commandes **init, add, commit, checkout**  
 
-# Pour rouler les test
+# Pour rouler les tests
 ```
 cd gitus
 mkdir build
