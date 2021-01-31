@@ -1,8 +1,6 @@
 add_library(git
     common.hpp
     common.cpp
-    argParser.h 
-    argParser.cpp
     filesystem/GitFilesystem.hpp
     filesystem/GitFilesystem.cpp
     filesystem/GitIndexFile.hpp
@@ -17,12 +15,10 @@ add_library(git
     objects/GitCommit.cpp
     commands/BaseCommand.hpp
     commands/BaseCommand.cpp
-    commands/UnknownCommand.hpp
-    commands/UnknownCommand.cpp
-    commands/HelpCommand.hpp
-    commands/HelpCommand.cpp
     commands/InitCommand.hpp
     commands/InitCommand.cpp
+    commands/HelpCommand.hpp
+    commands/HelpCommand.cpp
     commands/AddCommand.hpp
     commands/AddCommand.cpp
     commands/CommitCommand.hpp

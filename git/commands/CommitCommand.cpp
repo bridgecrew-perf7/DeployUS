@@ -59,7 +59,7 @@ int CommitCommand::execute()
         return 1;
     }
 
-    //3. Fetch root tree
+    //3.5. Fetch root tree
     GitTree *root = nullptr;
     string parentCommitSHA1 = Common::readFile(GitFilesystem::getHEADPath().c_str());
     if(parentCommitSHA1.size() != 0)
@@ -80,8 +80,8 @@ int CommitCommand::execute()
         //Split line of index file into its filename and hash components according to delimeter. 
         stringstream fileref(token);
         string filePath,fileHash;
-        getline(fileref,filePath,INDEX_FILE_DELIMETER);
-        getline(fileref,fileHash,INDEX_FILE_DELIMETER);
+        getline(fileref,filePath,Common::INDEX_FILE_DELIMETER);
+        getline(fileref,fileHash,Common::INDEX_FILE_DELIMETER);
 
         //Adding the versioned file to the GitTree
         root->addBlob(filePath, fileHash);

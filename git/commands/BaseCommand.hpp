@@ -10,7 +10,7 @@
 //      Avec une solution comme ca, tu r�gles des probl�mes que tu n'as pas et tu rajoutes une complexit� au code qui est innutile
 
 /* 
-    SV: L'énoncé dit que le command design pattern est superlu et inutile; Il ne l'interdit pas. 
+    SV: L'énoncé dit que le command design pattern est superlu et inutile, mais il ne l'interdit pas, du moins ce que j'avais compris. 
         Personellement, ce design pattern m'aide a m'organiser en structurant mon code.
         Ca encapsule mon code avec les variables / les constantes necessaires pour chaque commande. 
 

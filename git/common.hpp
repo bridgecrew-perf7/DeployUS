@@ -2,13 +2,14 @@
 #include <string>
 #include <boost/filesystem.hpp>
 
-const char INDEX_FILE_DELIMETER  = '\0';
-
 namespace fs = boost::filesystem;
 typedef std::string string;
 
 namespace Common
 {
+    extern const char* HELP_PARAM;
+    extern const char INDEX_FILE_DELIMETER;
+
     string generateSHA1(string text);
 
     string readFile(const char* path);
@@ -17,4 +18,7 @@ namespace Common
     string readGitObject(const string objSHA1);
 
     int writeFile(fs::path path, string text);
+
+    //Safe functions
+    int safeCreateFolder(fs::path folderpath, string errorMsg);
 }

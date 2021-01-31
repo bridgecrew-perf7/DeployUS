@@ -11,6 +11,9 @@
 namespace fs = boost::filesystem;
 using boost::uuids::detail::sha1;
 
+const char* Common::HELP_PARAM = "--help";
+const char Common::INDEX_FILE_DELIMETER  = '\0';
+
 string Common::generateSHA1(string text)
 /* Returns SHA-1 of given text*/
 {
@@ -95,4 +98,25 @@ int Common::writeFile(fs::path path, string text)
 		file.close(); 
 	}
 	return 0;
+}
+
+int Common::safeCreateFolder(fs::path folderpath, string errorMsg)
+//Safely creates folder. Sends error to stderr if one occurs and returns non-zero.
+//Returns:  Non-zero if an error occurs or folder not-created, zero otherwise
+{
+    try
+    {
+        if(!fs::create_directory(folderpath))
+        {
+            std::cout << errorMsg << std::endl;
+            return 1;
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        std::cout << errorMsg << std::endl;
+        return 1;
+    }
+    return 0;
 }
