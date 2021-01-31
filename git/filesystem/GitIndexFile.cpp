@@ -3,7 +3,7 @@
 #include <common.hpp>
 #include <fstream>
 #include <iostream>
-#include <boost/tokenizer.hpp>
+#include <sstream>
 
 GitIndexFile::GitIndexFile()
 {
@@ -24,14 +24,25 @@ ListBlobs GitIndexFile::parseIndexFile()
     string indexContents = Common::readFile(GitFilesystem::getIndexPath());
 
     //Parsing...
-    boost::char_separator<char> sepnewline{ string(1,GITINDEXFILE_INTER_SEPERATOR).c_str()};
-    tokenizer newline{indexContents, sepnewline};
-    for(const auto& line: newline)
+    std::stringstream bytestream(indexContents);
+    while(!bytestream.eof())
     {
+        //Read line
+        string line;
+        while(!bytestream.eof())
+        {
+            char c = bytestream.get();
+            if(c == GITINDEXFILE_INTER_SEPERATOR)
+                break;
+            line.push_back(c);
+        }
+
         //Split line on null-terminating character
         auto nulltermPos = line.find(GITINDEXFILE_INTRA_SEPERATOR);
+        if(nulltermPos == std::string::npos) //Line does not contain a valid entry
+            break;
         string filepath = line.substr(0,nulltermPos);
-        string hash = line.substr(nulltermPos + 1, line.size() - nulltermPos - 1);
+        string hash = line.substr(nulltermPos + 1);
 
         indexBlobs.push_back(std::pair<string, GitBlob>(filepath, GitBlob::createFromGitObject(hash)));
     }
@@ -136,7 +147,7 @@ GitBlob GitIndexFile::getBlobReference(const fs::path filepath)
 }
 
 int GitIndexFile::size()
-//Returns number of blobs in infex file
+//Returns number of blobs in index file
 {
     return blobs.size();
 }

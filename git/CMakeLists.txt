@@ -5,8 +5,8 @@ add_library(git
     filesystem/GitFilesystem.cpp
     filesystem/GitIndexFile.hpp
     filesystem/GitIndexFile.cpp
-    objects/BaseGitObject.hpp
-    objects/BaseGitObject.cpp
+    objects/GitObjectCommon.hpp
+    objects/GitObjectCommon.cpp
     objects/GitBlob.hpp
     objects/GitBlob.cpp
     objects/GitTree.hpp

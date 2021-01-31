@@ -15,6 +15,7 @@
 #include <string>
 
 namespace fs = boost::filesystem;
+using namespace GitUSTest;
 
 const fs::path TESTFILE_NUMBERS_TXT = "testfolder1/numbers.txt";
 const fs::path TESTFILE_NUMBERS_2_TXT = "testfolder1/numbers2.txt";

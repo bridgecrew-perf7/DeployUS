@@ -1,5 +1,5 @@
 #pragma once
-#include "BaseGitObject.hpp"
+#include "GitObjectCommon.hpp"
 #include "GitTree.hpp"
 #include <string>
 
@@ -11,9 +11,12 @@ const std::string GITCOMMIT_OBJECT_PARENT_FIELD = std::string("Parent");
 const std::string GITCOMMIT_OBJECT_TIME_FIELD = std::string("Time(UTC)");
 
 
-class GitCommit: public BaseGitObject
+class GitCommit
 {
     private:
+        string sha1hash;        //What the file will be named in the .git/objects folder
+        string filecontents;    //What is to be stored in the .git/objects folder
+
         GitTree* root;
         string parentCommitSHA1;
         string commitAuthor;
@@ -24,9 +27,9 @@ class GitCommit: public BaseGitObject
         GitCommit(GitTree *tree, const string& author, const string& message, const string& parentSHA1, const string& dt = string(""));
         ~GitCommit();
 
-        virtual string generateContents();
-        virtual string generateHash();
-        virtual int addInObjects();
+        string generateContents();
+        string generateHash();
+        int addInObjects();
 
         int blobInTree(string path, string hash);
 
@@ -36,9 +39,10 @@ class GitCommit: public BaseGitObject
         static GitCommit* createFromGitObject(const string& sha1);
 
         GitTree* getRootTree();
-        inline string getParentSHA() {return parentCommitSHA1;};
-        inline string getMsg() {return msg;};
-        inline string getAuthor() {return commitAuthor;};
-        inline string getCommitTime() {return commitTime;};
+        string getSHA1Hash() {return sha1hash;};
+        string getParentSHA() {return parentCommitSHA1;};
+        string getMsg() {return msg;};
+        string getAuthor() {return commitAuthor;};
+        string getCommitTime() {return commitTime;};
 };
 

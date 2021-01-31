@@ -140,13 +140,11 @@ int GitCommit::addInObjects()
 //Returns 0 if successful, non-zero otherwise
 {
     //1. Add the GitTree to the objects folder
-    this->root->sort();
-    this->root->generateHash();
     if(this->root->addInObjects())
         return 1; 
 
     //2. Add the GitCommit to the objects folder
     this->generateContents();
     this->generateHash();
-    return  BaseGitObject::addInObjects();
+    return  GitObjectCommon::addInObjects(this->sha1hash, this->filecontents);
 }
