@@ -20,7 +20,9 @@ add_library(git
     commands/CommitCommand.hpp
     commands/CommitCommand.cpp
     commands/CheckoutCommand.hpp
-    commands/CheckoutCommand.cpp)
+    commands/CheckoutCommand.cpp
+    start.hpp
+    start.cpp)
 
 if (UNIX)
 target_link_libraries(git 

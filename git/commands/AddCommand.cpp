@@ -50,7 +50,7 @@ int AddCommand::execute(int argc, char* argv[]) {
     string argument = argv[2]; 
     if (!fs::is_regular_file(argument))           
     {
-        std::cout << "Error: File does not exists.\n";
+        std::cout << "Error: File is not a regular file.\n";
         return 1;
     }
 
@@ -58,7 +58,7 @@ int AddCommand::execute(int argc, char* argv[]) {
     GitBlob gitblob(argument);
 
     //6. Verify that the file can be added
-    if( gitblob.isinIndex())
+    if(gitblob.isinIndex())
     {
         std::cout << "Error: File is already staged.\n";
         return 1;

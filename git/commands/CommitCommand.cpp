@@ -70,11 +70,11 @@ int CommitCommand::execute(int argc, char* argv[])
     GitCommit* commitobj = new GitCommit(root, commitAuthor, commitMessage, parentCommitSHA1);
     if(commitobj->addInObjects())
     {
-        std::cout << "Error: Could not add commit files.\n";
+        std::cout << "Error: Could not commit files.\n";
         return 1;
     }
 
-    //13. Delete content on .git/index file
+    //13. Delete content of .git/index file
     clearIndex();
 
     //14. Update the .git/HEAD file

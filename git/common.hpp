@@ -24,4 +24,5 @@ namespace Common
     //Safe functions
     int safeCreateFolder(fs::path folderpath);
     int safeRemove(fs::path path);
+    int safeRemoveAll(fs::path path);
 }

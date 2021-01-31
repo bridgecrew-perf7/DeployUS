@@ -78,15 +78,16 @@ string Common::readFile(const fs::path path)
 
 string Common::readGitObject(const string objSHA1)
 // Reads the file in the .git/object folder that corresponds to the sha1 passed in parameter
+// Throws runtime exception is file does not exists or not valid SHA.
 {
-    if(objSHA1.size() != 40) return nullptr;
+    if(!Common::isValidSHA1(objSHA1)) throw std::runtime_error("Not valid SHA1.");
 
     string foldername = objSHA1.substr(0,2);
     string filename = objSHA1.substr(2,38);
     fs::path filepath = fs::path(GitFilesystem::getObjectsPath()).append(foldername).append(filename);
 
     //Return contents if the object exists
-    if(!fs::exists(filepath))  return nullptr;
+    if(!fs::exists(filepath))   throw std::runtime_error("No file with this SHA1.");
     else                       return Common::readFile(filepath.c_str());
 
 }
@@ -133,6 +134,22 @@ int Common::safeRemove(fs::path path)
     try
     {
         fs::remove(path);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        return 1;
+    }
+    return 0;
+}
+
+int Common::safeRemoveAll(fs::path path)
+//Safely removes all subpaths contained at inode specified by path. Sends error to stderr if one occurs and returns non-zero.
+//Returns:  Non-zero if an error occurs or file not removed, zero otherwise
+{
+    try
+    {
+        fs::remove_all(path);
     }
     catch(const std::exception& e)
     {

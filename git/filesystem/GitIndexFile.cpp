@@ -107,3 +107,36 @@ int GitIndexFile::count(const string filepath)
     }
     return count;
 }
+
+int GitIndexFile::count(const fs::path filepath)
+//Returns the number of occurance of filepath
+{
+    return count(filepath.string());
+}
+
+GitBlob GitIndexFile::getBlobReference(const string filepath)
+//Returns Gitblob that has same path as in argument
+//If doesn't exists, returns empty GitBlob
+{
+    for(auto blob: blobs)
+    {
+        if(blob.first.compare(filepath) == 0)
+            return blob.second;
+    }
+
+    //Return a null reference
+    return GitBlob();
+}
+
+GitBlob GitIndexFile::getBlobReference(const fs::path filepath)
+//Returns Gitblob that has same path as in argument
+//If doesn't exists, returns empty GitBlob
+{
+    return getBlobReference(filepath.string());
+}
+
+int GitIndexFile::size()
+//Returns number of blobs in infex file
+{
+    return blobs.size();
+}

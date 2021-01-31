@@ -43,6 +43,11 @@ int CheckoutCommand::execute(int argc, char* argv[])
         return 1;
     }
     GitCommit* wantedCommitObj = GitCommit::createFromGitObject(wantedCommitID);
+    if(wantedCommitObj == nullptr)
+    {
+        std::cout << "Error: Could not read commit object.\n";
+        return 1;
+    }
 
     //3. Get current HEAD commit obj.
     string currentCommitID = Common::readFile(GitFilesystem::getHEADPath());

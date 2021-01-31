@@ -28,8 +28,18 @@ GitCommit::~GitCommit()
 GitCommit* GitCommit::createFromGitObject(const string& sha1)
 // Reads file specified by SHA1 and returns a valid GitCommit object of the commit object specified by sha1 argument
 {
-    string commitContent = Common::readGitObject(sha1);
-
+    //Read contents of commit obj
+    string commitContent;
+    try
+    {
+        commitContent = Common::readGitObject(sha1);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        return nullptr;
+    }
+    
     //Read in commit file
     boost::char_separator<char> sepnewline{ string(1,GITCOMMIT_OBJECT_INTER_SEPERATOR).c_str()};
     tokenizer newline{commitContent, sepnewline};

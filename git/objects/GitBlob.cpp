@@ -12,8 +12,12 @@
 #include <list>
 
 typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
-
 namespace fs = boost::filesystem;
+
+GitBlob::GitBlob()
+{
+
+}
 
 GitBlob::GitBlob(const string path)
 {
