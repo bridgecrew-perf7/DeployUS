@@ -13,7 +13,7 @@ make
 cd tests
 ./gittests
 ```
-Le terminal doit absolument être au niveau de gitus/<build folder>/tests/ car il y a des fichiers relatifs qui sont utilisés.   
+Le terminal doit absolument être au niveau de gitus/BUILD_FOLDER/tests/ car il y a des fichiers relatifs qui sont utilisés.   
 
 # Format d'un ficher objet representant un ficher 
 ```
