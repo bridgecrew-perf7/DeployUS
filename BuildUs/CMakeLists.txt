@@ -16,7 +16,6 @@ endif ()
 		
 set(CXX_STANDARD 17)
 
-add_subdirectory(yaml-cpp)
 add_subdirectory(src)
 add_subdirectory(tests)
 

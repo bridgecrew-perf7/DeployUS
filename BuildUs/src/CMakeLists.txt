@@ -1,3 +1,12 @@
+#=================================
+# yaml-cpp
+#=================================
+execute_process(
+    COMMAND bash setup.sh
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+add_subdirectory(yaml-cpp)
+
 
 #=================================
 # Common
