@@ -17,11 +17,12 @@ private:
     BuildUSCache cache;
 
     //Compilation methods
-    StringList toCompile();
+    StringPairList toCompile();
 
 
 public:
     GCCDriver(ConfigFile* _config);
+    static GCCDriver* safeFactory(ConfigFile* _config);
     ~GCCDriver();
 
     //Creation of executable steps

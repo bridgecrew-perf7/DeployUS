@@ -28,8 +28,8 @@ public:
     BuildUSCache();
     ~BuildUSCache();
 
-    StringList const getFileForMinimalCompilation(const StringList& filesForCompilation);
-    void updateCompiled(const StringList& filesCompiled);
+    StringPairList const getFileForMinimalCompilation(const StringPairList& filesForCompilation);
+    void updateCompiled(const StringPairList& filesCompiled);
 };
 
 namespace BuildUSCacheHelper{

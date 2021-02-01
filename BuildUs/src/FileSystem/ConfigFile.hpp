@@ -17,36 +17,47 @@
 #define CONFIG_FILE_DEP_INCL "deps_include"
 
 namespace fs = boost::filesystem;
-using namespace std;
 
 /* This class models the .buildus file in YAML format*/
 class ConfigFile
 {
 private:
-    fs::path filepath;
-    YAML::Node config; 
+    fs::path configPath;
+    StringList      projectName;
+    StringPairList  compileList;
+    StringList      depLibVars;
+    StringList      depLibList;
+    StringList      depInclVars;
 
-    //YAML config related methods
+    //YAML config related methods and attributes
+    YAML::Node config; 
     void parseYAML();
+
+    void verifyCompilationUnitsExists();
     bool const isYAMLInvalid();
 public:
     //Can throw an error! (ex: If configfile does not exists)
-    ConfigFile(const char* filepath);
+    ConfigFile(fs::path filepath);
+    static ConfigFile* safeFactory(fs::path filepath);
     ~ConfigFile();
 
     string const toString();
 
     //YAML config related methods
-    StringList const getProjectName();
-    StringList const getCompileList();
-    StringList const getDepLibVars();
-    StringList const getDepLibList();
-    StringList const getDepInclVars();
+    StringList      const getProjectName() {return this->projectName;};
+    StringPairList  const getCompileList() {return this->compileList;};
+    StringList      const getDepLibVars() {return this->depLibVars;};
+    StringList      const getDepLibList() {return this->depLibList;};
+    StringList      const getDepInclVars() {return this->depInclVars;};
 
     //getters
-    inline fs::path getConfigPath() {return fs::path(filepath);};
+    fs::path getConfigPath() {return fs::path(this->configPath);};
 
 };
 
-StringList const vectorizeYAMLNode(const YAML::Node node);
+namespace ConfigFileHelper
+{
+    StringList      const vectorizeYAMLNode(const YAML::Node node);
+    StringPairList  const generateCompileList(const YAML::Node node);
+}
 

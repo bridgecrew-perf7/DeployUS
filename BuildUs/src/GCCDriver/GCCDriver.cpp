@@ -7,12 +7,28 @@ GCCDriver::GCCDriver(ConfigFile* _config)
     cache = BuildUSCache(this->config->getConfigPath().parent_path());
 }
 
+GCCDriver* GCCDriver::safeFactory(ConfigFile* _config)
+// Catches all errors. Returns nullptr if an error occured
+{
+    GCCDriver* out;
+    try
+    {
+        out = new GCCDriver(_config);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        out = nullptr;
+    }
+    return out;       
+}
+
 GCCDriver::~GCCDriver()
 {
 
 }
 
-StringList GCCDriver::toCompile()
+StringPairList GCCDriver::toCompile()
 //Retreives list of files to compile
 {
     return this->cache.getFileForMinimalCompilation(this->config->getCompileList());
@@ -23,9 +39,10 @@ void GCCDriver::compile()
     Compiles necessary files for minimal recompilation
 */
 {
-    StringList filesToCompile = this->toCompile();
-    for(auto filepathstr: filesToCompile)
+    StringPairList filesToCompile = this->toCompile();
+    for(auto compileUnit: filesToCompile)
     {
+        string filepathstr = compileUnit.second;
         cout << "Compiling: " << filepathstr << endl;
         auto filepath = fs::path(filepathstr);
 
@@ -49,8 +66,8 @@ void GCCDriver::compile()
         systemCommand(cmd);
     }
 
-        //4. Update Cache file
-        this->cache.updateCompiled(filesToCompile);
+    //4. Update Cache file
+    this->cache.updateCompiled(filesToCompile);
 
 }
 

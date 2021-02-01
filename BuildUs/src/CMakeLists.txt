@@ -7,7 +7,6 @@ execute_process(
 )
 add_subdirectory(yaml-cpp)
 
-
 #=================================
 # Common
 #=================================
@@ -72,4 +71,29 @@ target_include_directories(GCCDriver
 target_link_libraries(GCCDriver
     PUBLIC
     FileSystem
+)
+
+
+#=================================
+# BuildUS.cpp
+#=================================
+add_library(BuildUSStart 
+            BuildUS.cpp)
+
+target_include_directories(BuildUSStart 
+   	 PUBLIC 
+	${CMAKE_CURRENT_SOURCE_DIR}/
+)
+
+target_link_libraries(BuildUSStart 
+    PUBLIC 
+        ${Boost_LIBRARIES}
+        FileSystem
+        GCCDriver
+)
+	
+target_include_directories(BuildUSStart 
+    PUBLIC 
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+		${Boost_INCLUDE_DIRS}
 )

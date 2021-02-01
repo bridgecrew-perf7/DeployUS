@@ -47,7 +47,7 @@ void BuildUSCache::readCacheOnDisk()
     }
 }
 
-StringList const BuildUSCache::getFileForMinimalCompilation(const StringList& filesForCompilation)
+StringPairList const BuildUSCache::getFileForMinimalCompilation(const StringPairList& filesForCompilation)
 /*
     Looks to see if files to compile 
         1. have been modified
@@ -56,9 +56,10 @@ StringList const BuildUSCache::getFileForMinimalCompilation(const StringList& fi
     Returns list of files that fit these criterias.
 */
 {
-    StringList filesToCompile;
-    for(auto filepathstr: filesForCompilation)
+    StringPairList filesToCompile;
+    for(auto compileUnit: filesForCompilation)
     {
+        string filepathstr = compileUnit.second;
         bool mustCompile = false;
 
         //Never has been compiled
@@ -79,19 +80,20 @@ StringList const BuildUSCache::getFileForMinimalCompilation(const StringList& fi
         }
         
         if(mustCompile)
-            filesToCompile.push_back(filepathstr);
+            filesToCompile.push_back(compileUnit);
     }
     return filesToCompile;
 }
 
-void BuildUSCache::updateCompiled(const StringList& filesCompiled)
+void BuildUSCache::updateCompiled(const StringPairList& filesCompiled)
 /*
     Update cached attribut with newly compiled files.
-    Each file has its SHA1 computed in order to check if 
+    Each file has its SHA1 computed in order to check if they have changed
 */
 {
-   for(string filepathstr: filesCompiled)
+   for(auto compileUnit: filesCompiled)
    {
+        string filepathstr = compileUnit.second;
         stringstream filecontents = readFile(fs::path(this->configParentPath).append(filepathstr));
 
         //1. Compute SHA1 of file contents to obtain unique id of file version.

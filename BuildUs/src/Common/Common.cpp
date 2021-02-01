@@ -1,17 +1,22 @@
 #include "Common.hpp"
+#include "boost/filesystem/fstream.hpp"
+#include <boost/uuid/detail/sha1.hpp>
+#include <iomanip>
 
-stringstream readFile(fs::path filepath)
+using boost::uuids::detail::sha1;
+
+std::stringstream readFile(fs::path filepath)
 /*
     Returns stringstream of all characters in file. 
     Throws std::runtime_error if file does not exists.
 */
 {
-    stringstream contents;
+    std::stringstream contents;
     if(!fs::exists(filepath))
     {
-        stringstream msg;
+        std::stringstream msg;
         msg << "Filepath " << filepath.string() << " does not exists.\n";
-        throw runtime_error(msg.str());
+        throw std::runtime_error(msg.str());
     }
     //Open file
     fs::ifstream file(filepath);
@@ -34,7 +39,7 @@ string systemCommand(string command)
    // Open pipe to file
    FILE* pipe = popen(command.c_str(), "r");
    if (!pipe) {
-      return string("popen failed!");
+      throw std::runtime_error("Can't execute command " + command);
    }
 
    // read till end of process:
@@ -61,9 +66,15 @@ string generateSHA1(string text)
 	sha.get_digest(hash);
 
     //Converting to hexadecimal
-    stringstream bytestream;
+    std::stringstream bytestream;
     char* result = new char[41];
-    for(int i=0; i < 5; i++) bytestream << setfill ('0') << setw(sizeof(unsigned int)*2) << hex <<hash[i];
+    for(int i=0; i < 5; i++) 
+    {
+        bytestream << std::setfill ('0');
+        bytestream << std::setw(sizeof(unsigned int)*2);
+        bytestream << std::hex;
+        bytestream << hash[i];
+    }
 
     //Storing in result buffer
     bytestream.read(result,40);
@@ -75,8 +86,8 @@ string generateSHA1(string text)
 int writeFile(fs::path path, string text)
 //Creates or overwrites content of file specified by path with text. Returns non-zero if failure, 0 if success.
 {
-    fstream file;
-	file.open(path.c_str(), ios::out);
+    std::fstream file;
+	file.open(path.c_str(), std::ios::out);
 	if (!file) {
         //File not created
         return 1;

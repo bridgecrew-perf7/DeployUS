@@ -1,14 +1,16 @@
 #include "ConfigFile.hpp"
 
-ConfigFile::ConfigFile(const char* filepath)
+ConfigFile::ConfigFile(fs::path filepath)
+//Can throw std::runtime_error! 
 {
-    this->filepath = filepath;
+    this->configPath = filepath;
 
     //1. Verify that file exists
     auto configfilepath = fs::path(filepath);
     if(!fs::exists(configfilepath))
     {
-        throw std::runtime_error("Error: Configuration file does not exists.");
+        string msg = string("Error: File ") + filepath.string() + string(" does not exists.");
+        throw std::runtime_error(msg);
     }
 
     //2. Parsing. Sets config attribute
@@ -17,8 +19,29 @@ ConfigFile::ConfigFile(const char* filepath)
     //3. Verify that config is valid
     if(this->isYAMLInvalid())
     {
-        throw std::runtime_error("Error: Configuration file is not valid.");
+        string msg = string("Error: Configuration file ") + filepath.string() + string(" is not valid YAML.");
+        throw std::runtime_error(msg);
     }
+
+    //4. Verify that all compilation units exists
+    //   Note: This function can throw std::runtime_error
+    this->verifyCompilationUnitsExists();
+}
+
+ConfigFile* ConfigFile::safeFactory(fs::path filepath)
+//Catches all errors. Returns nulltpr if an error occured
+{
+    ConfigFile* out;
+    try
+    {
+        out = new ConfigFile(filepath);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        out = nullptr;
+    }
+    return out;
 }
 
 ConfigFile::~ConfigFile()
@@ -30,7 +53,30 @@ void ConfigFile::parseYAML()
     Fills attribut fields with contents of config file.
 */
 {
-   this->config = YAML::LoadFile(this->filepath.c_str());
+    //Saving YAML config
+    this->config = YAML::LoadFile(this->getConfigPath().c_str());
+
+    //Filling attributes
+    this->projectName = ConfigFileHelper::vectorizeYAMLNode(this->config[CONFIG_FILE_PROJECT]);
+    this->compileList = ConfigFileHelper::generateCompileList(this->config);
+    this->depLibVars =  ConfigFileHelper::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_VARS]);
+    this->depLibList =  ConfigFileHelper::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_LIBS]);
+    this->depInclVars = ConfigFileHelper::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_INCL][CONFIG_FILE_VARS]);
+}
+
+void ConfigFile::verifyCompilationUnitsExists()
+// Checks to see if all filepaths from compile lists exists.
+// Throws runtime error if it is the case.
+{
+    for(auto elem: this->getCompileList())
+    {
+        fs::path compileunitPath = this->getConfigPath().parent_path().append(elem.second);
+        if(!fs::exists(compileunitPath))
+        {
+            string msg = string("Error: Compilation unit ") + elem.second + string(" does not exists.");
+            throw std::runtime_error(msg);
+        }
+    }
 }
 
 bool const ConfigFile::isYAMLInvalid()
@@ -39,85 +85,33 @@ bool const ConfigFile::isYAMLInvalid()
     Returns false if it is a valid YAML file
 */
 {
-    bool ret = false;
-
     //Only allowed 1 project name
     if(this->getProjectName().size() != 1)
-    {
-        ret = true;
-    }
+        return true;
 
     //Must compile at least 1 file
     if(this->getCompileList().size() < 1)
-    {
-        ret = true;
-    }
+        return true;
 
-    return ret;
+    return false;
 }
 
-StringList const ConfigFile::getProjectName()
-/*
-    Returns project name.
-*/
-{
-    return vectorizeYAMLNode(this->config[CONFIG_FILE_PROJECT]);
-}
-
-StringList const ConfigFile::getCompileList()
-/*
-    Returns list of filepaths to compile.
-*/
-{
-    StringList toCompile;
-    char item[5];
-    for(int i = 0; i < this->config[CONFIG_FILE_COMPILE].size(); i++ )
-    {
-        sprintf(item,"f%d",i + 1);
-        for(auto elem: vectorizeYAMLNode(this->config[CONFIG_FILE_COMPILE][i][item]))
-        {
-            toCompile.push_back(elem);
-        }
-    }
-    return toCompile;
-}
-
-StringList const ConfigFile::getDepLibVars()
-/* 
-    Returns vector of dependencies from environment variables
-*/
-{
-    return vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_VARS]);
-}
-
-StringList const ConfigFile::getDepLibList()
-/*
-    Returns list of libraries to link.
-*/
-{
-    return vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_LIBS]);
-}
-StringList const ConfigFile::getDepInclVars()
-/* 
-    Returns vector of dependencies from environment variables
-*/
-{
-    return vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_INCL][CONFIG_FILE_VARS]);
-}
 
 string const ConfigFile::toString()
-// Returns string representation of fields
+// Returns string representation of fields.
+// Mainly a debugging function, in order to visualize the fields of the ConfigFile class.
+// Should not be used during normal executable operation.
 {
-    stringstream out;
+    std::stringstream out;
     
     //1. Project
-    out << CONFIG_FILE_PROJECT << ": " << this->getProjectName()[0] << "\n";
+    out << CONFIG_FILE_PROJECT << ": " << this->getProjectName().at(0) << "\n";
     
     //2. Compile List
     out << CONFIG_FILE_COMPILE << ":\n";
     for(auto filepath: this->getCompileList())
     {
-        out << " " << filepath << '\n';
+        out << " " << filepath.second << '\n';
     }
 
     if(this->getDepLibList().size() > 0 || this->getDepLibVars().size() > 0)
@@ -161,11 +155,11 @@ string const ConfigFile::toString()
 
 /*
     ====================================
-    Global functions definitions
+    Helper functions definitions
     ====================================
 */
 
-StringList const vectorizeYAMLNode(const YAML::Node node)
+StringList const ConfigFileHelper::vectorizeYAMLNode(const YAML::Node node)
 //Returns vector of string contained in Node. Must be the last containing node.
 {
     StringList vectorized;
@@ -178,8 +172,43 @@ StringList const vectorizeYAMLNode(const YAML::Node node)
             for(int i = 0; i < node.size(); i++ )
                 vectorized.push_back(node[i].as<string>());
             break;
+        case YAML::NodeType::Map:
+            //Special case. We now have two strings.
+            //The map key and its value.
+            //We will concatenate the two with a \0 character
+            {
+                std::map<string,string> nodemap = node.as<std::map<string,string>>();
+                for(auto nodeItem: nodemap)
+                {
+                    string key   = nodeItem.first;
+                    string value = nodeItem.second;
+                    string concatenated = key + '\0' + value;
+                    vectorized.push_back(concatenated);
+                }
+            }
+            break;
         default:
             break;
     }
     return vectorized;
+}
+
+StringPairList const ConfigFileHelper::generateCompileList(const YAML::Node node)
+//Creates list of compilation units
+{
+    StringPairList toCompile;
+    for(int i = 0; i < node[CONFIG_FILE_COMPILE].size(); i++ )
+    {
+        string item = "f";
+        item += std::to_string(i + 1);
+        for(auto elem: ConfigFileHelper::vectorizeYAMLNode(node[CONFIG_FILE_COMPILE][i]))
+        {
+            int nullPos = elem.find('\0');
+            string outputPath = elem.substr(0,nullPos);
+            string inputPath = elem.substr(nullPos+1);
+            std::pair<string, string> compileUnit(outputPath,inputPath);
+            toCompile.push_back(compileUnit);
+        }
+    }
+    return toCompile;
 }
