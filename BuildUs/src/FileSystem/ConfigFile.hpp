@@ -2,19 +2,14 @@
 #include <Common/Common.hpp>
 #include <yaml-cpp/yaml.h> //https://github.com/jbeder/yaml-cpp.git. MIT licence
 #include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
-#include <map>
-#include <vector>
-#include <string>
-#include <iostream>
-#include <sstream>
 
-#define CONFIG_FILE_PROJECT "project"
-#define CONFIG_FILE_COMPILE "compile"
-#define CONFIG_FILE_LIBS "libs"
-#define CONFIG_FILE_VARS "var"
-#define CONFIG_FILE_DEP_LIBRARY "deps_library"
-#define CONFIG_FILE_DEP_INCL "deps_include"
+
+const string CONFIG_FILE_PROJECT = "project";
+const string CONFIG_FILE_COMPILE = "compile";
+const string CONFIG_FILE_LIBS = "libs";
+const string CONFIG_FILE_VARS = "var";
+const string CONFIG_FILE_DEP_LIBRARY = "deps_library";
+const string CONFIG_FILE_DEP_INCL = "deps_include";
 
 namespace fs = boost::filesystem;
 
@@ -55,7 +50,7 @@ public:
 
 };
 
-namespace ConfigFileHelper
+namespace ConfigFileUtils
 {
     StringList      const vectorizeYAMLNode(const YAML::Node node);
     StringPairList  const generateCompileList(const YAML::Node node);

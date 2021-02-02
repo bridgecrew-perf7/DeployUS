@@ -1,25 +1,19 @@
 #pragma once
-#include <boost/filesystem.hpp>
-#include <boost/uuid/name_generator_sha1.hpp>
 #include <Common/Common.hpp>
-#include <string>
-#include <sstream>
-#include <vector>
-#include <iostream>
+#include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
-using namespace std;
 
-#define BUILDUS_CACHE_INTERMEDIATE_FOLDER fs::path("intermediate")
-#define BUILDUS_CACHE_INTERMEDIATE_FILE BUILDUS_CACHE_INTERMEDIATE_FOLDER.append(".cache")
-#define BUILDUS_CACHE_INTER_SEP '\n'
-#define BUILDUS_CACHE_INTRA_SEP '\0'
+const fs::path BUILDUS_CACHE_INTERMEDIATE_FOLDER = fs::path("intermediate");
+const fs::path BUILDUS_CACHE_INTERMEDIATE_FILE = fs::path(BUILDUS_CACHE_INTERMEDIATE_FOLDER).append(".cache");
+const char BUILDUS_CACHE_INTER_SEP = '\n';
+const char BUILDUS_CACHE_INTRA_SEP = '\0';
 
 class BuildUSCache
 {
 private:
     fs::path configParentPath;
-    StringStringMap cached;
+    ThreeStringTupleList cached;
 
     void readCacheOnDisk();
     void writeCacheToDisk();
@@ -29,9 +23,9 @@ public:
     ~BuildUSCache();
 
     StringPairList const getFileForMinimalCompilation(const StringPairList& filesForCompilation);
-    void updateCompiled(const StringPairList& filesCompiled);
+    int updateCompiled(const StringPairList& filesCompiled);
 };
 
-namespace BuildUSCacheHelper{
-    string getCacheToken(stringstream& bytestream);
+namespace BuildUSCacheUtils{
+    string getCacheToken(std::stringstream& bytestream);
 }

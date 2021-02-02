@@ -2,6 +2,7 @@
 #include "boost/filesystem/fstream.hpp"
 #include <boost/uuid/detail/sha1.hpp>
 #include <iomanip>
+#include <iostream>
 
 using boost::uuids::detail::sha1;
 
@@ -54,6 +55,23 @@ string systemCommand(string command)
    return result;
 }
 
+int safeSystemCommand(string command, string& stdoutOutput)
+// Calls systemCommand and catches error. 
+// Stores command output into stdoutOutput 
+// Returns non-zero if an error occured. Zero otherwise
+{
+    try
+    {
+        systemCommand(command);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        return 1;
+    }
+    return 0;
+}
+
 string generateSHA1(string text)
 /* Returns SHA-1 of given text*/
 {
@@ -83,6 +101,12 @@ string generateSHA1(string text)
     return string(result);
 }
 
+bool isValidSHA1(string hash)
+//Returns true if is size 40 bytes and contains only hexadecimals. False otherwise
+{
+    return (hash.size() == 40) && (hash.find_first_not_of("0123456789abcdefABCDEF") == std::string::npos);
+}
+
 int writeFile(fs::path path, string text)
 //Creates or overwrites content of file specified by path with text. Returns non-zero if failure, 0 if success.
 {
@@ -97,5 +121,17 @@ int writeFile(fs::path path, string text)
 		file.close(); 
 	}
 	return 0;
+}
+
+int ThreeStringTupleUtils::countByFunction(ThreeStringTupleList tplList, string sourcefilepath, std::function<string(ThreeStringTuple)> getter )
+//Return Number of times sourcefilepath appears in tpl. Requires getter function to access element in ThreeStringTuple
+{
+    int count = 0;
+    for(auto tpl: tplList)
+    {
+        if(getter(tpl) == sourcefilepath)
+            count++;
+    }
+    return count;
 }
 

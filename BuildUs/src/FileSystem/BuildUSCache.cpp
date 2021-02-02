@@ -1,9 +1,17 @@
 #include "BuildUSCache.hpp"
+#include <boost/filesystem.hpp>
+#include <boost/uuid/name_generator_sha1.hpp>
+#include <Common/Common.hpp>
+#include <string>
+#include <sstream>
+#include <vector>
+#include <iostream>
+
 
 BuildUSCache::BuildUSCache(const fs::path& configDirectory)
 {
     this->configParentPath = configDirectory;
-    this->cached = StringStringMap();
+    this->cached = ThreeStringTupleList();
 
     if(fs::exists(BUILDUS_CACHE_INTERMEDIATE_FOLDER))
     {
@@ -34,15 +42,17 @@ void BuildUSCache::readCacheOnDisk()
         return;
 
     //1. Build Representation of cache (Parsing)
-    stringstream cachecontents = readFile(BUILDUS_CACHE_INTERMEDIATE_FILE);
+    std::stringstream cachecontents = readFile(BUILDUS_CACHE_INTERMEDIATE_FILE);
     while(!cachecontents.eof())
     {
         //Read in new line
-        string filepath = BuildUSCacheHelper::getCacheToken(cachecontents);
-        string fileSHA1 = BuildUSCacheHelper::getCacheToken(cachecontents);
+        string outputName = BuildUSCacheUtils::getCacheToken(cachecontents);
+        string filepath   = BuildUSCacheUtils::getCacheToken(cachecontents);
+        string fileSHA1   = BuildUSCacheUtils::getCacheToken(cachecontents);
         
         //Fill in cache map
-        this->cached[filepath] = fileSHA1;
+        ThreeStringTuple tpl = ThreeStringTuple(outputName,filepath,fileSHA1);
+        this->cached.push_back(tpl);
 
     }
 }
@@ -59,75 +69,100 @@ StringPairList const BuildUSCache::getFileForMinimalCompilation(const StringPair
     StringPairList filesToCompile;
     for(auto compileUnit: filesForCompilation)
     {
-        string filepathstr = compileUnit.second;
-        bool mustCompile = false;
+        bool needCompilation = true;
+        string compileUnitOutputPath = compileUnit.first + COMPILE_OBJECT_EXT;
+        string compileUnitFilePath = compileUnit.second;
+        fs::path compileUnitFilePathRelativeToConfig = fs::path(this->configParentPath).append(compileUnitFilePath);
+        string compileUnitSHA1 = generateSHA1(readFile(compileUnitFilePathRelativeToConfig).str());
 
-        //Never has been compiled
-        if(this->cached.count(filepathstr) == 0)
+        //Compare with every file in cache until hit is found
+        for(auto fileInCache : this->cached)
         {
-            mustCompile = true;
-        }
-        else
-        {
-            fs::path filepath = fs::path(this->configParentPath).append(filepathstr);
-            string fileSHA1 = generateSHA1(readFile(filepath).str());
+            string outputFilePath = ThreeStringTupleUtils::getOutputFileName(fileInCache);
+            string sourceFilePath = ThreeStringTupleUtils::getSourceFilePath(fileInCache);
+            string sourceSHA1     = ThreeStringTupleUtils::getSourceSHA1(fileInCache);
 
-            //SHA of file has changed, must recompile.
-            if(this->cached[filepathstr].compare(fileSHA1) != 0)
+
+            //Determine if compilation necessary
+            if(     compileUnitOutputPath == outputFilePath     //Same output path
+                &&  compileUnitFilePath   == sourceFilePath     //Same filename
+                &&  compileUnitSHA1       == sourceSHA1  )      //Same SHA1 (file has not changed)
             {
-                mustCompile = true;
+                needCompilation = false;
+                break;
             }
+
         }
-        
-        if(mustCompile)
+
+        //Add the file to compilation list
+        if(needCompilation)
             filesToCompile.push_back(compileUnit);
     }
+
     return filesToCompile;
 }
 
-void BuildUSCache::updateCompiled(const StringPairList& filesCompiled)
+int BuildUSCache::updateCompiled(const StringPairList& filesCompiled)
 /*
     Update cached attribut with newly compiled files.
     Each file has its SHA1 computed in order to check if they have changed
+
+    Returns zero if success, non-zero if unsucessful.
 */
 {
-   for(auto compileUnit: filesCompiled)
-   {
+    for(auto compileUnit: filesCompiled)
+    {
         string filepathstr = compileUnit.second;
-        stringstream filecontents = readFile(fs::path(this->configParentPath).append(filepathstr));
+        std::stringstream filecontents = readFile(fs::path(this->configParentPath).append(filepathstr));
 
         //1. Compute SHA1 of file contents to obtain unique id of file version.
         string fileSHA1 = generateSHA1(filecontents.str());
 
-        //2. Add file path and its has to the cache map
-        this->cached[filepathstr] = fileSHA1;
-   }
+        //2. Add file path and its has to the cache vector
+        ThreeStringTuple cacheEntry = ThreeStringTuple( compileUnit.first + COMPILE_OBJECT_EXT, //Adding extension to cache
+                                                        compileUnit.second,
+                                                        fileSHA1
+                                                    );
 
-   //3. Flush cache to disk
-   this->writeCacheToDisk();
+        this->cached.push_back(cacheEntry);
+    }
 
+    //3. Flush cache to disk
+    try
+    {
+        this->writeCacheToDisk();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        return 1;
+    }
+   
+    return 0;
 }
 
 void BuildUSCache::writeCacheToDisk()
 /*
-    Write the cache map to disk.
+    Write the cache map to disk. Can throw std::runtime_error;
 */
 {
-    stringstream cachecontents;
+    std::stringstream cachecontents;
 
-    //Formating: <filepath>\0<SHA1>\n
+    //Formating: <outputfile>\0<filepath>\0<SHA1>\n
     for(auto compiledFileDesc: this->cached)
     {
-        cachecontents << compiledFileDesc.first;
+        cachecontents << ThreeStringTupleUtils::getOutputFileName(compiledFileDesc);  //output file
         cachecontents << BUILDUS_CACHE_INTRA_SEP;
-        cachecontents << compiledFileDesc.second;
+        cachecontents << ThreeStringTupleUtils::getSourceFilePath(compiledFileDesc);  //source file path
+        cachecontents << BUILDUS_CACHE_INTRA_SEP;
+        cachecontents << ThreeStringTupleUtils::getSourceSHA1(compiledFileDesc);      //hash
         cachecontents << BUILDUS_CACHE_INTER_SEP;
     }
 
     //Flush to disk
     if(writeFile(BUILDUS_CACHE_INTERMEDIATE_FILE, cachecontents.str()))
     {
-        throw runtime_error("Unable to write .cache file.");
+        throw std::runtime_error("Unable to write .cache file.");
     }
 
 }
@@ -138,8 +173,8 @@ void BuildUSCache::writeCacheToDisk()
             HELPER FUNCTIONS
     ==============================
 */
-string BuildUSCacheHelper::getCacheToken(stringstream& bytestream)
-//Returns next token
+string BuildUSCacheUtils::getCacheToken(std::stringstream& bytestream)
+//Returns next token of .cache file.
 {
     string token;
     while(          bytestream.peek() != BUILDUS_CACHE_INTER_SEP
@@ -148,10 +183,15 @@ string BuildUSCacheHelper::getCacheToken(stringstream& bytestream)
     {
         token.push_back(bytestream.get());
     }
-    
-    //Remove seperator
-    if(!bytestream.eof())
+
+    //Advance until valid char
+    while(  (      bytestream.peek() == BUILDUS_CACHE_INTER_SEP
+              ||   bytestream.peek() == BUILDUS_CACHE_INTRA_SEP
+            )
+              &&    !bytestream.eof())
+    {
         bytestream.get();
+    }
 
     return token;
 }

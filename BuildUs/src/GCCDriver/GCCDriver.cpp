@@ -1,4 +1,10 @@
 #include "GCCDriver.hpp"
+#include <Common/Common.hpp>
+#include <FileSystem/ConfigFile.hpp>
+#include <boost/filesystem.hpp>
+#include <sstream>
+#include <FileSystem/BuildUSCache.hpp>
+#include <iostream>
 
 
 GCCDriver::GCCDriver(ConfigFile* _config)
@@ -34,16 +40,19 @@ StringPairList GCCDriver::toCompile()
     return this->cache.getFileForMinimalCompilation(this->config->getCompileList());
 }
 
-void GCCDriver::compile()
+int GCCDriver::compile()
 /*
-    Compiles necessary files for minimal recompilation
+    Compiles necessary files for minimal 
+    Returns 0 if successful, non-zero otherwise
 */
 {
     StringPairList filesToCompile = this->toCompile();
     for(auto compileUnit: filesToCompile)
     {
+        string outputfilename = compileUnit.first;
         string filepathstr = compileUnit.second;
-        cout << "Compiling: " << filepathstr << endl;
+
+        std::cout << "Compiling: " << filepathstr << std::endl;
         auto filepath = fs::path(filepathstr);
 
         //1. Generate source file path
@@ -51,23 +60,24 @@ void GCCDriver::compile()
         
         //2. Generate destination path
         fs::path destPath = BUILDUS_CACHE_INTERMEDIATE_FOLDER;
-        for(auto folder = filepath.begin(); folder != filepath.end(); folder ++)
-        {
-            string folderstr = folder->string();
-            if(folder == filepath.begin())
-                folderstr += ".dir";
-            destPath.append(folderstr);
-        }
-        destPath.replace_extension(destPath.extension().string() + ".o");
+        destPath.append(outputfilename);
+        destPath.replace_extension(destPath.extension().string() + COMPILE_OBJECT_EXT);
 
         //3. Call system command tu run compiler on file
         fs::create_directories(destPath.parent_path());
-        string cmd = generateCompilationCommand(sourcefile, destPath);
-        systemCommand(cmd);
+        string cmd = GCCDriverUtils::generateCompilationCommand(sourcefile, destPath);
+        string cmdOutput;
+        if(safeSystemCommand(cmd,cmdOutput))
+        {
+            std::cout << "Could not compile " << sourcefile << std::endl;
+            return 1;
+        }
     }
 
     //4. Update Cache file
     this->cache.updateCompiled(filesToCompile);
+
+    return 0;
 
 }
 
@@ -77,14 +87,14 @@ void GCCDriver::compile()
     ==================================================
 */
 
-string generateCompilationCommand(fs::path filepath, fs::path destination)
+string GCCDriverUtils::generateCompilationCommand(fs::path filepath, fs::path destination)
 /*
     Creates command to compile file specified by filepath. 
     Will place the generated assembly object file at destinationpath.
 */
 {
-    stringstream cmd;
-    cmd << GCC_COMPILER << " ";
+    std::stringstream cmd;
+    cmd << GCCDriverUtils::GCC_COMPILER << " ";
     cmd << "-c ";
     cmd << filepath.string() << " ";
     cmd << "-o ";

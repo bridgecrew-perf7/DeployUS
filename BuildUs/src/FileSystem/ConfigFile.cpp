@@ -1,4 +1,10 @@
 #include "ConfigFile.hpp"
+#include <boost/algorithm/string.hpp>
+#include <map>
+#include <vector>
+#include <string>
+#include <iostream>
+#include <sstream>
 
 ConfigFile::ConfigFile(fs::path filepath)
 //Can throw std::runtime_error! 
@@ -57,11 +63,11 @@ void ConfigFile::parseYAML()
     this->config = YAML::LoadFile(this->getConfigPath().c_str());
 
     //Filling attributes
-    this->projectName = ConfigFileHelper::vectorizeYAMLNode(this->config[CONFIG_FILE_PROJECT]);
-    this->compileList = ConfigFileHelper::generateCompileList(this->config);
-    this->depLibVars =  ConfigFileHelper::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_VARS]);
-    this->depLibList =  ConfigFileHelper::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_LIBS]);
-    this->depInclVars = ConfigFileHelper::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_INCL][CONFIG_FILE_VARS]);
+    this->projectName = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_PROJECT]);
+    this->compileList = ConfigFileUtils::generateCompileList(this->config);
+    this->depLibVars =  ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_VARS]);
+    this->depLibList =  ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_LIBS]);
+    this->depInclVars = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_INCL][CONFIG_FILE_VARS]);
 }
 
 void ConfigFile::verifyCompilationUnitsExists()
@@ -159,7 +165,7 @@ string const ConfigFile::toString()
     ====================================
 */
 
-StringList const ConfigFileHelper::vectorizeYAMLNode(const YAML::Node node)
+StringList const ConfigFileUtils::vectorizeYAMLNode(const YAML::Node node)
 //Returns vector of string contained in Node. Must be the last containing node.
 {
     StringList vectorized;
@@ -193,7 +199,7 @@ StringList const ConfigFileHelper::vectorizeYAMLNode(const YAML::Node node)
     return vectorized;
 }
 
-StringPairList const ConfigFileHelper::generateCompileList(const YAML::Node node)
+StringPairList const ConfigFileUtils::generateCompileList(const YAML::Node node)
 //Creates list of compilation units
 {
     StringPairList toCompile;
@@ -201,7 +207,7 @@ StringPairList const ConfigFileHelper::generateCompileList(const YAML::Node node
     {
         string item = "f";
         item += std::to_string(i + 1);
-        for(auto elem: ConfigFileHelper::vectorizeYAMLNode(node[CONFIG_FILE_COMPILE][i]))
+        for(auto elem: ConfigFileUtils::vectorizeYAMLNode(node[CONFIG_FILE_COMPILE][i]))
         {
             int nullPos = elem.find('\0');
             string outputPath = elem.substr(0,nullPos);

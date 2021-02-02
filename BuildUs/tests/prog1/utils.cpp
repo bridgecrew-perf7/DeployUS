@@ -2,8 +2,8 @@
 
 namespace utils
 {
-    string getStonks()
+    std::string getStonks()
     {
-        return string("GME & TSLA");
+        return std::string("GME & TSLA");
     }
 } // namespace utils

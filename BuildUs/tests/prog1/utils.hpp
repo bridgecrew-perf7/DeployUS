@@ -1,11 +1,9 @@
 #pragma once
 #include <string>
 
-using namespace std;
-
-#define ARKK "ARKK"
+const std::string ARKK = "ARKK";
 
 namespace utils
 {
-    string getStonks();
+    std::string getStonks();
 } 
