@@ -41,5 +41,5 @@ std::stringstream readFile(fs::path filepath);
 string generateSHA1(string text);
 bool isValidSHA1(string hash);
 
-string systemCommand(string command);
-int safeSystemCommand(string command, string& stdoutOutput);
+string popenCommand(string command);
+int safePopenCommand(string command, string& stdoutOutput);

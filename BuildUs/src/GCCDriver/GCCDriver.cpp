@@ -7,19 +7,20 @@
 #include <iostream>
 
 
-GCCDriver::GCCDriver(ConfigFile* _config)
+GCCDriver::GCCDriver(ConfigFile* _config, bool silentSysCmd)
 {
     this->config = _config;
+    this->isSysCmdSilent = silentSysCmd;
     cache = BuildUSCache(this->config->getConfigPath().parent_path());
 }
 
-GCCDriver* GCCDriver::safeFactory(ConfigFile* _config)
+GCCDriver* GCCDriver::safeFactory(ConfigFile* _config, bool silentSysCmd)
 // Catches all errors. Returns nullptr if an error occured
 {
     GCCDriver* out;
     try
     {
-        out = new GCCDriver(_config);
+        out = new GCCDriver(_config, silentSysCmd);
     }
     catch(const std::exception& e)
     {
@@ -65,9 +66,12 @@ int GCCDriver::compile()
 
         //3. Call system command tu run compiler on file
         fs::create_directories(destPath.parent_path());
-        string cmd = GCCDriverUtils::generateCompilationCommand(sourcefile, destPath);
-        string cmdOutput;
-        if(safeSystemCommand(cmd,cmdOutput))
+        string cmd = GCCDriverUtils::generateCompilationCommand(this->config, sourcefile, destPath);
+        
+        if(this->isSysCmdSilent) //silence output. Mainly used for unittesting
+            cmd += string(" >/dev/null 2>/dev/null");
+
+        if(system(cmd.c_str()))
         {
             std::cout << "Could not compile " << sourcefile << std::endl;
             return 1;
@@ -87,18 +91,29 @@ int GCCDriver::compile()
     ==================================================
 */
 
-string GCCDriverUtils::generateCompilationCommand(fs::path filepath, fs::path destination)
+string GCCDriverUtils::generateCompilationCommand(ConfigFile* config, fs::path filepath, fs::path destination)
 /*
     Creates command to compile file specified by filepath. 
     Will place the generated assembly object file at destinationpath.
 */
 {
     std::stringstream cmd;
+    //Compiler
     cmd << GCCDriverUtils::GCC_COMPILER << " ";
+
+    //Include Folder
+    for(auto includeDir: config->getDepInclVars())
+    {
+        cmd << "-I" << getenv(includeDir.c_str()) << " ";
+    }
+
+    //Source File
     cmd << "-c ";
-    cmd << filepath.string() << " ";
+    cmd << filepath.string() << " "; 
+
+    //Output
     cmd << "-o ";
-    cmd << destination.string() << " ";
+    cmd << destination.string() << " "; 
 
     return cmd.str();
 }

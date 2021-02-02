@@ -29,7 +29,7 @@ std::stringstream readFile(fs::path filepath)
     return contents;
 }
 
-string systemCommand(string command)
+string popenCommand(string command)
 /*
     Calls a system command. Returns command output.
 */
@@ -55,14 +55,14 @@ string systemCommand(string command)
    return result;
 }
 
-int safeSystemCommand(string command, string& stdoutOutput)
+int safePopenCommand(string command, string& stdoutOutput)
 // Calls systemCommand and catches error. 
 // Stores command output into stdoutOutput 
 // Returns non-zero if an error occured. Zero otherwise
 {
     try
     {
-        systemCommand(command);
+        popenCommand(command);
     }
     catch(const std::exception& e)
     {

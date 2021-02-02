@@ -59,6 +59,8 @@ void BuildUSCache::readCacheOnDisk()
 
 StringPairList const BuildUSCache::getFileForMinimalCompilation(const StringPairList& filesForCompilation)
 /*
+    Argument: List of entries in Config File
+
     Looks to see if files to compile 
         1. have been modified
         2. have never been compiled. 

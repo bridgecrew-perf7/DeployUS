@@ -16,7 +16,7 @@ void setup()
 
 void teardown()
 {
-    //REQUIRE(clearIntermediate() == 0);
+    REQUIRE(clearIntermediate() == 0);
     std::cout.clear();
 }
 
@@ -63,7 +63,7 @@ StringPairList TestSuccessfulCompilation(fs::path configpath)
     return toCompile;
 }
 
-TEST_CASE("COMPILATION_SUCCESS")
+TEST_CASE("COMPILATION_SUCCESS_NO_DEPS")
 {
     setup();
 
@@ -78,9 +78,11 @@ TEST_CASE("COMPILATION_SUCCESS")
     //Since these all compile the same program, and the .cache is not delete in between
     //And the compiled program only has 2 objects compiled, there should only be two lines in .cache
     REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_FILE));
+    std::stringstream cache = readFile(BUILDUS_CACHE_INTERMEDIATE_FILE);
+    
+    //Quickly count lines using for loop
     int numLines = 0;
     string line;
-    std::stringstream cache = readFile(BUILDUS_CACHE_INTERMEDIATE_FILE);
     for(;std::getline(cache,line);numLines++);
     REQUIRE(numLines == 2);
 
@@ -88,8 +90,49 @@ TEST_CASE("COMPILATION_SUCCESS")
     teardown();
 }
 
+TEST_CASE("COMPILATION_SUCCESS_WITH_DEPS")
+{
+    setup();
+    ConfigFile* cf;
+    string progfolder = "prog2";
+
+    //Config creation
+    std::stringstream configcontents = createConfigStreamForProg(progfolder); 
+    REQUIRE_NOTHROW(cf = new ConfigFile(CONFIG_FAKE_PATH,configcontents));
+
+    //GCCDriver creation
+    GCCDriver* gcc = GCCDriver::safeFactory(cf);
+    REQUIRE(gcc != nullptr);
+    REQUIRE(gcc->compile() == 0); //No errors!
+    
+    teardown();
+}
+
 
 TEST_CASE("COMPILATION_FAILURE")
 {
-    REQUIRE(1 == 1);
+    setup();
+    ConfigFile* cf;
+    string progfolder;
+
+    //These programs have intentional but different errors
+    SECTION("compileissue1")
+    {
+        progfolder = "prog_compileissue1";
+    }
+    SECTION("compilerissue2")
+    {
+        progfolder = "prog_compileissue2";
+    }
+
+    //Config creation
+    std::stringstream configcontents = createConfigStreamForProg(progfolder); 
+    REQUIRE_NOTHROW(cf = new ConfigFile(CONFIG_FAKE_PATH,configcontents));
+
+    //GCCDriver creation
+    GCCDriver* gcc = GCCDriver::safeFactory(cf, true);
+    REQUIRE(gcc != nullptr);
+    REQUIRE(gcc->compile() != 0); //Error when compiling!
+
+    teardown();
 }

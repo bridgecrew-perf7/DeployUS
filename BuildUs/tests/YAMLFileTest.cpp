@@ -6,6 +6,7 @@
 #include <string>
 #include <algorithm>
 #include <ConfigFile.hpp>
+#include <iostream>
 
 namespace fs = boost::filesystem;
 
@@ -21,20 +22,46 @@ TEST_CASE("Valid_YAML")
     expectedCompileFiles.push_back(elem2);
 
     //Valid ConfigFiles
-    REQUIRE_NOTHROW(cf = new ConfigFile(CONFIG1_PATH));
-    REQUIRE(vectorcompare(cf->getProjectName(), expectedProjectName));
-    REQUIRE(vectorcompare(cf->getCompileList(), expectedCompileFiles));
-    delete cf;
-    REQUIRE_NOTHROW(cf = new ConfigFile(CONFIG2_PATH));
-    REQUIRE(vectorcompare(cf->getProjectName(), expectedProjectName));
-    REQUIRE(vectorcompare(cf->getCompileList(), expectedCompileFiles));
-    delete cf;
-    REQUIRE_NOTHROW(cf = new ConfigFile(CONFIG3_PATH));
+    fs::path configpath;
+    SECTION("CONFIG1") {configpath = CONFIG1_PATH;}
+    SECTION("CONFIG2") {configpath = CONFIG2_PATH;}
+    SECTION("CONFIG3") {configpath = CONFIG3_PATH;}
+    
+    //Testing config
+    REQUIRE_NOTHROW(cf = new ConfigFile(configpath));
     REQUIRE(vectorcompare(cf->getProjectName(), expectedProjectName));
     REQUIRE(vectorcompare(cf->getCompileList(), expectedCompileFiles));
     delete cf;
 
 }
+
+TEST_CASE("Generate_Valid_Config_From_Function")
+//Goal of test: see if config files created from a stringstream is the same as if it came from file.
+{
+    //Setup
+    ConfigFile* cfreal;
+    ConfigFile* cf;
+
+    //Generate config object
+    std::stringstream configcontents = createConfigStreamForProg("prog1");
+
+    //No errors must occur when creating object
+    REQUIRE_NOTHROW(cf = new ConfigFile(CONFIG2_PATH,configcontents));
+    
+    //Compare with a real config file
+    REQUIRE_NOTHROW(cfreal = new ConfigFile(CONFIG2_PATH));
+    REQUIRE(cf->getConfigPath() == cfreal->getConfigPath());
+    REQUIRE(cf->getProjectName() == cfreal->getProjectName());
+    REQUIRE(cf->getCompileList() == cfreal->getCompileList());
+    REQUIRE(cf->getDepInclVars() == cfreal->getDepInclVars());
+    REQUIRE(cf->getDepLibList() == cfreal->getDepLibList());
+    REQUIRE(cf->getDepLibVars() == cfreal->getDepLibVars());
+
+    delete cf;
+    delete cfreal;
+
+}
+
 
 
 TEST_CASE("Invalid_YAML")

@@ -1,8 +1,10 @@
 file(COPY "config" DESTINATION ".")
 file(COPY "prog1" DESTINATION ".")
-configure_file("prog1/main.cpp" "prog1/main.cpp" COPYONLY)
-configure_file("prog1/utils.cpp" "prog1/utils.cpp" COPYONLY)
-configure_file("prog1/utils.hpp" "prog1/utils.hpp" COPYONLY)
+file(COPY "prog2" DESTINATION ".")
+file(COPY "prog_compileissue1" DESTINATION ".")
+file(COPY "prog_compileissue2" DESTINATION ".")
+file(COPY "prog_linkerissue1" DESTINATION ".")
+file(COPY "prog_linkerissue2" DESTINATION ".")
 
 add_executable(BuildUSTests 
     catch2.cpp

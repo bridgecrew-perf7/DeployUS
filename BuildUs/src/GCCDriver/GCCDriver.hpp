@@ -5,23 +5,16 @@
 
 namespace fs = boost::filesystem;
 
-namespace GCCDriverUtils
-{
-    const string GCC_COMPILER = "g++";
-    
-    //Helper functions
-    string generateCompilationCommand(fs::path filepath, fs::path destination);
-}
-
 class GCCDriver
 {
     private:
         ConfigFile* config; 
         BuildUSCache cache;
+        bool isSysCmdSilent;
 
     public:
-        GCCDriver(ConfigFile* _config);
-        static GCCDriver* safeFactory(ConfigFile* _config);
+        GCCDriver(ConfigFile* _config, bool silentSysCmd = false);
+        static GCCDriver* safeFactory(ConfigFile* _config, bool silentSysCmd = false);
         ~GCCDriver();
 
         //Creation of executable steps
@@ -30,3 +23,11 @@ class GCCDriver
         //Compilation methods
         StringPairList toCompile();
 };
+
+namespace GCCDriverUtils
+{
+    const string GCC_COMPILER = "g++";
+    
+    //Helper functions
+    string generateCompilationCommand(ConfigFile* config, fs::path filepath, fs::path destination);
+}
