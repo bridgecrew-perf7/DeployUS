@@ -1,4 +1,0 @@
-project: app1
-compile:
- - f1: fichier1.cpp
- - f2: fichier2.cpp

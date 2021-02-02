@@ -1,0 +1,5 @@
+project: app1
+project: app2
+compile:
+ - f1: ../prog1/main.cpp
+ - f2: ../prog1/utils.cpp
