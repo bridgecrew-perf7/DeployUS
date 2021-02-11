@@ -3,6 +3,7 @@
 #include <boost/uuid/detail/sha1.hpp>
 #include <iomanip>
 #include <iostream>
+#include <cstdarg>
 
 using boost::uuids::detail::sha1;
 
@@ -135,3 +136,41 @@ int ThreeStringTupleUtils::countByFunction(ThreeStringTupleList tplList, string 
     return count;
 }
 
+StringPairList createStringPairList(int numPairs, string outputfile, string sourcepath, ...)
+{
+    StringPairList out;
+    std::va_list args;
+    va_start(args,sourcepath);
+    
+    //Adding the first compilation file
+    std::pair<string,string> p = std::pair<string,string>(outputfile,sourcepath);
+    out.push_back(p);
+
+    //Adding subsequent compilation files
+    for(int i=0; i < numPairs - 1; i++)
+    {
+        string output = va_arg(args,string);
+        string source = va_arg(args,string);
+        p = std::pair<string,string>(output,source);
+        out.push_back(p);
+    }
+    va_end(args);
+
+    return out;
+}
+
+StringList createStringList(int num, ...)
+{
+    StringList out;
+    std::va_list args;
+    va_start(args,num);
+
+    for(int i = 0; i < num; i++)
+    {
+        string item = va_arg(args,string);
+        out.push_back(item);
+    }
+
+    va_end(args);
+    return out;
+}

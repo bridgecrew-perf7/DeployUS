@@ -1,4 +1,5 @@
 #include "BuildUSCache.hpp"
+#include <FileSystem/ConfigFile.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/uuid/name_generator_sha1.hpp>
 #include <Common/Common.hpp>
@@ -8,9 +9,9 @@
 #include <iostream>
 
 
-BuildUSCache::BuildUSCache(const fs::path& configDirectory)
+BuildUSCache::BuildUSCache(ConfigFile* configPtr)
 {
-    this->configParentPath = configDirectory;
+    this->config = configPtr;
     this->cached = ThreeStringTupleList();
 
     if(fs::exists(BUILDUS_CACHE_INTERMEDIATE_FOLDER))
@@ -38,11 +39,11 @@ void BuildUSCache::readCacheOnDisk()
 */
 {
     //Verify the file's existence
-    if(!fs::exists(BUILDUS_CACHE_INTERMEDIATE_FILE))
+    if(!fs::exists(BUILDUS_CACHE_INTERMEDIATE_CACHE))
         return;
 
     //1. Build Representation of cache (Parsing)
-    std::stringstream cachecontents = readFile(BUILDUS_CACHE_INTERMEDIATE_FILE);
+    std::stringstream cachecontents = readFile(BUILDUS_CACHE_INTERMEDIATE_CACHE);
     while(!cachecontents.eof())
     {
         //Read in new line
@@ -74,7 +75,8 @@ StringPairList const BuildUSCache::getFileForMinimalCompilation(const StringPair
         bool needCompilation = true;
         string compileUnitOutputPath = compileUnit.first + COMPILE_OBJECT_EXT;
         string compileUnitFilePath = compileUnit.second;
-        fs::path compileUnitFilePathRelativeToConfig = fs::path(this->configParentPath).append(compileUnitFilePath);
+
+        fs::path compileUnitFilePathRelativeToConfig = this->config->getConfigParentPath().append(compileUnitFilePath);
         string compileUnitSHA1 = generateSHA1(readFile(compileUnitFilePathRelativeToConfig).str());
 
         //Compare with every file in cache until hit is found
@@ -115,7 +117,7 @@ int BuildUSCache::updateCompiled(const StringPairList& filesCompiled)
     for(auto compileUnit: filesCompiled)
     {
         string filepathstr = compileUnit.second;
-        std::stringstream filecontents = readFile(fs::path(this->configParentPath).append(filepathstr));
+        std::stringstream filecontents = readFile(this->config->getConfigParentPath().append(filepathstr));
 
         //1. Compute SHA1 of file contents to obtain unique id of file version.
         string fileSHA1 = generateSHA1(filecontents.str());
@@ -162,7 +164,7 @@ void BuildUSCache::writeCacheToDisk()
     }
 
     //Flush to disk
-    if(writeFile(BUILDUS_CACHE_INTERMEDIATE_FILE, cachecontents.str()))
+    if(writeFile(BUILDUS_CACHE_INTERMEDIATE_CACHE, cachecontents.str()))
     {
         throw std::runtime_error("Unable to write .cache file.");
     }

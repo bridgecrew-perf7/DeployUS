@@ -11,12 +11,12 @@ namespace fs = boost::filesystem;
 void setup()
 {
     std::cout.setstate(std::ios::failbit); //Don't display anything
-    REQUIRE(clearIntermediate() == 0);
+    REQUIRE(cleanIntermediate() == 0);
 }
 
 void teardown()
 {
-    REQUIRE(clearIntermediate() == 0);
+    REQUIRE(cleanIntermediate() == 0);
     std::cout.clear();
 }
 
@@ -33,11 +33,12 @@ StringPairList TestSuccessfulCompilation(fs::path configpath)
 
     //Compiling
     REQUIRE(gcc->compile() == 0);
+    REQUIRE(gcc->toCompile().size() == 0); //All files have been compiled
 
     //Verify files have been compiled properly
     REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_FOLDER));
-    REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_FILE));
-    std::stringstream cachestream = readFile(BUILDUS_CACHE_INTERMEDIATE_FILE);  //Reading cache
+    REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_CACHE));
+    std::stringstream cachestream = readFile(BUILDUS_CACHE_INTERMEDIATE_CACHE);  //Reading cache
     for(auto elem: config->getCompileList())
     {
         //Check object file path
@@ -53,7 +54,7 @@ StringPairList TestSuccessfulCompilation(fs::path configpath)
         REQUIRE(cacheObjectName == objectfilename);
         REQUIRE(cacheSourceFile == elem.second);
         //SHA specifics
-        string realSHA1 = generateSHA1(readFile(config->getConfigPath().parent_path().append(cacheSourceFile)).str());
+        string realSHA1 = generateSHA1(readFile(config->getConfigParentPath().append(cacheSourceFile)).str());
         REQUIRE(isValidSHA1(cacheSourceSHA1));
         REQUIRE(isValidSHA1(realSHA1));
         REQUIRE(cacheSourceSHA1 == realSHA1);  //The right SHA1 must be placed inside cache
@@ -77,8 +78,8 @@ TEST_CASE("COMPILATION_SUCCESS_NO_DEPS")
 
     //Since these all compile the same program, and the .cache is not delete in between
     //And the compiled program only has 2 objects compiled, there should only be two lines in .cache
-    REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_FILE));
-    std::stringstream cache = readFile(BUILDUS_CACHE_INTERMEDIATE_FILE);
+    REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_CACHE));
+    std::stringstream cache = readFile(BUILDUS_CACHE_INTERMEDIATE_CACHE);
     
     //Quickly count lines using for loop
     int numLines = 0;
@@ -94,11 +95,7 @@ TEST_CASE("COMPILATION_SUCCESS_WITH_DEPS")
 {
     setup();
     ConfigFile* cf;
-    string progfolder = "prog2";
-
-    //Config creation
-    std::stringstream configcontents = createConfigStreamForProg(progfolder); 
-    REQUIRE_NOTHROW(cf = new ConfigFile(CONFIG_FAKE_PATH,configcontents));
+    REQUIRE_NOTHROW(cf = new ConfigFile(CONFIG_PROG2_PATH));
 
     //GCCDriver creation
     GCCDriver* gcc = GCCDriver::safeFactory(cf);
@@ -126,7 +123,7 @@ TEST_CASE("COMPILATION_FAILURE")
     }
 
     //Config creation
-    std::stringstream configcontents = createConfigStreamForProg(progfolder); 
+    std::stringstream configcontents = createGeneralConfigProg(progfolder); 
     REQUIRE_NOTHROW(cf = new ConfigFile(CONFIG_FAKE_PATH,configcontents));
 
     //GCCDriver creation

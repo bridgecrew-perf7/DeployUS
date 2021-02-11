@@ -1,24 +1,25 @@
 #pragma once
 #include <Common/Common.hpp>
+#include <FileSystem/ConfigFile.hpp>
 #include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
 
 const fs::path BUILDUS_CACHE_INTERMEDIATE_FOLDER = fs::path("intermediate");
-const fs::path BUILDUS_CACHE_INTERMEDIATE_FILE = fs::path(BUILDUS_CACHE_INTERMEDIATE_FOLDER).append(".cache");
+const fs::path BUILDUS_CACHE_INTERMEDIATE_CACHE = fs::path(BUILDUS_CACHE_INTERMEDIATE_FOLDER).append(".cache");
 const char BUILDUS_CACHE_INTER_SEP = '\n';
 const char BUILDUS_CACHE_INTRA_SEP = '\0';
 
 class BuildUSCache
 {
 private:
-    fs::path configParentPath;
+    ConfigFile* config;
     ThreeStringTupleList cached;
 
     void readCacheOnDisk();
     void writeCacheToDisk();
 public:
-    BuildUSCache(const fs::path& configDirectory);
+    BuildUSCache(ConfigFile* configPtr);
     BuildUSCache();
     ~BuildUSCache();
 

@@ -8,13 +8,16 @@ const fs::path CONFIG2_PATH = "config/config2.buildus";
 const fs::path CONFIG3_PATH = "config/2projectnames.buildus";
 const fs::path CONFIG_FAKE_PATH = "config/nonexistant.buildus";
 
+const fs::path CONFIG_PROG1_PATH = "config/configprog1.buildus";
+const fs::path CONFIG_PROG2_PATH = "config/configprog2.buildus";
+
 const fs::path BADCONFIG1_PATH = "config/badconfig1.buildus"; //No compilation units
 const fs::path BADCONFIG2_PATH = "config/badconfig2.buildus"; //No project name
 const fs::path BADCONFIG3_PATH = "config/badconfig3.buildus"; //Compilation file does not exists
 
 
 
-int clearIntermediate()
+int cleanIntermediate()
 // Remove intermediae folder
 // Returns: 0 for success, non-zero for failure.
 {
@@ -23,30 +26,19 @@ int clearIntermediate()
     return BuildUS::start(argc,argv);
 }
 
-std::stringstream createConfigStreamForProg(string progfolder)
+std::stringstream createGeneralConfigProg(string progfolder)
 //Creates common Config file in stringstream format
 {
-    StringList projectName;
-    projectName.push_back(string("app1"));
-
-    StringPairList compileFiles;
-    std::pair<string,string> elem1(string("f1"), string("../") + progfolder + string("/main.cpp"));
-    std::pair<string,string> elem2(string("f2"), string("../") + progfolder + string("/utils.cpp"));
-    compileFiles.push_back(elem1);
-    compileFiles.push_back(elem2);
-
-    StringList depLibVars = StringList();
-    depLibVars.push_back("BOOST_LIBRARYDIR");
-
-    StringList depLibList = StringList();
-    depLibList.push_back("lib1");
-    depLibList.push_back("lib2");
-
-    StringList depInclVars = StringList();
-    depInclVars.push_back("BOOST_INCLUDEDIR");
-
+    StringList      projectName = createStringList(1, string("app1"));
+    StringPairList  compileList = createStringPairList(2,   string("f1"), 
+                                                            string("../") + progfolder + string("/main.cpp"),
+                                                            string("f2"),
+                                                            string("../") + progfolder + string("/utils.cpp"));
+    StringList      depLibVars  = createStringList(1,string("BOOST_LIBRARYDIR"));
+    StringList      depLibList  = createStringList(2, string("lib1"), string("lib2"));
+    StringList      depInclVars = createStringList(1, string("BOOST_INCLUDEDIR"));
     return ConfigFileUtils::createConfigContents(projectName,
-                                                compileFiles,
+                                                compileList,
                                                 depLibVars,
                                                 depLibList,
                                                 depInclVars);

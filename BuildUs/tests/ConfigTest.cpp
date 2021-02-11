@@ -29,10 +29,44 @@ TEST_CASE("Valid_YAML")
     
     //Testing config
     REQUIRE_NOTHROW(cf = new ConfigFile(configpath));
-    REQUIRE(vectorcompare(cf->getProjectName(), expectedProjectName));
-    REQUIRE(vectorcompare(cf->getCompileList(), expectedCompileFiles));
+    REQUIRE(cf->getProjectName() == expectedProjectName);
+    REQUIRE(cf->getCompileList() == expectedCompileFiles);
     delete cf;
 
+}
+
+TEST_CASE("VALID_PROGRAM")
+{
+    ConfigFile* cf;
+    StringList expectedProjectName;
+    StringPairList expectedCompileFiles;
+    fs::path configpath;
+
+    SECTION("PROG1")
+    {
+        expectedProjectName.push_back(string("app1"));
+        std::pair<string,string> elem1(string("f1"), string("../prog1/main.cpp"));
+        std::pair<string,string> elem2(string("f2"), string("../prog1/utils.cpp"));
+        expectedCompileFiles.push_back(elem1);
+        expectedCompileFiles.push_back(elem2);
+        configpath = CONFIG_PROG1_PATH;
+
+    }
+    SECTION("PROG2")
+    {
+        expectedProjectName.push_back(string("app1"));
+        std::pair<string,string> elem1(string("f1"), string("../prog2/main.cpp"));
+        std::pair<string,string> elem2(string("f2"), string("../prog2/utils.cpp"));
+        expectedCompileFiles.push_back(elem1);
+        expectedCompileFiles.push_back(elem2);
+        configpath = CONFIG_PROG2_PATH;
+    }
+
+    //Testing config
+    REQUIRE_NOTHROW(cf = new ConfigFile(configpath));
+    REQUIRE(cf->getProjectName() == expectedProjectName);
+    REQUIRE(cf->getCompileList() == expectedCompileFiles);
+    delete cf;
 }
 
 TEST_CASE("Generate_Valid_Config_From_Function")
@@ -43,7 +77,7 @@ TEST_CASE("Generate_Valid_Config_From_Function")
     ConfigFile* cf;
 
     //Generate config object
-    std::stringstream configcontents = createConfigStreamForProg("prog1");
+    std::stringstream configcontents = createGeneralConfigProg("prog1");
 
     //No errors must occur when creating object
     REQUIRE_NOTHROW(cf = new ConfigFile(CONFIG2_PATH,configcontents));

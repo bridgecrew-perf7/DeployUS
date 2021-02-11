@@ -45,21 +45,27 @@ namespace BuildUS
             return 1;
         
         //2. Create GCCDriver Object
-        GCCDriver* builder = GCCDriver::safeFactory(config);
-        if(builder == nullptr)
+        GCCDriver* gcc = GCCDriver::safeFactory(config);
+        if(gcc == nullptr)
             return 1;
         
-        //1. Compiling step
-        if(builder->compile())
+        //3. Compiling step
+        if(gcc->compile())
         {
-            std::cout << "Error: Could not compile files.\n";
+            return 1;
+        }
+
+        //4. Linking step
+        if(gcc->link())
+        {
             return 1;
         }
 
 
+
         //Reclaim memory
         delete config;
-        delete builder;
+        delete gcc;
 
         return 0;
     }

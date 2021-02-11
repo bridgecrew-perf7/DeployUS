@@ -97,7 +97,7 @@ void ConfigFile::parseYAML(std::stringstream& bytestream)
 
     //Filling attributes
     this->projectName = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_PROJECT]);
-    this->compileList = ConfigFileUtils::generateCompileList(this->config);
+    this->compileList = ConfigFileUtils::generateCompileList(this->config[CONFIG_FILE_COMPILE]);
     this->depLibVars =  ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_VARS]);
     this->depLibList =  ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_LIBS]);
     this->depInclVars = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_INCL][CONFIG_FILE_VARS]);
@@ -109,7 +109,7 @@ void ConfigFile::verifyCompilationUnitsExists()
 {
     for(auto elem: this->getCompileList())
     {
-        fs::path compileunitPath = this->getConfigPath().parent_path().append(elem.second);
+        fs::path compileunitPath = this->getConfigParentPath().append(elem.second);
         if(!fs::exists(compileunitPath))
         {
             string msg = string("Error: Compilation unit ") + elem.second + string(" does not exists.");
@@ -141,7 +141,9 @@ string const ConfigFile::toString()
 // Mainly a debugging function, in order to visualize the fields of the ConfigFile class.
 // Should not be used during normal executable operation.
 {
-    return ConfigFileUtils::createConfigContents(getProjectName(),getCompileList(),getDepLibVars(),getDepLibList(),getDepInclVars()).str();
+    YAML::Emitter emitter;
+    emitter << this->config;
+    return string(emitter.c_str());
 }
 
 /*
@@ -173,7 +175,7 @@ StringList const ConfigFileUtils::vectorizeYAMLNode(const YAML::Node node)
                 {
                     string key   = nodeItem.first;
                     string value = nodeItem.second;
-                    string concatenated = key + '\0' + value;
+                    string concatenated = key + CONFIG_MAP_SEPERATOR + value;
                     vectorized.push_back(concatenated);
                 }
             }
@@ -188,13 +190,11 @@ StringPairList const ConfigFileUtils::generateCompileList(const YAML::Node node)
 //Creates list of compilation units
 {
     StringPairList toCompile;
-    for(int i = 0; i < node[CONFIG_FILE_COMPILE].size(); i++ )
+    for(int i = 0; i < node.size(); i++ )
     {
-        string item = "f";
-        item += std::to_string(i + 1);
-        for(auto elem: ConfigFileUtils::vectorizeYAMLNode(node[CONFIG_FILE_COMPILE][i]))
+        for(auto elem: ConfigFileUtils::vectorizeYAMLNode(node[i]))
         {
-            int nullPos = elem.find('\0');
+            int nullPos = elem.find(CONFIG_MAP_SEPERATOR);
             string outputPath = elem.substr(0,nullPos);
             string inputPath = elem.substr(nullPos+1);
             std::pair<string, string> compileUnit(outputPath,inputPath);
@@ -212,52 +212,67 @@ std::stringstream ConfigFileUtils::createConfigContents(    StringList      proj
                                                             StringList      depInclVars)
 {
     std::stringstream out;
-    
+    YAML::Emitter emitter;
+    emitter << YAML::BeginMap;
+
     //1. Project
-    out << CONFIG_FILE_PROJECT << ": " << projectName.at(0) << "\n";
+    emitter << YAML::Key << CONFIG_FILE_PROJECT;
+    emitter << YAML::Value << projectName.at(0);
     
     //2. Compile List
-    out << CONFIG_FILE_COMPILE << ":\n";
+    emitter << YAML::Key << CONFIG_FILE_COMPILE;
+    emitter << YAML::Value;
+    emitter << YAML::BeginSeq;
     for(auto compileUnit: compileList)
     {
-        out << " - " << compileUnit.first <<": " << compileUnit.second << '\n';
-    }
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << compileUnit.first;
+        emitter << YAML::Value << compileUnit.second;
+        emitter << YAML::EndMap;
+    } 
+    emitter << YAML::EndSeq;
+    
 
     if(depLibList.size() > 0 || depLibVars.size() > 0)
     {
-        out << CONFIG_FILE_DEP_LIBRARY << ": \n";
-
+        emitter << YAML::Key << CONFIG_FILE_DEP_LIBRARY;
+        emitter << YAML::Value;
+        emitter << YAML::BeginMap;
         //3. Dependencies vars List
         if(depLibVars.size() > 0)
         {
-            out << " " << CONFIG_FILE_VARS << ":\n";
-            for(auto var: depLibVars)
-            {
-                out << "  " << var << '\n';
-            }
+            
+            emitter << YAML::Key << CONFIG_FILE_VARS;
+            emitter << YAML::Value << depLibVars.at(0);
         }
 
         //4. Dependencies libraries List
         if(depLibList.size() > 0)
-        {   out << " " << CONFIG_FILE_LIBS << ":\n";
-            for(auto libpath: depLibList)
+        {   
+            emitter << YAML::Key << CONFIG_FILE_LIBS;
+            emitter << YAML::Value;
+            emitter << YAML::BeginSeq;
+            for(auto lib: depLibList)
             {
-                out << " - " << libpath << '\n';
+                emitter << lib;
             }
+            emitter << YAML::EndSeq;
         }
+        emitter << YAML::EndMap;
     }
-
 
     //5. Includes List
-    if(depLibList.size() > 0)
+    if(depInclVars.size() > 0)
     {
-        out << CONFIG_FILE_DEP_INCL << ": \n";
-        out << " " << CONFIG_FILE_VARS << ":\n";
-        for(auto var: depInclVars)
-        {
-            out << "  " << var << '\n';
-        }
-    }
-    
+        emitter << YAML::Key << CONFIG_FILE_DEP_INCL;
+        emitter << YAML::Value;
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << CONFIG_FILE_VARS;
+        emitter << YAML::Value << depInclVars.at(0);
+        emitter << YAML::EndMap;
+    } 
+
+    emitter << YAML::EndMap;
+    out << emitter.c_str();
     return out;
 }

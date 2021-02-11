@@ -10,8 +10,9 @@ add_executable(BuildUSTests
     catch2.cpp
     unittestscommon.cpp
     unittests.hpp
+    ConfigTest.cpp
     CompilationTest.cpp
-    YAMLFileTest.cpp
+    LinkingTest.cpp
 )
 
 target_link_libraries(BuildUSTests

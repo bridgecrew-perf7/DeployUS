@@ -52,15 +52,17 @@ public:
     StringList      const getDepLibList() {return this->depLibList;};
     StringList      const getDepInclVars() {return this->depInclVars;};
     fs::path getConfigPath() {return fs::path(this->configPath);};
+    fs::path getConfigParentPath() {return fs::path(this->configPath.parent_path());};
 
 };
 
 namespace ConfigFileUtils
 {
+    const char CONFIG_MAP_SEPERATOR = '\0';
     StringList      const vectorizeYAMLNode(const YAML::Node node);
     StringPairList  const generateCompileList(const YAML::Node node);
 
-    //Easily create a the contents of a config file
+    //Easily create the contents of a config file
     std::stringstream createConfigContents( StringList      projectName,
                                             StringPairList  compileList,
                                             StringList      depLibVars = StringList(),
