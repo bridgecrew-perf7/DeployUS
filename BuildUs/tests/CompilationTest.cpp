@@ -37,8 +37,8 @@ StringPairList TestSuccessfulCompilation(fs::path configpath)
 
     //Verify files have been compiled properly
     REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_FOLDER));
-    REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_CACHE));
-    std::stringstream cachestream = readFile(BUILDUS_CACHE_INTERMEDIATE_CACHE);  //Reading cache
+    REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE));
+    std::stringstream cachestream = readFile(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE);  //Reading cache
     for(auto elem: config->getCompileList())
     {
         //Check object file path
@@ -78,8 +78,8 @@ TEST_CASE("COMPILATION_SUCCESS_NO_DEPS")
 
     //Since these all compile the same program, and the .cache is not delete in between
     //And the compiled program only has 2 objects compiled, there should only be two lines in .cache
-    REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_CACHE));
-    std::stringstream cache = readFile(BUILDUS_CACHE_INTERMEDIATE_CACHE);
+    REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE));
+    std::stringstream cache = readFile(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE);
     
     //Quickly count lines using for loop
     int numLines = 0;

@@ -40,7 +40,7 @@ TEST_CASE("LINKING_SUCCESS")
     REQUIRE(gcc->link() == 0);
     
     //Execution of program
-    string programName = cf->getProjectName().at(0);
+    string programName = cf->getProjectName();
     string cmd = "./" + programName + " >/dev/null 2>/dev/null";
     REQUIRE(system(cmd.c_str()) == 0);
 

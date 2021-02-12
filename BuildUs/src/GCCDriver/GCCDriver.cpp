@@ -43,11 +43,22 @@ StringPairList GCCDriver::toCompile()
 
 int GCCDriver::compile()
 /*
-    Compiles necessary files for minimal 
+    Compiles necessary files for minimal
+
     Returns 0 if successful, non-zero otherwise
 */
 {
+    StringPairList filesCompiled;
+    string errMsg;
+
+    //1. Get files that must be compiled for minimal compilation.
     StringPairList filesToCompile = this->toCompile();
+    if(filesToCompile.size() == 0)
+    {
+        return 0;
+    }
+
+    //Compile every file necessary for minimal compilation
     for(auto compileUnit: filesToCompile)
     {
         string outputfilename = compileUnit.first;
@@ -67,23 +78,34 @@ int GCCDriver::compile()
         //3. Call system command tu run compiler on file
         if(fs::create_directories(destPath.parent_path()))
         {
-            std::cout << "Error: Could not write compiled object files. Access denied.\n" << std::endl;
-            return 1;
+            errMsg = "Error: Could not write compiled object files. Access denied.\n";
+            break;
         }
+
+        //Create command
         string cmd = GCCDriverUtils::generateCompilationCommand(this->config, sourcefile, destPath);
-        
         if(this->isSysCmdSilent) //silence output. Mainly used for unittesting
             cmd += string(" >/dev/null 2>/dev/null");
 
+        //Call command
         if(system(cmd.c_str()))
         {
-            std::cout << "Error: Could not compile " << sourcefile << std::endl;
-            return 1;
+            errMsg = string("Error: Could not compile ") + sourcefile.string();
+            break;
         }
+        filesCompiled.push_back(compileUnit);
+
     }
 
     //4. Update Cache file
-    this->cache.updateCompiled(filesToCompile);
+    this->cache.updateCompiled(filesCompiled);
+
+    //5. Throw error if one detected
+    if(!errMsg.empty())
+    {
+        std::cout << errMsg << std::endl;
+        return 1;
+    }
 
     return 0;
 
@@ -93,6 +115,11 @@ int GCCDriver::link()
 //Performs linkage of compiled units with GNU ld
 //Returns non-zero if an error occured, zero otherwise
 {
+    if(!this->cache.mustLink())
+    {
+        return 0;
+    }
+
     string cmd = "g++ ";
 
     //1. Append Object files
@@ -110,40 +137,45 @@ int GCCDriver::link()
     }
 
     //2. Add output executable name
-    string projectname = this->config->getProjectName().at(0);
+    string projectname = this->config->getProjectName();
     cmd += "-o ";
     cmd += projectname;
     cmd += " ";
 
     //3. Append Library directories
-    for(auto libVar: this->config->getDepLibVars())
+    string libVar = this->config->getDepLibVar();
+    if(!libVar.empty())
     {
         string envvarValue = getenv(libVar.c_str());
         cmd += "-L";
         cmd += envvarValue;
         cmd += " ";
     }
+    
 
     //4. Add libraries staticly
-    cmd += "-static ";
-    for(auto lib: this->config->getDepLibList())
+    if(this->config->getDepLibList().size() > 0)
     {
-        //Have to remove "lib" from start
-        int prefixPos = lib.find(GCCDriverUtils::GCC_LIB_PREFIX);
-        if( prefixPos != std::string::npos)
-            lib = lib.substr(GCCDriverUtils::GCC_LIB_PREFIX.size());
+        cmd += "-static ";
+        for(auto lib: this->config->getDepLibList())
+        {
+            //Have to remove "lib" from start
+            int prefixPos = lib.find(GCCDriverUtils::GCC_LIB_PREFIX);
+            if( prefixPos != std::string::npos)
+                lib = lib.substr(GCCDriverUtils::GCC_LIB_PREFIX.size());
 
-        //Have to remove ".a" or ".so"
-        int extPos = lib.find(GCCDriverUtils::GCC_DOT_A_EXT);
-        if( extPos != std::string::npos)
-            lib = lib.substr(0,extPos);
-        extPos = lib.find(GCCDriverUtils::GCC_DOT_SO_EXT);
-        if( extPos != std::string::npos)
-            lib = lib.substr(0,extPos);
+            //Have to remove ".a" or ".so"
+            int extPos = lib.find(GCCDriverUtils::GCC_DOT_A_EXT);
+            if( extPos != std::string::npos)
+                lib = lib.substr(0,extPos);
+            extPos = lib.find(GCCDriverUtils::GCC_DOT_SO_EXT);
+            if( extPos != std::string::npos)
+                lib = lib.substr(0,extPos);
 
-        cmd += "-l";
-        cmd += lib;
-        cmd += " ";
+            cmd += "-l";
+            cmd += lib;
+            cmd += " ";
+        }
     }
 
     //5, Silence command if necessary
@@ -156,6 +188,10 @@ int GCCDriver::link()
         std::cout << "Error: Could not link files " << std::endl;
         return 1;
     }
+
+    //Update project.cache file
+    this->cache.writeProjectCacheToDisk();
+
 
     return 0;
 }
@@ -172,23 +208,26 @@ string GCCDriverUtils::generateCompilationCommand(ConfigFile* config, fs::path f
     Will place the generated assembly object file at destinationpath.
 */
 {
-    std::stringstream cmd;
+    string cmd;
     //Compiler
-    cmd << GCCDriverUtils::GCC_COMPILER << " ";
+    cmd += GCCDriverUtils::GCC_COMPILER + " ";
 
     //Include Folder
-    for(auto includeDir: config->getDepInclVars())
+    string includeDir = config->getDepInclVar();
+    if(!includeDir.empty())
     {
-        cmd << "-I" << getenv(includeDir.c_str()) << " ";
+        string envVal = getenv(includeDir.c_str());
+        cmd += "-I" + envVal + " ";
     }
+    
 
     //Source File
-    cmd << "-c ";
-    cmd << filepath.string() << " "; 
+    cmd += "-c ";
+    cmd += filepath.string() + " "; 
 
     //Output
-    cmd << "-o ";
-    cmd << destination.string() << " "; 
+    cmd += "-o ";
+    cmd += destination.string() + " "; 
 
-    return cmd.str();
+    return cmd;
 }

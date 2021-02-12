@@ -17,12 +17,12 @@ namespace fs = boost::filesystem;
 class ConfigFile
 {
 private:
-    fs::path configPath;
-    StringList      projectName;
+    fs::path        configPath;
+    string          projectName;
     StringPairList  compileList;
-    StringList      depLibVars;
+    string          depLibVar;
     StringList      depLibList;
-    StringList      depInclVars;
+    string          depInclVar;
 
     void initialize(std::stringstream& bytestream);
 
@@ -31,7 +31,7 @@ private:
     void parseYAML(std::stringstream& bytestream);
 
     void verifyCompilationUnitsExists();
-    bool const isYAMLInvalid();
+    bool const isConfigInvalid(string& err);
 public:
     //Can throw an error! (ex: If configfile does not exists)
     ConfigFile(fs::path filepath);
@@ -46,11 +46,11 @@ public:
     string const toString();
 
     //getters
-    StringList      const getProjectName() {return this->projectName;};
+    string          const getProjectName() {return this->projectName;};
     StringPairList  const getCompileList() {return this->compileList;};
-    StringList      const getDepLibVars() {return this->depLibVars;};
-    StringList      const getDepLibList() {return this->depLibList;};
-    StringList      const getDepInclVars() {return this->depInclVars;};
+    string          const getDepLibVar()   {return this->depLibVar;};
+    StringList      const getDepLibList()  {return this->depLibList;};
+    string          const getDepInclVar()  {return this->depInclVar;};
     fs::path getConfigPath() {return fs::path(this->configPath);};
     fs::path getConfigParentPath() {return fs::path(this->configPath.parent_path());};
 
@@ -63,11 +63,11 @@ namespace ConfigFileUtils
     StringPairList  const generateCompileList(const YAML::Node node);
 
     //Easily create the contents of a config file
-    std::stringstream createConfigContents( StringList      projectName,
+    std::stringstream createValidYAML(      string          projectName,
                                             StringPairList  compileList,
-                                            StringList      depLibVars = StringList(),
+                                            string          depLibVar = string(),
                                             StringList      depLibList = StringList(),
-                                            StringList      depInclVars = StringList());
+                                            string          depInclVar = string());
     
 }
 

@@ -29,15 +29,15 @@ int cleanIntermediate()
 std::stringstream createGeneralConfigProg(string progfolder)
 //Creates common Config file in stringstream format
 {
-    StringList      projectName = createStringList(1, string("app1"));
+    string          projectName = string("app1");
     StringPairList  compileList = createStringPairList(2,   string("f1"), 
                                                             string("../") + progfolder + string("/main.cpp"),
                                                             string("f2"),
                                                             string("../") + progfolder + string("/utils.cpp"));
-    StringList      depLibVars  = createStringList(1,string("BOOST_LIBRARYDIR"));
+    string          depLibVars  = string("BOOST_LIBRARYDIR");
     StringList      depLibList  = createStringList(2, string("lib1"), string("lib2"));
-    StringList      depInclVars = createStringList(1, string("BOOST_INCLUDEDIR"));
-    return ConfigFileUtils::createConfigContents(projectName,
+    string          depInclVars = string("BOOST_INCLUDEDIR");
+    return ConfigFileUtils::createValidYAML(    projectName,
                                                 compileList,
                                                 depLibVars,
                                                 depLibList,

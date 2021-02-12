@@ -40,10 +40,10 @@ void ConfigFile::initialize(std::stringstream& bytestream)
     this->parseYAML(bytestream);
 
     //2. Verify that config is valid
-    if(this->isYAMLInvalid())
+    string err;
+    if(this->isConfigInvalid(err))
     {
-        string msg = string("Error: Configuration file is not valid.");
-        throw std::runtime_error(msg);
+        throw std::runtime_error(err);
     }
 
     //3. Verify that all compilation units exists
@@ -92,15 +92,21 @@ void ConfigFile::parseYAML(std::stringstream& bytestream)
     Fills attribut fields with contents of config file.
 */
 {
+    auto extractFirstString = [&](StringList list) {return list.size() > 0 ? list.at(0) : string();};
     //Saving YAML config
     this->config = YAML::Load(bytestream);
 
     //Filling attributes
-    this->projectName = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_PROJECT]);
+    StringList temp;
+    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_PROJECT]);
+    this->projectName = extractFirstString(temp) ; // Only 1 name
+    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_VARS]);
+    this->depLibVar   =  extractFirstString(temp); // Only 1 var
+    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_INCL][CONFIG_FILE_VARS]);
+    this->depInclVar  = extractFirstString(temp);  // Only 1 var
+    
     this->compileList = ConfigFileUtils::generateCompileList(this->config[CONFIG_FILE_COMPILE]);
-    this->depLibVars =  ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_VARS]);
-    this->depLibList =  ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_LIBS]);
-    this->depInclVars = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_INCL][CONFIG_FILE_VARS]);
+    this->depLibList  =  ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_LIBS]);
 }
 
 void ConfigFile::verifyCompilationUnitsExists()
@@ -118,19 +124,43 @@ void ConfigFile::verifyCompilationUnitsExists()
     }
 }
 
-bool const ConfigFile::isYAMLInvalid()
+bool const ConfigFile::isConfigInvalid(string& err)
 /*
-    Returns true if the YAML file is invalid.
-    Returns false if it is a valid YAML file
+    Returns true if the Config file is invalid.
+    Returns false if it is a valid Config file
 */
 {
     //Only allowed 1 project name
-    if(this->getProjectName().size() != 1)
+    if(this->getProjectName().empty())
+    {
+        err = "Error: Must have a project name.";
         return true;
+    }
 
     //Must compile at least 1 file
     if(this->getCompileList().size() < 1)
+    {
+        err = "Error: Must have at least one file to compile.";
         return true;
+    }
+
+    //All environment variables must exists
+    if(!this->getDepInclVar().empty())
+    {
+        if(getenv(this->getDepInclVar().c_str()) == NULL)
+        {
+            err = "Error: Include variable is not an environment variable.";
+            return true;
+        }
+    }
+    if(!this->getDepLibVar().empty())
+    {
+        if(getenv(this->getDepLibVar().c_str()) == NULL)
+        {
+            err = "Error: Library variable is not an environment variable.";
+            return true;
+        }
+    }
 
     return false;
 }
@@ -205,11 +235,11 @@ StringPairList const ConfigFileUtils::generateCompileList(const YAML::Node node)
 }
 
 /* Creates the content of a valid YAML config file. Useful for unit testing*/
-std::stringstream ConfigFileUtils::createConfigContents(    StringList      projectName,
-                                                            StringPairList  compileList,
-                                                            StringList      depLibVars,
-                                                            StringList      depLibList,
-                                                            StringList      depInclVars)
+std::stringstream ConfigFileUtils::createValidYAML( string          projectName,
+                                                    StringPairList  compileList,
+                                                    string          depLibVar,
+                                                    StringList      depLibList,
+                                                    string          depInclVar)
 {
     std::stringstream out;
     YAML::Emitter emitter;
@@ -217,7 +247,7 @@ std::stringstream ConfigFileUtils::createConfigContents(    StringList      proj
 
     //1. Project
     emitter << YAML::Key << CONFIG_FILE_PROJECT;
-    emitter << YAML::Value << projectName.at(0);
+    emitter << YAML::Value << projectName;
     
     //2. Compile List
     emitter << YAML::Key << CONFIG_FILE_COMPILE;
@@ -233,17 +263,17 @@ std::stringstream ConfigFileUtils::createConfigContents(    StringList      proj
     emitter << YAML::EndSeq;
     
 
-    if(depLibList.size() > 0 || depLibVars.size() > 0)
+    if(depLibList.size() > 0 || !depLibVar.empty())
     {
         emitter << YAML::Key << CONFIG_FILE_DEP_LIBRARY;
         emitter << YAML::Value;
         emitter << YAML::BeginMap;
         //3. Dependencies vars List
-        if(depLibVars.size() > 0)
+        if(!depLibVar.empty())
         {
             
             emitter << YAML::Key << CONFIG_FILE_VARS;
-            emitter << YAML::Value << depLibVars.at(0);
+            emitter << YAML::Value << depLibVar;
         }
 
         //4. Dependencies libraries List
@@ -262,13 +292,13 @@ std::stringstream ConfigFileUtils::createConfigContents(    StringList      proj
     }
 
     //5. Includes List
-    if(depInclVars.size() > 0)
+    if(!depInclVar.empty())
     {
         emitter << YAML::Key << CONFIG_FILE_DEP_INCL;
         emitter << YAML::Value;
         emitter << YAML::BeginMap;
         emitter << YAML::Key << CONFIG_FILE_VARS;
-        emitter << YAML::Value << depInclVars.at(0);
+        emitter << YAML::Value << depInclVar;
         emitter << YAML::EndMap;
     } 
 
