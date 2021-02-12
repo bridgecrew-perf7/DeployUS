@@ -1,0 +1,10 @@
+project: app1
+deps_include:
+ var: BOOST_INCLUDEDIR
+deps_library:
+ var: BOOST_LIBRARYDIR
+ libs:
+  - boost_filesystem
+compile:
+ - f1: ../prog2/main.cpp
+ - f2: ../prog2/utils.cpp

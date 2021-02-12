@@ -16,37 +16,23 @@ ConfigFile::ConfigFile(fs::path filepath)
     if(!fs::exists(configfilepath))
     {
         string msg = string("Error: File ") + filepath.string() + string(" does not exists.");
-        throw std::runtime_error(msg);
+        throw std::runtime_error(msg.c_str());
     }
 
     //2. Read files
     std::stringstream configcontents = readFile(configfilepath);
 
-    //3. Initialize members
-    initialize(configcontents);
-}
+    //3. Parsing. Sets config attribute
+    this->parseYAML(configcontents);
 
-ConfigFile::ConfigFile(fs::path simulatedConfigPath, std::stringstream& bytestream)
-//Create Config from bytestream. Usefull for unittesting
-{
-    this->configPath = simulatedConfigPath;
-    initialize(bytestream);
-}
-
-void ConfigFile::initialize(std::stringstream& bytestream)
-//Common code to all constructors
-{
-    //1. Parsing. Sets config attribute
-    this->parseYAML(bytestream);
-
-    //2. Verify that config is valid
-    if(this->isYAMLInvalid())
+    //4. Verify that config is valid
+    string err;
+    if(this->isConfigInvalid(err))
     {
-        string msg = string("Error: Configuration file is not valid.");
-        throw std::runtime_error(msg);
+        throw std::runtime_error(err);
     }
 
-    //3. Verify that all compilation units exists
+    //5. Verify that all compilation units exists
     //   Note: This function can throw std::runtime_error
     this->verifyCompilationUnitsExists();
 }
@@ -67,22 +53,6 @@ ConfigFile* ConfigFile::safeFactory(fs::path filepath)
     return out;
 }
 
-static ConfigFile* safeFactory(fs::path simulatedConfigPath, std::stringstream& bytestream)
-//Catches all error. Returns nullptr if an error occured
-{
-    ConfigFile* out;
-    try
-    {
-        out = new ConfigFile(simulatedConfigPath, bytestream);
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-        out = nullptr;
-    }
-    return out;
-}
-
 ConfigFile::~ConfigFile()
 {
 }
@@ -92,15 +62,21 @@ void ConfigFile::parseYAML(std::stringstream& bytestream)
     Fills attribut fields with contents of config file.
 */
 {
+    auto extractFirstString = [&](StringList list) {return list.size() > 0 ? list.at(0) : string();};
     //Saving YAML config
     this->config = YAML::Load(bytestream);
 
     //Filling attributes
-    this->projectName = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_PROJECT]);
-    this->compileList = ConfigFileUtils::generateCompileList(this->config);
-    this->depLibVars =  ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_VARS]);
-    this->depLibList =  ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_LIBS]);
-    this->depInclVars = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_INCL][CONFIG_FILE_VARS]);
+    StringList temp;
+    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_PROJECT]);
+    this->projectName = extractFirstString(temp) ; // Only 1 name
+    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_VARS]);
+    this->depLibVar   =  extractFirstString(temp); // Only 1 var
+    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_INCL][CONFIG_FILE_VARS]);
+    this->depInclVar  = extractFirstString(temp);  // Only 1 var
+    
+    this->compileList = ConfigFileUtils::generateCompileList(this->config[CONFIG_FILE_COMPILE]);
+    this->depLibList  =  ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_LIBS]);
 }
 
 void ConfigFile::verifyCompilationUnitsExists()
@@ -109,7 +85,7 @@ void ConfigFile::verifyCompilationUnitsExists()
 {
     for(auto elem: this->getCompileList())
     {
-        fs::path compileunitPath = this->getConfigPath().parent_path().append(elem.second);
+        fs::path compileunitPath = this->getConfigParentPath().append(elem.second);
         if(!fs::exists(compileunitPath))
         {
             string msg = string("Error: Compilation unit ") + elem.second + string(" does not exists.");
@@ -118,19 +94,43 @@ void ConfigFile::verifyCompilationUnitsExists()
     }
 }
 
-bool const ConfigFile::isYAMLInvalid()
+bool const ConfigFile::isConfigInvalid(string& err)
 /*
-    Returns true if the YAML file is invalid.
-    Returns false if it is a valid YAML file
+    Returns true if the Config file is invalid.
+    Returns false if it is a valid Config file
 */
 {
     //Only allowed 1 project name
-    if(this->getProjectName().size() != 1)
+    if(this->getProjectName().empty())
+    {
+        err = "Error: Must have a project name.";
         return true;
+    }
 
     //Must compile at least 1 file
     if(this->getCompileList().size() < 1)
+    {
+        err = "Error: Must have at least one file to compile.";
         return true;
+    }
+
+    //All environment variables must exists
+    if(!this->getDepInclVar().empty())
+    {
+        if(getenv(this->getDepInclVar().c_str()) == NULL)
+        {
+            err = "Error: Include variable is not an environment variable.";
+            return true;
+        }
+    }
+    if(!this->getDepLibVar().empty())
+    {
+        if(getenv(this->getDepLibVar().c_str()) == NULL)
+        {
+            err = "Error: Library variable is not an environment variable.";
+            return true;
+        }
+    }
 
     return false;
 }
@@ -141,7 +141,9 @@ string const ConfigFile::toString()
 // Mainly a debugging function, in order to visualize the fields of the ConfigFile class.
 // Should not be used during normal executable operation.
 {
-    return ConfigFileUtils::createConfigContents(getProjectName(),getCompileList(),getDepLibVars(),getDepLibList(),getDepInclVars()).str();
+    YAML::Emitter emitter;
+    emitter << this->config;
+    return string(emitter.c_str());
 }
 
 /*
@@ -173,7 +175,7 @@ StringList const ConfigFileUtils::vectorizeYAMLNode(const YAML::Node node)
                 {
                     string key   = nodeItem.first;
                     string value = nodeItem.second;
-                    string concatenated = key + '\0' + value;
+                    string concatenated = key + CONFIG_MAP_SEPERATOR + value;
                     vectorized.push_back(concatenated);
                 }
             }
@@ -188,13 +190,11 @@ StringPairList const ConfigFileUtils::generateCompileList(const YAML::Node node)
 //Creates list of compilation units
 {
     StringPairList toCompile;
-    for(int i = 0; i < node[CONFIG_FILE_COMPILE].size(); i++ )
+    for(int i = 0; i < node.size(); i++ )
     {
-        string item = "f";
-        item += std::to_string(i + 1);
-        for(auto elem: ConfigFileUtils::vectorizeYAMLNode(node[CONFIG_FILE_COMPILE][i]))
+        for(auto elem: ConfigFileUtils::vectorizeYAMLNode(node[i]))
         {
-            int nullPos = elem.find('\0');
+            int nullPos = elem.find(CONFIG_MAP_SEPERATOR);
             string outputPath = elem.substr(0,nullPos);
             string inputPath = elem.substr(nullPos+1);
             std::pair<string, string> compileUnit(outputPath,inputPath);
@@ -202,62 +202,4 @@ StringPairList const ConfigFileUtils::generateCompileList(const YAML::Node node)
         }
     }
     return toCompile;
-}
-
-/* Creates the content of a valid YAML config file. Useful for unit testing*/
-std::stringstream ConfigFileUtils::createConfigContents(    StringList      projectName,
-                                                            StringPairList  compileList,
-                                                            StringList      depLibVars,
-                                                            StringList      depLibList,
-                                                            StringList      depInclVars)
-{
-    std::stringstream out;
-    
-    //1. Project
-    out << CONFIG_FILE_PROJECT << ": " << projectName.at(0) << "\n";
-    
-    //2. Compile List
-    out << CONFIG_FILE_COMPILE << ":\n";
-    for(auto compileUnit: compileList)
-    {
-        out << " - " << compileUnit.first <<": " << compileUnit.second << '\n';
-    }
-
-    if(depLibList.size() > 0 || depLibVars.size() > 0)
-    {
-        out << CONFIG_FILE_DEP_LIBRARY << ": \n";
-
-        //3. Dependencies vars List
-        if(depLibVars.size() > 0)
-        {
-            out << " " << CONFIG_FILE_VARS << ":\n";
-            for(auto var: depLibVars)
-            {
-                out << "  " << var << '\n';
-            }
-        }
-
-        //4. Dependencies libraries List
-        if(depLibList.size() > 0)
-        {   out << " " << CONFIG_FILE_LIBS << ":\n";
-            for(auto libpath: depLibList)
-            {
-                out << " - " << libpath << '\n';
-            }
-        }
-    }
-
-
-    //5. Includes List
-    if(depLibList.size() > 0)
-    {
-        out << CONFIG_FILE_DEP_INCL << ": \n";
-        out << " " << CONFIG_FILE_VARS << ":\n";
-        for(auto var: depInclVars)
-        {
-            out << "  " << var << '\n';
-        }
-    }
-    
-    return out;
 }

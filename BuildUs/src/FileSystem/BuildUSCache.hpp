@@ -1,29 +1,37 @@
 #pragma once
 #include <Common/Common.hpp>
+#include <FileSystem/ConfigFile.hpp>
 #include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
 
 const fs::path BUILDUS_CACHE_INTERMEDIATE_FOLDER = fs::path("intermediate");
-const fs::path BUILDUS_CACHE_INTERMEDIATE_FILE = fs::path(BUILDUS_CACHE_INTERMEDIATE_FOLDER).append(".cache");
+const fs::path BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE = fs::path(BUILDUS_CACHE_INTERMEDIATE_FOLDER).append("compile.cache");
+const fs::path BUILDUS_CACHE_INTERMEDIATE_PROJECT_CACHE = fs::path(BUILDUS_CACHE_INTERMEDIATE_FOLDER).append("project.cache");
 const char BUILDUS_CACHE_INTER_SEP = '\n';
 const char BUILDUS_CACHE_INTRA_SEP = '\0';
 
 class BuildUSCache
 {
 private:
-    fs::path configParentPath;
+    ConfigFile* config;
     ThreeStringTupleList cached;
 
-    void readCacheOnDisk();
-    void writeCacheToDisk();
+    const fs::path getExecutablePath(); 
+
+    void readCompileCacheOnDisk();
+    void writeCompileCacheToDisk();
+
 public:
-    BuildUSCache(const fs::path& configDirectory);
+    BuildUSCache(ConfigFile* configPtr);
     BuildUSCache();
     ~BuildUSCache();
 
     StringPairList const getFileForMinimalCompilation(const StringPairList& filesForCompilation);
     int updateCompiled(const StringPairList& filesCompiled);
+
+    bool const mustLink();
+    void const writeProjectCacheToDisk();
 };
 
 namespace BuildUSCacheUtils{

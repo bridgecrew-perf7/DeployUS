@@ -25,14 +25,14 @@ namespace BuildUS
             std::cout << "Usage: ./BuildUS <Config filepath>" << std::endl;
             return 1;
         }
-        fs::path configPath = argv[1];
+        fs::path arg1 = argv[1];
         
         //Special command: ./BuildUS clean
-        if(configPath.compare(BUILDUS_CLEAN) == 0)
+        if(arg1.compare(BUILDUS_CLEAN) == 0)
             return clean();
 
         //Check file extension
-        if(configPath.extension().compare(BUILDUS_EXTENSION) != 0)
+        if(arg1.extension().compare(BUILDUS_EXTENSION) != 0)
         {
             std::cout << "Error: Config file must have .buildus extension.\n";
             return 1;
@@ -40,26 +40,30 @@ namespace BuildUS
 
 
         //1. Load Config File
-        ConfigFile* config = ConfigFile::safeFactory(configPath);
+        ConfigFile* config = ConfigFile::safeFactory(arg1);
         if(config == nullptr)
             return 1;
         
         //2. Create GCCDriver Object
-        GCCDriver* builder = GCCDriver::safeFactory(config);
-        if(builder == nullptr)
+        GCCDriver* gcc = GCCDriver::safeFactory(config);
+        if(gcc == nullptr)
             return 1;
         
-        //1. Compiling step
-        if(builder->compile())
+        //3. Compiling step
+        if(gcc->compile())
         {
-            std::cout << "Error: Could not compile files.\n";
             return 1;
         }
 
+        //4. Linking step
+        if(gcc->link())
+        {
+            return 1;
+        }
 
         //Reclaim memory
         delete config;
-        delete builder;
+        delete gcc;
 
         return 0;
     }
@@ -67,6 +71,26 @@ namespace BuildUS
     int clean()
     //Removes intermediate folder
     {
+        string err;
+        //Deleting executable
+        if(fs::exists(BUILDUS_CACHE_INTERMEDIATE_PROJECT_CACHE))
+        {
+            std::stringstream projectcache = readFile(BUILDUS_CACHE_INTERMEDIATE_PROJECT_CACHE);
+            string execPath = BuildUSCacheUtils::getCacheToken(projectcache);
+            try
+            {
+                fs::remove(fs::path(execPath));
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+                err += "Error: Could not remove executable.\n";
+            }
+            
+            
+        }
+        
+        //Deleting intermediate folder
         if(fs::exists(BUILDUS_CACHE_INTERMEDIATE_FOLDER))
         {
             try
@@ -76,9 +100,14 @@ namespace BuildUS
             catch(const std::exception& e)
             {
                 std::cerr << e.what() << '\n';
-                std::cout << "Error: Could not clean directory.\n";
-                return 1;
+                err += "Error: Could not clean directory.\n";
             }
+        }
+
+        if(err.size() > 0)
+        {
+            std::cout << err;
+            return 1;
         }
         return 0;
     }

@@ -1,0 +1,10 @@
+project: app1
+deps_include:
+ var: BOOST_INCLUDEDIR
+deps_library:
+ var: THIS_VAR_DNE
+ libs:
+  - boost_filesystem
+compile:
+ - f1: ../prog1/main.cpp
+ - f2: ../prog1/utils.cpp

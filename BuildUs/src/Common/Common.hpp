@@ -43,3 +43,6 @@ bool isValidSHA1(string hash);
 
 string popenCommand(string command);
 int safePopenCommand(string command, string& stdoutOutput);
+
+StringPairList createStringPairList(int numPairs, string outputfile, string sourcepath, ...);
+StringList createStringList(int num, ...);

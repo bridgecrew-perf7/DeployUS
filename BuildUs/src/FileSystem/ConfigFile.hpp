@@ -17,55 +17,45 @@ namespace fs = boost::filesystem;
 class ConfigFile
 {
 private:
-    fs::path configPath;
-    StringList      projectName;
+    fs::path        configPath;
+    string          projectName;
     StringPairList  compileList;
-    StringList      depLibVars;
+    string          depLibVar;
     StringList      depLibList;
-    StringList      depInclVars;
-
-    void initialize(std::stringstream& bytestream);
+    string          depInclVar;
 
     //YAML config related methods and attributes
     YAML::Node config; 
     void parseYAML(std::stringstream& bytestream);
 
     void verifyCompilationUnitsExists();
-    bool const isYAMLInvalid();
+    bool const isConfigInvalid(string& err);
 public:
     //Can throw an error! (ex: If configfile does not exists)
     ConfigFile(fs::path filepath);
-    ConfigFile(fs::path simulatedConfigPath, std::stringstream& bytestream);
 
     //Will not throw an error
     static ConfigFile* safeFactory(fs::path filepath);
-    static ConfigFile* safeFactory(fs::path simulatedConfigPath, std::stringstream& bytestream);
     ~ConfigFile();
 
     //To string function
     string const toString();
 
     //getters
-    StringList      const getProjectName() {return this->projectName;};
+    string          const getProjectName() {return this->projectName;};
     StringPairList  const getCompileList() {return this->compileList;};
-    StringList      const getDepLibVars() {return this->depLibVars;};
-    StringList      const getDepLibList() {return this->depLibList;};
-    StringList      const getDepInclVars() {return this->depInclVars;};
+    string          const getDepLibVar()   {return this->depLibVar;};
+    StringList      const getDepLibList()  {return this->depLibList;};
+    string          const getDepInclVar()  {return this->depInclVar;};
     fs::path getConfigPath() {return fs::path(this->configPath);};
+    fs::path getConfigParentPath() {return fs::path(this->configPath.parent_path());};
 
 };
 
 namespace ConfigFileUtils
 {
+    const char CONFIG_MAP_SEPERATOR = '\0';
     StringList      const vectorizeYAMLNode(const YAML::Node node);
     StringPairList  const generateCompileList(const YAML::Node node);
-
-    //Easily create a the contents of a config file
-    std::stringstream createConfigContents( StringList      projectName,
-                                            StringPairList  compileList,
-                                            StringList      depLibVars = StringList(),
-                                            StringList      depLibList = StringList(),
-                                            StringList      depInclVars = StringList());
-    
 }
 

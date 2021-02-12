@@ -8,15 +8,15 @@
 
 namespace fs = boost::filesystem;
 
-void setup()
+void setupCompilationTest()
 {
     std::cout.setstate(std::ios::failbit); //Don't display anything
-    REQUIRE(clearIntermediate() == 0);
+    REQUIRE(cleanIntermediate() == 0);
 }
 
-void teardown()
+void teardownCompilationTest()
 {
-    REQUIRE(clearIntermediate() == 0);
+    REQUIRE(cleanIntermediate() == 0);
     std::cout.clear();
 }
 
@@ -33,11 +33,12 @@ StringPairList TestSuccessfulCompilation(fs::path configpath)
 
     //Compiling
     REQUIRE(gcc->compile() == 0);
+    REQUIRE(gcc->toCompile().size() == 0); //All files have been compiled
 
     //Verify files have been compiled properly
     REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_FOLDER));
-    REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_FILE));
-    std::stringstream cachestream = readFile(BUILDUS_CACHE_INTERMEDIATE_FILE);  //Reading cache
+    REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE));
+    std::stringstream cachestream = readFile(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE);  //Reading cache
     for(auto elem: config->getCompileList())
     {
         //Check object file path
@@ -53,32 +54,35 @@ StringPairList TestSuccessfulCompilation(fs::path configpath)
         REQUIRE(cacheObjectName == objectfilename);
         REQUIRE(cacheSourceFile == elem.second);
         //SHA specifics
-        string realSHA1 = generateSHA1(readFile(config->getConfigPath().parent_path().append(cacheSourceFile)).str());
+        string realSHA1 = generateSHA1(readFile(config->getConfigParentPath().append(cacheSourceFile)).str());
         REQUIRE(isValidSHA1(cacheSourceSHA1));
         REQUIRE(isValidSHA1(realSHA1));
         REQUIRE(cacheSourceSHA1 == realSHA1);  //The right SHA1 must be placed inside cache
         
     }
 
+
+    delete config;
+    delete gcc;
     return toCompile;
 }
 
 TEST_CASE("COMPILATION_SUCCESS_NO_DEPS")
 {
-    setup();
+    setupCompilationTest();
 
     //Run Config1,2,3
-    StringPairList compiled = TestSuccessfulCompilation(CONFIG1_PATH);
+    StringPairList compiled = TestSuccessfulCompilation(CONFIG_LIBS_DNE_PATH);
     REQUIRE(compiled.size() == 2);
-    compiled = TestSuccessfulCompilation(CONFIG2_PATH);
+    compiled = TestSuccessfulCompilation(CONFIG_PROG1_PATH);
     REQUIRE(compiled.size() == 0);
-    compiled = TestSuccessfulCompilation(CONFIG3_PATH);
+    compiled = TestSuccessfulCompilation(CONFIG_2PROJECTNAMES_PATH);
     REQUIRE(compiled.size() == 0);
 
     //Since these all compile the same program, and the .cache is not delete in between
     //And the compiled program only has 2 objects compiled, there should only be two lines in .cache
-    REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_FILE));
-    std::stringstream cache = readFile(BUILDUS_CACHE_INTERMEDIATE_FILE);
+    REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE));
+    std::stringstream cache = readFile(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE);
     
     //Quickly count lines using for loop
     int numLines = 0;
@@ -87,52 +91,51 @@ TEST_CASE("COMPILATION_SUCCESS_NO_DEPS")
     REQUIRE(numLines == 2);
 
     
-    teardown();
+    teardownCompilationTest();
 }
 
 TEST_CASE("COMPILATION_SUCCESS_WITH_DEPS")
 {
-    setup();
+    setupCompilationTest();
     ConfigFile* cf;
-    string progfolder = "prog2";
-
-    //Config creation
-    std::stringstream configcontents = createConfigStreamForProg(progfolder); 
-    REQUIRE_NOTHROW(cf = new ConfigFile(CONFIG_FAKE_PATH,configcontents));
+    REQUIRE_NOTHROW(cf = new ConfigFile(CONFIG_PROG2_PATH));
 
     //GCCDriver creation
     GCCDriver* gcc = GCCDriver::safeFactory(cf);
     REQUIRE(gcc != nullptr);
     REQUIRE(gcc->compile() == 0); //No errors!
     
-    teardown();
+    delete cf;
+    delete gcc;
+    teardownCompilationTest();
 }
 
 
 TEST_CASE("COMPILATION_FAILURE")
 {
-    setup();
+    setupCompilationTest();
     ConfigFile* cf;
-    string progfolder;
+    fs::path configpath;
 
     //These programs have intentional but different errors
     SECTION("compileissue1")
     {
-        progfolder = "prog_compileissue1";
+        configpath = CONFIG_COMPILEISSUE1_PATH;
     }
     SECTION("compilerissue2")
     {
-        progfolder = "prog_compileissue2";
+        configpath = CONFIG_COMPILEISSUE2_PATH;
     }
 
     //Config creation
-    std::stringstream configcontents = createConfigStreamForProg(progfolder); 
-    REQUIRE_NOTHROW(cf = new ConfigFile(CONFIG_FAKE_PATH,configcontents));
+    REQUIRE_NOTHROW(cf = new ConfigFile(configpath));
 
     //GCCDriver creation
     GCCDriver* gcc = GCCDriver::safeFactory(cf, true);
     REQUIRE(gcc != nullptr);
     REQUIRE(gcc->compile() != 0); //Error when compiling!
 
-    teardown();
+    delete cf;
+    delete gcc;
+    teardownCompilationTest();
 }
