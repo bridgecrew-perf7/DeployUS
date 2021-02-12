@@ -16,37 +16,23 @@ ConfigFile::ConfigFile(fs::path filepath)
     if(!fs::exists(configfilepath))
     {
         string msg = string("Error: File ") + filepath.string() + string(" does not exists.");
-        throw std::runtime_error(msg);
+        throw std::runtime_error(msg.c_str());
     }
 
     //2. Read files
     std::stringstream configcontents = readFile(configfilepath);
 
-    //3. Initialize members
-    initialize(configcontents);
-}
+    //3. Parsing. Sets config attribute
+    this->parseYAML(configcontents);
 
-ConfigFile::ConfigFile(fs::path simulatedConfigPath, std::stringstream& bytestream)
-//Create Config from bytestream. Usefull for unittesting
-{
-    this->configPath = simulatedConfigPath;
-    initialize(bytestream);
-}
-
-void ConfigFile::initialize(std::stringstream& bytestream)
-//Common code to all constructors
-{
-    //1. Parsing. Sets config attribute
-    this->parseYAML(bytestream);
-
-    //2. Verify that config is valid
+    //4. Verify that config is valid
     string err;
     if(this->isConfigInvalid(err))
     {
         throw std::runtime_error(err);
     }
 
-    //3. Verify that all compilation units exists
+    //5. Verify that all compilation units exists
     //   Note: This function can throw std::runtime_error
     this->verifyCompilationUnitsExists();
 }
@@ -58,22 +44,6 @@ ConfigFile* ConfigFile::safeFactory(fs::path filepath)
     try
     {
         out = new ConfigFile(filepath);
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-        out = nullptr;
-    }
-    return out;
-}
-
-static ConfigFile* safeFactory(fs::path simulatedConfigPath, std::stringstream& bytestream)
-//Catches all error. Returns nullptr if an error occured
-{
-    ConfigFile* out;
-    try
-    {
-        out = new ConfigFile(simulatedConfigPath, bytestream);
     }
     catch(const std::exception& e)
     {
@@ -232,77 +202,4 @@ StringPairList const ConfigFileUtils::generateCompileList(const YAML::Node node)
         }
     }
     return toCompile;
-}
-
-/* Creates the content of a valid YAML config file. Useful for unit testing*/
-std::stringstream ConfigFileUtils::createValidYAML( string          projectName,
-                                                    StringPairList  compileList,
-                                                    string          depLibVar,
-                                                    StringList      depLibList,
-                                                    string          depInclVar)
-{
-    std::stringstream out;
-    YAML::Emitter emitter;
-    emitter << YAML::BeginMap;
-
-    //1. Project
-    emitter << YAML::Key << CONFIG_FILE_PROJECT;
-    emitter << YAML::Value << projectName;
-    
-    //2. Compile List
-    emitter << YAML::Key << CONFIG_FILE_COMPILE;
-    emitter << YAML::Value;
-    emitter << YAML::BeginSeq;
-    for(auto compileUnit: compileList)
-    {
-        emitter << YAML::BeginMap;
-        emitter << YAML::Key << compileUnit.first;
-        emitter << YAML::Value << compileUnit.second;
-        emitter << YAML::EndMap;
-    } 
-    emitter << YAML::EndSeq;
-    
-
-    if(depLibList.size() > 0 || !depLibVar.empty())
-    {
-        emitter << YAML::Key << CONFIG_FILE_DEP_LIBRARY;
-        emitter << YAML::Value;
-        emitter << YAML::BeginMap;
-        //3. Dependencies vars List
-        if(!depLibVar.empty())
-        {
-            
-            emitter << YAML::Key << CONFIG_FILE_VARS;
-            emitter << YAML::Value << depLibVar;
-        }
-
-        //4. Dependencies libraries List
-        if(depLibList.size() > 0)
-        {   
-            emitter << YAML::Key << CONFIG_FILE_LIBS;
-            emitter << YAML::Value;
-            emitter << YAML::BeginSeq;
-            for(auto lib: depLibList)
-            {
-                emitter << lib;
-            }
-            emitter << YAML::EndSeq;
-        }
-        emitter << YAML::EndMap;
-    }
-
-    //5. Includes List
-    if(!depInclVar.empty())
-    {
-        emitter << YAML::Key << CONFIG_FILE_DEP_INCL;
-        emitter << YAML::Value;
-        emitter << YAML::BeginMap;
-        emitter << YAML::Key << CONFIG_FILE_VARS;
-        emitter << YAML::Value << depInclVar;
-        emitter << YAML::EndMap;
-    } 
-
-    emitter << YAML::EndMap;
-    out << emitter.c_str();
-    return out;
 }

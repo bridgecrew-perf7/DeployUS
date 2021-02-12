@@ -24,8 +24,6 @@ private:
     StringList      depLibList;
     string          depInclVar;
 
-    void initialize(std::stringstream& bytestream);
-
     //YAML config related methods and attributes
     YAML::Node config; 
     void parseYAML(std::stringstream& bytestream);
@@ -35,11 +33,9 @@ private:
 public:
     //Can throw an error! (ex: If configfile does not exists)
     ConfigFile(fs::path filepath);
-    ConfigFile(fs::path simulatedConfigPath, std::stringstream& bytestream);
 
     //Will not throw an error
     static ConfigFile* safeFactory(fs::path filepath);
-    static ConfigFile* safeFactory(fs::path simulatedConfigPath, std::stringstream& bytestream);
     ~ConfigFile();
 
     //To string function
@@ -61,13 +57,5 @@ namespace ConfigFileUtils
     const char CONFIG_MAP_SEPERATOR = '\0';
     StringList      const vectorizeYAMLNode(const YAML::Node node);
     StringPairList  const generateCompileList(const YAML::Node node);
-
-    //Easily create the contents of a config file
-    std::stringstream createValidYAML(      string          projectName,
-                                            StringPairList  compileList,
-                                            string          depLibVar = string(),
-                                            StringList      depLibList = StringList(),
-                                            string          depInclVar = string());
-    
 }
 

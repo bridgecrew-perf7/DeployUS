@@ -32,7 +32,7 @@ GCCDriver* GCCDriver::safeFactory(ConfigFile* _config, bool silentSysCmd)
 
 GCCDriver::~GCCDriver()
 {
-
+    //Not responsible for deleting config!
 }
 
 StringPairList GCCDriver::toCompile()

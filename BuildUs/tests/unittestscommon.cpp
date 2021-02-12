@@ -3,9 +3,17 @@
 #include <BuildUS.hpp>
 #include <FileSystem/ConfigFile.hpp>
 
-const fs::path CONFIG1_PATH = "config/config1.buildus";
-const fs::path CONFIG2_PATH = "config/config2.buildus";
-const fs::path CONFIG3_PATH = "config/2projectnames.buildus";
+const fs::path CONFIG_LIBS_DNE_PATH = "config/config_libsDNE.buildus";
+const fs::path CONFIG_LIBS_VAR_DNE_PATH = "config/config_libsVarDNE.buildus";
+const fs::path CONFIG_INCL_VAR_DNE_PATH = "config/config_InclVarDNE.buildus";
+
+const fs::path CONFIG_LINKERISSUE1_PATH = "config/config_linkerissue1.buildus";
+const fs::path CONFIG_LINKERISSUE2_PATH = "config/config_linkerissue2.buildus";
+
+const fs::path CONFIG_COMPILEISSUE1_PATH = "config/config_compileissue1.buildus";
+const fs::path CONFIG_COMPILEISSUE2_PATH = "config/config_compileissue2.buildus";
+
+const fs::path CONFIG_2PROJECTNAMES_PATH = "config/2projectnames.buildus";
 const fs::path CONFIG_FAKE_PATH = "config/nonexistant.buildus";
 
 const fs::path CONFIG_PROG1_PATH = "config/configprog1.buildus";
@@ -26,20 +34,3 @@ int cleanIntermediate()
     return BuildUS::start(argc,argv);
 }
 
-std::stringstream createGeneralConfigProg(string progfolder)
-//Creates common Config file in stringstream format
-{
-    string          projectName = string("app1");
-    StringPairList  compileList = createStringPairList(2,   string("f1"), 
-                                                            string("../") + progfolder + string("/main.cpp"),
-                                                            string("f2"),
-                                                            string("../") + progfolder + string("/utils.cpp"));
-    string          depLibVars  = string("BOOST_LIBRARYDIR");
-    StringList      depLibList  = createStringList(2, string("lib1"), string("lib2"));
-    string          depInclVars = string("BOOST_INCLUDEDIR");
-    return ConfigFileUtils::createValidYAML(    projectName,
-                                                compileList,
-                                                depLibVars,
-                                                depLibList,
-                                                depInclVars);
-}

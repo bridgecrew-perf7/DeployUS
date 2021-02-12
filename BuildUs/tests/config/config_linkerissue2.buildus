@@ -1,0 +1,4 @@
+project: app1
+compile:
+ - f1: ../prog_linkerissue2/main.cpp
+ - f2: ../prog_linkerissue2/utils.cpp

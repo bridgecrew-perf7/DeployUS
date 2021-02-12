@@ -22,9 +22,9 @@ TEST_CASE("Valid_YAML")
 
     //Valid ConfigFiles
     fs::path configpath;
-    SECTION("CONFIG1") {configpath = CONFIG1_PATH;}
-    SECTION("CONFIG2") {configpath = CONFIG2_PATH;}
-    SECTION("CONFIG3") {configpath = CONFIG3_PATH;}
+    SECTION("CONFIG1") {configpath = CONFIG_LIBS_DNE_PATH;}
+    SECTION("CONFIG2") {configpath = CONFIG_PROG1_PATH;}
+    SECTION("CONFIG3") {configpath = CONFIG_2PROJECTNAMES_PATH;}
     
     //Testing config
     REQUIRE_NOTHROW(cf = new ConfigFile(configpath));
@@ -68,79 +68,31 @@ TEST_CASE("VALID_PROGRAM")
     delete cf;
 }
 
-TEST_CASE("Generate_Valid_Config_From_Function")
-//Goal of test: see if config files created from a stringstream is the same as if it came from file.
-{
-    //Setup
-    ConfigFile* cfreal;
-    ConfigFile* cf;
-
-    //Generate config object
-    std::stringstream configcontents = createGeneralConfigProg("prog1");
-
-    //No errors must occur when creating object
-    REQUIRE_NOTHROW(cf = new ConfigFile(CONFIG2_PATH,configcontents));
-    
-    //Compare with a real config file
-    REQUIRE_NOTHROW(cfreal = new ConfigFile(CONFIG2_PATH));
-    REQUIRE(cf->getConfigPath() == cfreal->getConfigPath());
-    REQUIRE(cf->getProjectName() == cfreal->getProjectName());
-    REQUIRE(cf->getCompileList() == cfreal->getCompileList());
-    REQUIRE(cf->getDepInclVar() == cfreal->getDepInclVar());
-    REQUIRE(cf->getDepLibList() == cfreal->getDepLibList());
-    REQUIRE(cf->getDepLibVar() == cfreal->getDepLibVar());
-
-    delete cf;
-    delete cfreal;
-
-}
-
 TEST_CASE("Invalid_YAML")
 {
    ConfigFile* cf;
 
    //Invalid ConfigFiles
-   REQUIRE_THROWS(cf = new ConfigFile(BADCONFIG1_PATH)); //No project name
-   REQUIRE_THROWS(cf = new ConfigFile(BADCONFIG2_PATH)); //No compilation unit
+   REQUIRE_THROWS(cf = new ConfigFile(BADCONFIG1_PATH)); //No compilation unit
+   REQUIRE_THROWS(cf = new ConfigFile(BADCONFIG2_PATH)); //No project name
 }
 
 TEST_CASE("FILES_OR_VARIABLES_DNE")
 {
-    //Creating valid yaml, but with an env var that does not exists
-    string          progfolder = string("prog1");
-    string          projectName = string("app1");
-    StringPairList  compileList = createStringPairList(2,   string("f1"), 
-                                                            string("../") + progfolder + string("/main.cpp"),
-                                                            string("f2"),
-                                                            string("../") + progfolder + string("/utils.cpp"));
-    StringList      depLibList  = StringList();
-    string          depInclVar;
-    string          depLibVar;
-
+    fs::path configpath;
     SECTION("Include_Variable_DNE") 
     {
-        depInclVar = string("THIS_ENV_VAR_DOES_NOT_EXISTS");
-        depLibVar  = string();
+        configpath = CONFIG_INCL_VAR_DNE_PATH;
     }
     SECTION("Library_Variable_DNE") 
     {
-        depInclVar = string();
-        depLibVar  = string("THIS_ENV_VAR_DOES_NOT_EXISTS");
+        configpath = CONFIG_LIBS_VAR_DNE_PATH;
     }
     SECTION("COMPILATION_UNITS_DNE")
     {
-        compileList = createStringPairList(2,   string("f1"), 
-                                                string("../THISFILE/DNE.cpp"),
-                                                string("f2"),
-                                                string("../THISFILE/DNE_ASWELL.cpp"));
+        configpath = BADCONFIG3_PATH;
     }
 
-    std::stringstream yamlFile =  ConfigFileUtils::createValidYAML(     projectName,
-                                                                        compileList,
-                                                                        depLibVar,
-                                                                        depLibList,
-                                                                        depInclVar);
-
     ConfigFile* cf;
-    REQUIRE_THROWS(cf = new ConfigFile("config/config1.buildus", yamlFile));
+    REQUIRE_THROWS(cf = new ConfigFile(configpath));
 }

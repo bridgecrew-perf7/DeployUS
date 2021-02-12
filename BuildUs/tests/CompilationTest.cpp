@@ -8,13 +8,13 @@
 
 namespace fs = boost::filesystem;
 
-void setup()
+void setupCompilationTest()
 {
     std::cout.setstate(std::ios::failbit); //Don't display anything
     REQUIRE(cleanIntermediate() == 0);
 }
 
-void teardown()
+void teardownCompilationTest()
 {
     REQUIRE(cleanIntermediate() == 0);
     std::cout.clear();
@@ -61,19 +61,22 @@ StringPairList TestSuccessfulCompilation(fs::path configpath)
         
     }
 
+
+    delete config;
+    delete gcc;
     return toCompile;
 }
 
 TEST_CASE("COMPILATION_SUCCESS_NO_DEPS")
 {
-    setup();
+    setupCompilationTest();
 
     //Run Config1,2,3
-    StringPairList compiled = TestSuccessfulCompilation(CONFIG1_PATH);
+    StringPairList compiled = TestSuccessfulCompilation(CONFIG_LIBS_DNE_PATH);
     REQUIRE(compiled.size() == 2);
-    compiled = TestSuccessfulCompilation(CONFIG2_PATH);
+    compiled = TestSuccessfulCompilation(CONFIG_PROG1_PATH);
     REQUIRE(compiled.size() == 0);
-    compiled = TestSuccessfulCompilation(CONFIG3_PATH);
+    compiled = TestSuccessfulCompilation(CONFIG_2PROJECTNAMES_PATH);
     REQUIRE(compiled.size() == 0);
 
     //Since these all compile the same program, and the .cache is not delete in between
@@ -88,12 +91,12 @@ TEST_CASE("COMPILATION_SUCCESS_NO_DEPS")
     REQUIRE(numLines == 2);
 
     
-    teardown();
+    teardownCompilationTest();
 }
 
 TEST_CASE("COMPILATION_SUCCESS_WITH_DEPS")
 {
-    setup();
+    setupCompilationTest();
     ConfigFile* cf;
     REQUIRE_NOTHROW(cf = new ConfigFile(CONFIG_PROG2_PATH));
 
@@ -102,34 +105,37 @@ TEST_CASE("COMPILATION_SUCCESS_WITH_DEPS")
     REQUIRE(gcc != nullptr);
     REQUIRE(gcc->compile() == 0); //No errors!
     
-    teardown();
+    delete cf;
+    delete gcc;
+    teardownCompilationTest();
 }
 
 
 TEST_CASE("COMPILATION_FAILURE")
 {
-    setup();
+    setupCompilationTest();
     ConfigFile* cf;
-    string progfolder;
+    fs::path configpath;
 
     //These programs have intentional but different errors
     SECTION("compileissue1")
     {
-        progfolder = "prog_compileissue1";
+        configpath = CONFIG_COMPILEISSUE1_PATH;
     }
     SECTION("compilerissue2")
     {
-        progfolder = "prog_compileissue2";
+        configpath = CONFIG_COMPILEISSUE2_PATH;
     }
 
     //Config creation
-    std::stringstream configcontents = createGeneralConfigProg(progfolder); 
-    REQUIRE_NOTHROW(cf = new ConfigFile(CONFIG_FAKE_PATH,configcontents));
+    REQUIRE_NOTHROW(cf = new ConfigFile(configpath));
 
     //GCCDriver creation
     GCCDriver* gcc = GCCDriver::safeFactory(cf, true);
     REQUIRE(gcc != nullptr);
     REQUIRE(gcc->compile() != 0); //Error when compiling!
 
-    teardown();
+    delete cf;
+    delete gcc;
+    teardownCompilationTest();
 }

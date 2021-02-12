@@ -10,6 +10,7 @@ add_executable(BuildUSTests
     catch2.cpp
     unittestscommon.cpp
     unittests.hpp
+    CleanTest.cpp
     ConfigTest.cpp
     CompilationTest.cpp
     LinkingTest.cpp
