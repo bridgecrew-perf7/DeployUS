@@ -132,7 +132,7 @@ int GitBlob::isinIndex()
 }
 
 int GitBlob::isTracked()
-//Returns non-zero if the file is already tacked
+//Returns non-zero if the file is already tacked // AB - tacked? tracked?
 {
     string sha1Commit = Common::readFile(GitFilesystem::getHEADPath());
     //No commit = not being tracked!

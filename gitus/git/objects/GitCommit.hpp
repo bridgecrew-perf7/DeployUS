@@ -33,6 +33,7 @@ class GitCommit
 
         int blobInTree(string path, string hash);
 
+        // AB - si tu as restore (au complet), je m'attends à avoir "remove" au complet (et non juste rm)
         int rmTrackedFiles();
         int restoreTrackedFiles();
 

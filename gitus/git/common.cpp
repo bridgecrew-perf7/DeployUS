@@ -11,7 +11,7 @@
 namespace fs = boost::filesystem;
 using boost::uuids::detail::sha1;
 
-const char* Common::HELP_PARAM = "--help";
+const char* Common::HELP_PARAM = "--help"; // AB - pourquoi pas string?
 const char Common::INDEX_FILE_DELIMETER_INTER  = '\0';
 const char* Common::INDEX_FILE_DELIMETER_INTRA  = "\n";
 
@@ -46,6 +46,8 @@ string Common::generateSHA1(string text)
 bool Common::isValidSHA1(string text)
 //Returns true if text is 40 bytes and is in hexadecimal form. False otherwise.
 {
+    // AB - des regex ca fait une plus belle job
+    //      mais la validation est appréciée
     return (text.size() == 40) &&  (text.find_first_not_of("0123456789abcdefABCDEF") == string::npos);
 }
 
@@ -97,7 +99,7 @@ int Common::writeFile(fs::path path, string text)
 {
     std::fstream file;
 	file.open(path.c_str(), std::ios::out);
-	if (!file) {
+	if (!file) { // AB - constance accolades -2
         //File not created
         return 1;
 	}

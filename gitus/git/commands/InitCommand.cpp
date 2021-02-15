@@ -8,6 +8,7 @@ namespace fs = boost::filesystem;
 
 int InitCommand::help() 
 //Displays command usage. Always returns 0.
+// AB - pourquoi pas retourner void?
 {
     std::cout << "usage: gitus init\n";
     return 0;
@@ -23,7 +24,8 @@ int InitCommand::execute(int argc, char* argv[])
     {
         string option = argv[2];
         if(option.compare(Common::HELP_PARAM) == 0)
-            return help();
+            return help(); // AB - étant donné que help retourne 0, ca aide ta fonction execute et non la fonction help.
+                           //    - c'est un peu un effet de bord -2
     }
 
     //2. If .git folder already exists, then print to screen that a local git repo already exists. Else, create folder
@@ -52,7 +54,7 @@ int InitCommand::execute(int argc, char* argv[])
     
     //3. Create empty files index and HEAD files
     std::ofstream fileHEAD(GitFilesystem::getHEADPath().c_str());
-    fileHEAD.close();
+    fileHEAD.close(); // AB - les 2 closes sont un peu redondants car le destructeur va faire ca pour toi
     std::ofstream fileIndex(GitFilesystem::getIndexPath().c_str());
     fileIndex.close();
 

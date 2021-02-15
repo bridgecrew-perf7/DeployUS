@@ -56,17 +56,20 @@ int CommitCommand::execute(int argc, char* argv[])
     }
 
     //6. Fetch root tree. The root tree represents the repo directory with the tracked files. Untracked files are not included.
-    GitTree *root = nullptr;
+    GitTree *root = nullptr; //AB - je n'aime pas mais je comprend...
+                             //     regarde pour utiliser des "smart pointeurs" 
     string parentCommitSHA1 = Common::readFile(GitFilesystem::getHEADPath());
     if(parentCommitSHA1.size() != 0)
     {
         GitCommit* parentCommit = GitCommit::createFromGitObject(parentCommitSHA1);
         root = parentCommit->getRootTree();
         root->updateFromIndex();
+        // AB - et BOOM, fuite de mémoire sur parentCommit -2
     }
     else root = GitTree::createGitTreeFromIndexFile();
 
     //11. Create commit object and add it the the object file
+    // AB - aucune raison d'être un pointeur.
     GitCommit* commitobj = new GitCommit(root, commitAuthor, commitMessage, parentCommitSHA1);
     if(commitobj->addInObjects())
     {
@@ -81,7 +84,7 @@ int CommitCommand::execute(int argc, char* argv[])
     updateHEAD(commitobj);
 
     //Reclaim memory
-    delete commitobj; //Will also delete GitTree* root obj
+    delete commitobj; //Will also delete GitTree* root obj - AB - bon commentaire
 
     return 0;
 }

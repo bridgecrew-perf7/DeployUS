@@ -63,7 +63,7 @@ int AddCommand::execute(int argc, char* argv[]) {
         std::cout << "Error: File is already staged.\n";
         return 1;
     }
-    if(gitblob.isTracked())
+    if(gitblob.isTracked()) // AB - pourquoi faire ca? Checkout?
     {
         std::cout << "Error: File is already being tracked\n";
         return 1;

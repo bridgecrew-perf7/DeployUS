@@ -17,7 +17,7 @@ int GitObjectCommon::addInObjects(string sha1hash, string filecontents)
     auto folderPath = GitFilesystem::getObjectsPath().append(folderName);
     if(! fs::exists(folderPath))
     {
-        fs::create_directory(folderPath);
+        fs::create_directory(folderPath); // AB - exception possible -5
     }
 
     //3. Create file in folder. Check to see that file does not already exists

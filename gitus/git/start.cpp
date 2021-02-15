@@ -32,6 +32,8 @@ namespace GitUS
 
         //POSSIBLE ACTIONS include init, add, commit, checkout
         string command = argv[1];
+
+        // AB - relativement difficile à lire...mais ok
         if (command.compare(Common::HELP_PARAM)  == 0) return help();
         else if( command.compare(INIT_CMD) == 0) ret = InitCommand::execute(argc, argv);
         else if( command.compare(ADD_CMD) == 0) ret = AddCommand::execute(argc, argv);

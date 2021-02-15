@@ -4,7 +4,7 @@
 #include <string>
 #include <list>
 
-
+// AB - détail d'implémentation. Ca va dans le .cpp
 const string GITBLOB_OBJECT_BLOB_NAME("blob");
 const string GITBLOB_OBJECT_FILENAME_FIELD("Filename: ");
 const string GITBLOB_OBJECT_FILESIZE_FIELD("Filesize: ");
@@ -40,6 +40,9 @@ class GitBlob
         int restoreBlob();
         int addInObjects() {return GitObjectCommon::addInObjects(this->sha1hash, this->filecontents);};
 
+
+        // AB - est-ce que ca vaut la peine que ca soit publique?
+        //      Acces -2
         //String generation
         string generateReference();
         string generateContents();

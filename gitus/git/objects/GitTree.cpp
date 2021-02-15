@@ -81,6 +81,7 @@ GitTree::~GitTree()
 void GitTree::initialize()
 //Initializes member attributes.
 {
+    // AB - pourquoi utiliser des pointeurs? Ca aurait pu etre fait avec des objets normaux -2
     branches = new std::map<string, GitTree*>();
     leaves = new std::list<std::pair<string, string>>();
 }

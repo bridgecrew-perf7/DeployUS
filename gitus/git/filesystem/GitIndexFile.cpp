@@ -71,17 +71,21 @@ void GitIndexFile::produceIndexFile()
     out_indexfile.close();
 }
 
-int GitIndexFile::addBlob(GitBlob blob)
+int GitIndexFile::addBlob(GitBlob blob) // AB - passage par copie voulue? -2
 //Adds blob to internal representation of index file. Returns non-zero if unsuccessful
+// AB - mauvais commentaire. Retourne seulement 0. -2
 {
     string relativePath = blob.getRelativePath();
     
     //Check to see that file is not already in index file
-    for (auto it = blobs.begin(); it != blobs.end(); ) 
+    for (auto it = blobs.begin(); it != blobs.end(); )
     {
-        if(it->first.compare(relativePath) == 0)
+        // AB - tu pourrais utiliser la fonction remove_if
+        //      ca évite de faire la boucle manuellement et ca simplifie le code
+
+        if(it->first.compare(relativePath) == 0) // AB - pourquoi pas juste (it->first == relativePath) - Code surcomplexe - 2
         {
-            it = blobs.erase(it);
+            it = blobs.erase(it); // AB - l'assignation sert à quoi?
             break;
         }
         else
@@ -99,14 +103,16 @@ int GitIndexFile::contains(const string filepath, const string hash)
 //Returns non-zero if the filepath is inside the index file.
 //Returns zero otherwise.
 {
-    for(auto blob: blobs)
+    for(auto blob: blobs) // AB - cute
     {
+        // AB - find_if aurait été bien ici
         if(blob.first.compare(filepath) == 0 && blob.second.getSHA1Hash().compare(hash) == 0)
             return 1;
     }
     return 0;
 }
 
+// AB - code mort -2
 int GitIndexFile::count(const string filepath)
 //Returns the number of occurance of filepath
 {
@@ -119,6 +125,7 @@ int GitIndexFile::count(const string filepath)
     return count;
 }
 
+// AB - code mort
 int GitIndexFile::count(const fs::path filepath)
 //Returns the number of occurance of filepath
 {

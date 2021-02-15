@@ -5,10 +5,12 @@
 #include <string>
 #include <boost/tokenizer.hpp>
 
+// AB - ca ne vaut pas la peine de les mettre dans le .h si c'est du détail uniquement utilisé dans le .cpp
 const char GITINDEXFILE_INTER_SEPERATOR = '\n';
 const char GITINDEXFILE_INTRA_SEPERATOR = '\0';
 
-typedef std::list<std::pair<string,GitBlob>> ListBlobs;
+typedef std::list<std::pair<string,GitBlob>> ListBlobs; // AB - c'est très C. Les using c'est plus C++ et intuitif
+                                                        //    - using ListBlobs = std::list<std::pair<string,GitBlob>>
 typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
 
 class GitIndexFile

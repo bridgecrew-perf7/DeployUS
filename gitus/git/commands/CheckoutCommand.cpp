@@ -43,7 +43,7 @@ int CheckoutCommand::execute(int argc, char* argv[])
         return 1;
     }
     GitCommit* wantedCommitObj = GitCommit::createFromGitObject(wantedCommitID);
-    if(wantedCommitObj == nullptr)
+    if(wantedCommitObj == nullptr) // AB - if (wantedCommitObj) fait la meme chose
     {
         std::cout << "Error: Could not read commit object.\n";
         return 1;
@@ -56,6 +56,7 @@ int CheckoutCommand::execute(int argc, char* argv[])
         std::cout << "Error: The commit history is empty.\n";
         return 1;
     }
+    // AB - pointeur inutile    
     GitCommit* currentCommitObj = GitCommit::createFromGitObject(currentCommitID);
 
     //3. Remove currently tracked files

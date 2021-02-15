@@ -12,7 +12,7 @@ typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
 
 GitCommit::GitCommit(GitTree *tree, const string& author, const string& message, const string& parentSHA1, const string& dt)
 {
-    root = tree;
+    root = tree; // AB - je ne crois pas qu'il y ait de raison d'utiliser des pointeurs
     commitAuthor = author;
     msg = message;
     commitTime = dt;
@@ -54,6 +54,7 @@ GitCommit* GitCommit::createFromGitObject(const string& sha1)
         memberfields[fieldname] = fieldvalue;
     }
 
+    //AB - attention, tu overshadow
     GitTree* root = new GitTree(memberfields[GITTREE_OBJECT_TREE_NAME]);
     GitCommit* out = new GitCommit( root,
                                     memberfields[GITCOMMIT_OBJECT_AUTHOR_FIELD],
