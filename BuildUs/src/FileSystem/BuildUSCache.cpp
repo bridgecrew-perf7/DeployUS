@@ -19,14 +19,14 @@ BuildUSCache::BuildUSCache(ConfigFile& configFile)
     this->config = configFile;
     this->cached = ThreeStringTupleList();
 
-    if(fs::exists(BUILDUS_CACHE_INTERMEDIATE_FOLDER))
+    if(fs::exists(BuildUSCacheUtils::INTERMEDIATE_FOLDER))
     {
         //Read cached files
         this->readCompileCacheOnDisk();
     }
     else //Intermediate folder does not exists.
     {
-        fs::create_directory(BUILDUS_CACHE_INTERMEDIATE_FOLDER);
+        fs::create_directory(BuildUSCacheUtils::INTERMEDIATE_FOLDER);
     }
 }
 
@@ -41,12 +41,12 @@ int BuildUSCache::readCompileCacheOnDisk()
 */
 {
     //Verify the file's existence
-    if(!fs::exists(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE))
+    if(!fs::exists(BuildUSCacheUtils::INTERMEDIATE_COMPILE_CACHE))
         return 0;
 
     //1. Build Representation of cache (Parsing)
     std::stringstream cachecontents;
-    if(readFile(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE,cachecontents))
+    if(readFile(BuildUSCacheUtils::INTERMEDIATE_COMPILE_CACHE,cachecontents))
     {
         return 1;
     }
@@ -79,15 +79,15 @@ int BuildUSCache::writeCompileCacheToDisk()
     for(auto compiledFileDesc: this->cached)
     {
         cachecontents << ThreeStringTupleUtils::getOutputFileName(compiledFileDesc);  //output file
-        cachecontents << BUILDUS_CACHE_INTRA_SEP;
+        cachecontents << BuildUSCacheUtils::INTRA_SEP;
         cachecontents << ThreeStringTupleUtils::getSourceFilePath(compiledFileDesc);  //source file path
-        cachecontents << BUILDUS_CACHE_INTRA_SEP;
+        cachecontents << BuildUSCacheUtils::INTRA_SEP;
         cachecontents << ThreeStringTupleUtils::getSourceSHA1(compiledFileDesc);      //hash
-        cachecontents << BUILDUS_CACHE_INTER_SEP;
+        cachecontents << BuildUSCacheUtils::INTER_SEP;
     }
 
     //Flush to disk
-    if(writeFile(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE, cachecontents.str()))
+    if(writeFile(BuildUSCacheUtils::INTERMEDIATE_COMPILE_CACHE, cachecontents.str()))
     {
         std::cout << "Unable to write .cache file." << std::endl;
         return 1;
@@ -121,9 +121,9 @@ void const BuildUSCache::writeProjectCacheToDisk()
 {
     std::stringstream out;
     out << this->getExecutablePath().string();
-    out << BUILDUS_CACHE_INTRA_SEP;
+    out << BuildUSCacheUtils::INTRA_SEP;
     out << generateSHA1(this->config.toString());
-    writeFile(BUILDUS_CACHE_INTERMEDIATE_PROJECT_CACHE, out.str());
+    writeFile(BuildUSCacheUtils::INTERMEDIATE_PROJECT_CACHE, out.str());
 }
 
 int const BuildUSCache::getFileForMinimalCompilation(const StringPairList& filesForCompilation, StringPairList& filesToCompile)
@@ -214,7 +214,7 @@ int BuildUSCache::updateCompiled(const StringPairList& filesCompiled)
 
 const fs::path BuildUSCache::getExecutablePath()
 {
-    fs::path execPath = BUILDUS_CACHE_INTERMEDIATE_FOLDER.parent_path().append(this->config.getProjectName());
+    fs::path execPath = BuildUSCacheUtils::INTERMEDIATE_FOLDER.parent_path().append(this->config.getProjectName());
     return execPath;
 }
 
@@ -228,16 +228,16 @@ string BuildUSCacheUtils::getCacheToken(std::stringstream& bytestream)
 //Returns next token of .cache file.
 {
     string token;
-    while(          bytestream.peek() != BUILDUS_CACHE_INTER_SEP
-              &&    bytestream.peek() != BUILDUS_CACHE_INTRA_SEP
+    while(          bytestream.peek() != BuildUSCacheUtils::INTER_SEP
+              &&    bytestream.peek() != BuildUSCacheUtils::INTRA_SEP
               &&    !bytestream.eof())
     {
         token.push_back(bytestream.get());
     }
 
     //Advance until valid char
-    while(  (      bytestream.peek() == BUILDUS_CACHE_INTER_SEP
-              ||   bytestream.peek() == BUILDUS_CACHE_INTRA_SEP
+    while(  (      bytestream.peek() == BuildUSCacheUtils::INTER_SEP
+              ||   bytestream.peek() == BuildUSCacheUtils::INTRA_SEP
             )
               &&    !bytestream.eof())
     {

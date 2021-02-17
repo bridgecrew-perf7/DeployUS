@@ -4,13 +4,6 @@
 #include <boost/filesystem.hpp>
 
 
-const string CONFIG_FILE_PROJECT = "project";
-const string CONFIG_FILE_COMPILE = "compile";
-const string CONFIG_FILE_LIBS = "libs";
-const string CONFIG_FILE_VARS = "var";
-const string CONFIG_FILE_DEP_LIBRARY = "deps_library";
-const string CONFIG_FILE_DEP_INCL = "deps_include";
-
 namespace fs = boost::filesystem;
 
 /* This class models the .buildus file in YAML format*/
@@ -53,6 +46,13 @@ public:
 
 namespace ConfigFileUtils
 {
+    const string CONFIG_FILE_PROJECT = "project";
+    const string CONFIG_FILE_COMPILE = "compile";
+    const string CONFIG_FILE_LIBS = "libs";
+    const string CONFIG_FILE_VARS = "var";
+    const string CONFIG_FILE_DEP_LIBRARY = "deps_library";
+    const string CONFIG_FILE_DEP_INCL = "deps_include";
+
     const char CONFIG_MAP_SEPERATOR = '\0';
     StringList      const vectorizeYAMLNode(const YAML::Node node);
     StringPairList  const generateCompileList(const YAML::Node node);

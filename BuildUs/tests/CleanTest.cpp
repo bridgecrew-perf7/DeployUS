@@ -31,7 +31,7 @@ TEST_CASE("CLEAN_SUCCESS")
     fs::path configpath;
 
     //Ensuring there are no intermediate files
-    REQUIRE_NOTHROW(fs::remove_all(BUILDUS_CACHE_INTERMEDIATE_FOLDER));
+    REQUIRE_NOTHROW(fs::remove_all(BuildUSCacheUtils::INTERMEDIATE_FOLDER));
     REQUIRE_NOTHROW(fs::remove_all(progname));
 
     SECTION("PROG1") {configpath = CONFIG_PROG1_PATH;}
@@ -47,16 +47,16 @@ TEST_CASE("CLEAN_SUCCESS")
     //Compile, link
     REQUIRE(gcc.compile() == 0);
     REQUIRE(gcc.link() == 0);
-    REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_FOLDER));
-    REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_PROJECT_CACHE));
-    REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE));
+    REQUIRE(fs::exists(BuildUSCacheUtils::INTERMEDIATE_FOLDER));
+    REQUIRE(fs::exists(BuildUSCacheUtils::INTERMEDIATE_PROJECT_CACHE));
+    REQUIRE(fs::exists(BuildUSCacheUtils::INTERMEDIATE_COMPILE_CACHE));
     REQUIRE(fs::exists(progname));
 
     //Clean! and verify that it was successful
     REQUIRE(BuildUS::clean() == 0);
-    REQUIRE(!fs::exists(BUILDUS_CACHE_INTERMEDIATE_FOLDER));
-    REQUIRE(!fs::exists(BUILDUS_CACHE_INTERMEDIATE_PROJECT_CACHE));
-    REQUIRE(!fs::exists(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE));
+    REQUIRE(!fs::exists(BuildUSCacheUtils::INTERMEDIATE_FOLDER));
+    REQUIRE(!fs::exists(BuildUSCacheUtils::INTERMEDIATE_PROJECT_CACHE));
+    REQUIRE(!fs::exists(BuildUSCacheUtils::INTERMEDIATE_COMPILE_CACHE));
     REQUIRE(!fs::exists(progname));
 
     teardownCleanTest();

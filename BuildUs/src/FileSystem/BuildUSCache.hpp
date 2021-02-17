@@ -5,12 +5,6 @@
 
 namespace fs = boost::filesystem;
 
-const fs::path BUILDUS_CACHE_INTERMEDIATE_FOLDER = fs::path("intermediate");
-const fs::path BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE = fs::path(BUILDUS_CACHE_INTERMEDIATE_FOLDER).append("compile.cache");
-const fs::path BUILDUS_CACHE_INTERMEDIATE_PROJECT_CACHE = fs::path(BUILDUS_CACHE_INTERMEDIATE_FOLDER).append("project.cache");
-const char BUILDUS_CACHE_INTER_SEP = '\n';
-const char BUILDUS_CACHE_INTRA_SEP = '\0';
-
 class BuildUSCache
 {
 private:
@@ -35,5 +29,12 @@ public:
 };
 
 namespace BuildUSCacheUtils{
+
+    const fs::path INTERMEDIATE_FOLDER = fs::path("intermediate");
+    const fs::path INTERMEDIATE_COMPILE_CACHE = fs::path(INTERMEDIATE_FOLDER).append("compile.cache");
+    const fs::path INTERMEDIATE_PROJECT_CACHE = fs::path(INTERMEDIATE_FOLDER).append("project.cache");
+    const char INTER_SEP = '\n';
+    const char INTRA_SEP = '\0';
+
     string getCacheToken(std::stringstream& bytestream);
 }

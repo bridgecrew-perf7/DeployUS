@@ -78,10 +78,10 @@ namespace BuildUS
     {
         string err;
         //Deleting executable
-        if(fs::exists(BUILDUS_CACHE_INTERMEDIATE_PROJECT_CACHE))
+        if(fs::exists(BuildUSCacheUtils::INTERMEDIATE_PROJECT_CACHE))
         {
             std::stringstream projectcache;
-            if(readFile(BUILDUS_CACHE_INTERMEDIATE_PROJECT_CACHE,projectcache))
+            if(readFile(BuildUSCacheUtils::INTERMEDIATE_PROJECT_CACHE,projectcache))
             {
                 return 1;
             }
@@ -100,11 +100,11 @@ namespace BuildUS
         }
         
         //Deleting intermediate folder
-        if(fs::exists(BUILDUS_CACHE_INTERMEDIATE_FOLDER))
+        if(fs::exists(BuildUSCacheUtils::INTERMEDIATE_FOLDER))
         {
             try
             {
-                fs::remove_all(BUILDUS_CACHE_INTERMEDIATE_FOLDER);
+                fs::remove_all(BuildUSCacheUtils::INTERMEDIATE_FOLDER);
             }
             catch(const std::exception& e)
             {

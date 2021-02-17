@@ -64,7 +64,7 @@ int GCCDriver::compile()
         fs::path sourcefile = this->config.getConfigParentPath().append(filepathstr);
         
         //2. Generate destination path
-        fs::path destPath = BUILDUS_CACHE_INTERMEDIATE_FOLDER;
+        fs::path destPath = BuildUSCacheUtils::INTERMEDIATE_FOLDER;
         destPath.append(outputfilename);
         destPath.replace_extension(destPath.extension().string() + COMPILE_OBJECT_EXT);
 
@@ -109,10 +109,10 @@ int GCCDriver::link()
 //Returns non-zero if an error occured, zero otherwise
 {
     //Load project.cache
-    if(fs::exists(BUILDUS_CACHE_INTERMEDIATE_PROJECT_CACHE))
+    if(fs::exists(BuildUSCacheUtils::INTERMEDIATE_PROJECT_CACHE))
     {
         std::stringstream projectCacheContents;
-        if(readFile(BUILDUS_CACHE_INTERMEDIATE_PROJECT_CACHE,projectCacheContents))
+        if(readFile(BuildUSCacheUtils::INTERMEDIATE_PROJECT_CACHE,projectCacheContents))
         {
             return 1;
         }
@@ -131,7 +131,7 @@ int GCCDriver::link()
         string objectfilename = linkUnit.first;
 
         //1. Build output file path
-        fs::path destPath = BUILDUS_CACHE_INTERMEDIATE_FOLDER;
+        fs::path destPath = BuildUSCacheUtils::INTERMEDIATE_FOLDER;
         destPath.append(objectfilename);
         destPath.replace_extension(destPath.extension().string() + COMPILE_OBJECT_EXT);
 

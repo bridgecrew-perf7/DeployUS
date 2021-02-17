@@ -35,16 +35,16 @@ void ConfigFile::parseYAML(std::stringstream& bytestream)
 
     //Extracting single element attributes
     StringList temp;
-    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_PROJECT]);
+    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[ConfigFileUtils::CONFIG_FILE_PROJECT]);
     this->projectName = extractFirstString(temp) ; // Only 1 name
-    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_VARS]);
+    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[ConfigFileUtils::CONFIG_FILE_DEP_LIBRARY][ConfigFileUtils::CONFIG_FILE_VARS]);
     this->depLibVar   =  extractFirstString(temp); // Only 1 var
-    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_INCL][CONFIG_FILE_VARS]);
+    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[ConfigFileUtils::CONFIG_FILE_DEP_INCL][ConfigFileUtils::CONFIG_FILE_VARS]);
     this->depInclVar  = extractFirstString(temp);  // Only 1 var
     
     //Multiple element attributs
-    this->compileList = ConfigFileUtils::generateCompileList(this->config[CONFIG_FILE_COMPILE]);
-    this->depLibList  =  ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_LIBS]);
+    this->compileList = ConfigFileUtils::generateCompileList(this->config[ConfigFileUtils::CONFIG_FILE_COMPILE]);
+    this->depLibList  =  ConfigFileUtils::vectorizeYAMLNode(this->config[ConfigFileUtils::CONFIG_FILE_DEP_LIBRARY][ConfigFileUtils::CONFIG_FILE_LIBS]);
 }
 
 int const ConfigFile::verifyCompilationUnitsExists(string& err)
