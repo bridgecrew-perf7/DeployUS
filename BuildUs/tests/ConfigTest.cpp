@@ -103,6 +103,10 @@ TEST_CASE("FILES_OR_VARIABLES_DNE")
     {
         configpath = CONFIG_LIBS_VAR_DNE_PATH;
     }
+    SECTION("Libraries_DNE") 
+    {
+        configpath = CONFIG_LIBS_DNE_PATH;
+    }
     SECTION("COMPILATION_UNITS_DNE")
     {
         configpath = BADCONFIG3_PATH;
