@@ -1,0 +1,28 @@
+stages:
+ - build
+ - test
+
+building-exe:
+ stage: build
+ image: shawnvosburg/igl711
+ artifacts:
+  paths: 
+   - output/*
+ script:
+  - apt install zlib1g zlib1g-dev -y
+  - cd /boostinstall/boost_1_75_0/
+  - ./b2 --with-iostreams -a
+  - cd $CI_PROJECT_DIR/BuildUS
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
+  - mkdir $CI_PROJECT_DIR/output
+  - cp BuildUS $CI_PROJECT_DIR/output/BuildUS
+  - cp tests/BuildUSTests $CI_PROJECT_DIR/output/BuildUSTests
+
+lauch-test-exe:
+ stage: test
+ image: ubuntu
+ script:
+  - ./output/BuildUSTests
