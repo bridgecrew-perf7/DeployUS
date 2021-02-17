@@ -26,38 +26,41 @@ void linkingTeardown()
 TEST_CASE("LINKING_SUCCESS")
 {
     linkingSetup();
-    ConfigFile* cf;
-    GCCDriver* gcc;
+    ConfigFile cf;
+    GCCDriver gcc;
     fs::path configpath;
+    std::stringstream configcontents;
+    string err;
 
     SECTION("PROG1"){configpath = CONFIG_PROG1_PATH;}
     SECTION("PROG2"){configpath = CONFIG_PROG2_PATH;}
 
     //Load config and compile. This is tested in CompilationTest.cpp
-    REQUIRE_NOTHROW(cf = new ConfigFile(configpath));
-    REQUIRE_NOTHROW(gcc = new GCCDriver(cf,true));
-    REQUIRE(gcc->compile() == 0);
+    REQUIRE(readFile(configpath,configcontents) == 0);
+    cf = ConfigFile(configpath, configcontents);
+    REQUIRE(cf.isConfigValid(err) == 0);
+    gcc = GCCDriver(cf,true);
+    REQUIRE(gcc.compile() == 0);
 
     //Linking
-    REQUIRE(gcc->link() == 0);
+    REQUIRE(gcc.link() == 0);
     
     //Execution of program
-    string programName = cf->getProjectName();
+    string programName = cf.getProjectName();
     string cmd = "./" + programName + " >/dev/null 2>/dev/null";
     REQUIRE(system(cmd.c_str()) == 0);
 
-
-    delete cf;
-    delete gcc;
     linkingTeardown();
 }
 
 TEST_CASE("LINKING_FAILURE")
 {
     linkingSetup();
-    ConfigFile* cf;
-    GCCDriver* gcc;
+    ConfigFile cf;
+    GCCDriver gcc;
     fs::path configpath;
+    std::stringstream configcontents;
+    string err;
 
     SECTION("Libs do not exixsts")
     {
@@ -73,14 +76,14 @@ TEST_CASE("LINKING_FAILURE")
     }
 
     //Compile
-    REQUIRE_NOTHROW(cf = new ConfigFile(configpath));
-    REQUIRE_NOTHROW(gcc = new GCCDriver(cf, true));
-    REQUIRE(gcc->compile() == 0);
+    REQUIRE(readFile(configpath,configcontents) == 0);
+    cf = ConfigFile(configpath, configcontents);
+    REQUIRE(cf.isConfigValid(err) == 0);
+    gcc = GCCDriver(cf,true);
+    REQUIRE(gcc.compile() == 0);
 
     //Linking. Must be a failure!
-    REQUIRE(gcc->link() != 0);
+    REQUIRE(gcc.link() != 0);
 
-    delete cf;
-    delete gcc;
     linkingTeardown();
 }

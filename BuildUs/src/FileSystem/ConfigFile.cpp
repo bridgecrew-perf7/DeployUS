@@ -6,51 +6,16 @@
 #include <iostream>
 #include <sstream>
 
-ConfigFile::ConfigFile(fs::path filepath)
-//Can throw std::runtime_error! 
+ConfigFile::ConfigFile()
+{ 
+}
+
+ConfigFile::ConfigFile(fs::path filepath, std::stringstream& configContents)
 {
     this->configPath = filepath;
 
-    //1. Verify that file exists
-    auto configfilepath = fs::path(filepath);
-    if(!fs::exists(configfilepath))
-    {
-        string msg = string("Error: File ") + filepath.string() + string(" does not exists.");
-        throw std::runtime_error(msg.c_str());
-    }
-
-    //2. Read files
-    std::stringstream configcontents = readFile(configfilepath);
-
-    //3. Parsing. Sets config attribute
-    this->parseYAML(configcontents);
-
-    //4. Verify that config is valid
-    string err;
-    if(this->isConfigInvalid(err))
-    {
-        throw std::runtime_error(err);
-    }
-
-    //5. Verify that all compilation units exists
-    //   Note: This function can throw std::runtime_error
-    this->verifyCompilationUnitsExists();
-}
-
-ConfigFile* ConfigFile::safeFactory(fs::path filepath)
-//Catches all errors. Returns nulltpr if an error occured
-{
-    ConfigFile* out;
-    try
-    {
-        out = new ConfigFile(filepath);
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-        out = nullptr;
-    }
-    return out;
+    //1. Parsing. Sets config attribute
+    this->parseYAML(configContents);    
 }
 
 ConfigFile::~ConfigFile()
@@ -62,56 +27,68 @@ void ConfigFile::parseYAML(std::stringstream& bytestream)
     Fills attribut fields with contents of config file.
 */
 {
+    //Simple lambda function to extract the first string of StrintPairList
     auto extractFirstString = [&](StringList list) {return list.size() > 0 ? list.at(0) : string();};
+    
     //Saving YAML config
     this->config = YAML::Load(bytestream);
 
-    //Filling attributes
+    //Extracting single element attributes
     StringList temp;
-    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_PROJECT]);
+    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[ConfigFileUtils::CONFIG_FILE_PROJECT]);
     this->projectName = extractFirstString(temp) ; // Only 1 name
-    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_VARS]);
+    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[ConfigFileUtils::CONFIG_FILE_DEP_LIBRARY][ConfigFileUtils::CONFIG_FILE_VARS]);
     this->depLibVar   =  extractFirstString(temp); // Only 1 var
-    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_INCL][CONFIG_FILE_VARS]);
+    temp = ConfigFileUtils::vectorizeYAMLNode(this->config[ConfigFileUtils::CONFIG_FILE_DEP_INCL][ConfigFileUtils::CONFIG_FILE_VARS]);
     this->depInclVar  = extractFirstString(temp);  // Only 1 var
     
-    this->compileList = ConfigFileUtils::generateCompileList(this->config[CONFIG_FILE_COMPILE]);
-    this->depLibList  =  ConfigFileUtils::vectorizeYAMLNode(this->config[CONFIG_FILE_DEP_LIBRARY][CONFIG_FILE_LIBS]);
+    //Multiple element attributs
+    this->compileList = ConfigFileUtils::generateCompileList(this->config[ConfigFileUtils::CONFIG_FILE_COMPILE]);
+    this->depLibList  =  ConfigFileUtils::vectorizeYAMLNode(this->config[ConfigFileUtils::CONFIG_FILE_DEP_LIBRARY][ConfigFileUtils::CONFIG_FILE_LIBS]);
 }
 
-void ConfigFile::verifyCompilationUnitsExists()
+int const ConfigFile::verifyCompilationUnitsExists(string& err)
 // Checks to see if all filepaths from compile lists exists.
-// Throws runtime error if it is the case.
+// Returns 0 if every compilation unit exists, non-zero otherwise
 {
+    bool allExists = true;
     for(auto elem: this->getCompileList())
     {
         fs::path compileunitPath = this->getConfigParentPath().append(elem.second);
         if(!fs::exists(compileunitPath))
         {
-            string msg = string("Error: Compilation unit ") + elem.second + string(" does not exists.");
-            throw std::runtime_error(msg);
+            err += string("Error: Compilation unit ") + elem.second + string(" does not exists.\n");
+            allExists = false;
         }
     }
+
+    return allExists? 0 : 1;
 }
 
-bool const ConfigFile::isConfigInvalid(string& err)
+int const ConfigFile::isConfigValid(string& err)
 /*
-    Returns true if the Config file is invalid.
-    Returns false if it is a valid Config file
+    Returns 0 if the Config file is invalid.
+    Returns non-zero if it is a valid Config file
 */
 {
+    int isValid = 0;
+
     //Only allowed 1 project name
     if(this->getProjectName().empty())
     {
-        err = "Error: Must have a project name.";
-        return true;
+        err += "Error: Must have a project name. \n";
+        isValid = 1;
     }
 
     //Must compile at least 1 file
     if(this->getCompileList().size() < 1)
     {
-        err = "Error: Must have at least one file to compile.";
-        return true;
+        err += "Error: Must have at least one file to compile.\n";
+        isValid = 1;
+    }
+    else if(this->verifyCompilationUnitsExists(err) != 0)
+    {
+        isValid = 1;
     }
 
     //All environment variables must exists
@@ -119,20 +96,19 @@ bool const ConfigFile::isConfigInvalid(string& err)
     {
         if(getenv(this->getDepInclVar().c_str()) == NULL)
         {
-            err = "Error: Include variable is not an environment variable.";
-            return true;
+            err += "Error: Include variable is not an environment variable.\n";
+            isValid = 1;
         }
     }
     if(!this->getDepLibVar().empty())
     {
         if(getenv(this->getDepLibVar().c_str()) == NULL)
         {
-            err = "Error: Library variable is not an environment variable.";
-            return true;
+            err += "Error: Library variable is not an environment variable.\n";
+            isValid = 1;
         }
     }
-
-    return false;
+    return isValid;
 }
 
 

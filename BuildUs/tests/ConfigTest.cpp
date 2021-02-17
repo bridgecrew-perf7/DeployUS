@@ -12,7 +12,7 @@ namespace fs = boost::filesystem;
 
 TEST_CASE("Valid_YAML")
 {
-    ConfigFile* cf;
+    ConfigFile cf;
     string expectedProjectName = "app1";
     StringPairList expectedCompileFiles;
     std::pair<string,string> elem1(string("f1"), string("../prog1/main.cpp"));
@@ -27,16 +27,16 @@ TEST_CASE("Valid_YAML")
     SECTION("CONFIG3") {configpath = CONFIG_2PROJECTNAMES_PATH;}
     
     //Testing config
-    REQUIRE_NOTHROW(cf = new ConfigFile(configpath));
-    REQUIRE(cf->getProjectName() == expectedProjectName);
-    REQUIRE(cf->getCompileList() == expectedCompileFiles);
-    delete cf;
-
+    std::stringstream configContents;
+    REQUIRE(readFile(configpath,configContents) == 0);
+    cf = ConfigFile(configpath, configContents);
+    REQUIRE(cf.getProjectName() == expectedProjectName);
+    REQUIRE(cf.getCompileList() == expectedCompileFiles);
 }
 
 TEST_CASE("VALID_PROGRAM")
 {
-    ConfigFile* cf;
+    ConfigFile cf;
     string expectedProjectName;
     StringPairList expectedCompileFiles;
     fs::path configpath;
@@ -62,19 +62,34 @@ TEST_CASE("VALID_PROGRAM")
     }
 
     //Testing config
-    REQUIRE_NOTHROW(cf = new ConfigFile(configpath));
-    REQUIRE(cf->getProjectName() == expectedProjectName);
-    REQUIRE(cf->getCompileList() == expectedCompileFiles);
-    delete cf;
+    std::stringstream configContents;
+    REQUIRE(readFile(configpath,configContents) == 0);
+    cf = ConfigFile(configpath, configContents);
+
+    string err;
+    REQUIRE(cf.isConfigValid(err) == 0);
+    REQUIRE(err.empty());
+
+    REQUIRE(cf.getProjectName() == expectedProjectName);
+    REQUIRE(cf.getCompileList() == expectedCompileFiles);
 }
 
 TEST_CASE("Invalid_YAML")
 {
-   ConfigFile* cf;
+    ConfigFile cf;
+    fs::path configpath;
 
-   //Invalid ConfigFiles
-   REQUIRE_THROWS(cf = new ConfigFile(BADCONFIG1_PATH)); //No compilation unit
-   REQUIRE_THROWS(cf = new ConfigFile(BADCONFIG2_PATH)); //No project name
+    SECTION("BADCONFIG1") {configpath = BADCONFIG1_PATH;}; //No compilation unit
+    SECTION("BADCONFIG2") {configpath = BADCONFIG2_PATH;}; //No project name
+
+    //Invalid ConfigFiles
+    std::stringstream configContents;
+    REQUIRE(readFile(configpath,configContents) == 0);
+    cf = ConfigFile(configpath, configContents);
+    
+    string err;
+    REQUIRE(cf.isConfigValid(err) != 0); //An error occured.
+    REQUIRE(!err.empty());
 }
 
 TEST_CASE("FILES_OR_VARIABLES_DNE")
@@ -93,6 +108,12 @@ TEST_CASE("FILES_OR_VARIABLES_DNE")
         configpath = BADCONFIG3_PATH;
     }
 
-    ConfigFile* cf;
-    REQUIRE_THROWS(cf = new ConfigFile(configpath));
+    std::stringstream configContents;
+    REQUIRE(readFile(configpath,configContents) == 0);
+    ConfigFile cf = ConfigFile(configpath, configContents);
+    
+    //An error occured
+    string err;
+    REQUIRE(cf.isConfigValid(err) != 0); //An error occured.
+    REQUIRE(!err.empty());
 }

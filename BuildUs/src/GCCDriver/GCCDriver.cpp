@@ -7,27 +7,16 @@
 #include <boost/filesystem.hpp>
 
 
-GCCDriver::GCCDriver(ConfigFile* _config, bool silentSysCmd)
+
+GCCDriver::GCCDriver()
+{
+}
+
+GCCDriver::GCCDriver(ConfigFile& _config, bool silentSysCmd)
 {
     this->config = _config;
     this->isSysCmdSilent = silentSysCmd;
     cache = BuildUSCache(this->config);
-}
-
-GCCDriver* GCCDriver::safeFactory(ConfigFile* _config, bool silentSysCmd)
-// Catches all errors. Returns nullptr if an error occured
-{
-    GCCDriver* out;
-    try
-    {
-        out = new GCCDriver(_config, silentSysCmd);
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-        out = nullptr;
-    }
-    return out;       
 }
 
 GCCDriver::~GCCDriver()
@@ -35,10 +24,10 @@ GCCDriver::~GCCDriver()
     //Not responsible for deleting config!
 }
 
-StringPairList GCCDriver::toCompile()
+int GCCDriver::toCompile(StringPairList& filesToCompile)
 //Retreives list of files to compile
 {
-    return this->cache.getFileForMinimalCompilation(this->config->getCompileList());
+    return this->cache.getFileForMinimalCompilation(this->config.getCompileList(),filesToCompile);
 }
 
 int GCCDriver::compile()
@@ -52,7 +41,11 @@ int GCCDriver::compile()
     string errMsg;
 
     //1. Get files that must be compiled for minimal compilation.
-    StringPairList filesToCompile = this->toCompile();
+    StringPairList filesToCompile;
+    if(this->toCompile(filesToCompile))
+    {
+        return 1;
+    }
     if(filesToCompile.size() == 0)
     {
         return 0;
@@ -68,10 +61,10 @@ int GCCDriver::compile()
         auto filepath = fs::path(filepathstr);
 
         //1. Generate source file path
-        fs::path sourcefile = this->config->getConfigParentPath().append(filepathstr);
+        fs::path sourcefile = this->config.getConfigParentPath().append(filepathstr);
         
         //2. Generate destination path
-        fs::path destPath = BUILDUS_CACHE_INTERMEDIATE_FOLDER;
+        fs::path destPath = BuildUSCacheUtils::INTERMEDIATE_FOLDER;
         destPath.append(outputfilename);
         destPath.replace_extension(destPath.extension().string() + COMPILE_OBJECT_EXT);
 
@@ -100,7 +93,7 @@ int GCCDriver::compile()
     //4. Update Cache file
     this->cache.updateCompiled(filesCompiled);
 
-    //5. Throw error if one detected
+    //5. Display error if one detected
     if(!errMsg.empty())
     {
         std::cout << errMsg << std::endl;
@@ -115,20 +108,30 @@ int GCCDriver::link()
 //Performs linkage of compiled units with GNU ld
 //Returns non-zero if an error occured, zero otherwise
 {
-    if(!this->cache.mustLink())
+    //Load project.cache
+    if(fs::exists(BuildUSCacheUtils::INTERMEDIATE_PROJECT_CACHE))
     {
-        return 0;
+        std::stringstream projectCacheContents;
+        if(readFile(BuildUSCacheUtils::INTERMEDIATE_PROJECT_CACHE,projectCacheContents))
+        {
+            return 1;
+        }
+        if(!this->cache.mustLink(projectCacheContents))
+        {
+            return 0;
+        }
     }
+    
 
-    string cmd = "g++ ";
+    string cmd = GCCDriverUtils::GCC_COMPILER + " ";
 
     //1. Append Object files
-    for(auto linkUnit: this->config->getCompileList())
+    for(auto linkUnit: this->config.getCompileList())
     {
         string objectfilename = linkUnit.first;
 
         //1. Build output file path
-        fs::path destPath = BUILDUS_CACHE_INTERMEDIATE_FOLDER;
+        fs::path destPath = BuildUSCacheUtils::INTERMEDIATE_FOLDER;
         destPath.append(objectfilename);
         destPath.replace_extension(destPath.extension().string() + COMPILE_OBJECT_EXT);
 
@@ -137,13 +140,13 @@ int GCCDriver::link()
     }
 
     //2. Add output executable name
-    string projectname = this->config->getProjectName();
+    string projectname = this->config.getProjectName();
     cmd += "-o ";
     cmd += projectname;
     cmd += " ";
 
     //3. Append Library directories
-    string libVar = this->config->getDepLibVar();
+    string libVar = this->config.getDepLibVar();
     if(!libVar.empty())
     {
         string envvarValue = getenv(libVar.c_str());
@@ -154,10 +157,10 @@ int GCCDriver::link()
     
 
     //4. Add libraries staticly
-    if(this->config->getDepLibList().size() > 0)
+    if(this->config.getDepLibList().size() > 0)
     {
         cmd += "-static ";
-        for(auto lib: this->config->getDepLibList())
+        for(auto lib: this->config.getDepLibList())
         {
             //Have to remove "lib" from start
             int prefixPos = lib.find(GCCDriverUtils::GCC_LIB_PREFIX);
@@ -202,7 +205,7 @@ int GCCDriver::link()
     ==================================================
 */
 
-string GCCDriverUtils::generateCompilationCommand(ConfigFile* config, fs::path filepath, fs::path destination)
+string GCCDriverUtils::generateCompilationCommand(ConfigFile& config, fs::path filepath, fs::path destination)
 /*
     Creates command to compile file specified by filepath. 
     Will place the generated assembly object file at destinationpath.
@@ -213,7 +216,7 @@ string GCCDriverUtils::generateCompilationCommand(ConfigFile* config, fs::path f
     cmd += GCCDriverUtils::GCC_COMPILER + " ";
 
     //Include Folder
-    string includeDir = config->getDepInclVar();
+    const string includeDir = config.getDepInclVar();
     if(!includeDir.empty())
     {
         string envVal = getenv(includeDir.c_str());

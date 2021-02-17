@@ -38,32 +38,37 @@ namespace BuildUS
             return 1;
         }
 
+        //Load Config File
+        std::stringstream configContents;
+        if(readFile(arg1, configContents))
+        {
+            return 1;
+        }
+
 
         //1. Load Config File
-        ConfigFile* config = ConfigFile::safeFactory(arg1);
-        if(config == nullptr)
+        ConfigFile config = ConfigFile(arg1, configContents);
+        string err;
+        if(!config.isConfigValid(err))
+        {
+            std::cout << err;
             return 1;
+        }
         
         //2. Create GCCDriver Object
-        GCCDriver* gcc = GCCDriver::safeFactory(config);
-        if(gcc == nullptr)
-            return 1;
+        GCCDriver gcc = GCCDriver(config);
         
         //3. Compiling step
-        if(gcc->compile())
+        if(gcc.compile())
         {
             return 1;
         }
 
         //4. Linking step
-        if(gcc->link())
+        if(gcc.link())
         {
             return 1;
         }
-
-        //Reclaim memory
-        delete config;
-        delete gcc;
 
         return 0;
     }
@@ -73,9 +78,13 @@ namespace BuildUS
     {
         string err;
         //Deleting executable
-        if(fs::exists(BUILDUS_CACHE_INTERMEDIATE_PROJECT_CACHE))
+        if(fs::exists(BuildUSCacheUtils::INTERMEDIATE_PROJECT_CACHE))
         {
-            std::stringstream projectcache = readFile(BUILDUS_CACHE_INTERMEDIATE_PROJECT_CACHE);
+            std::stringstream projectcache;
+            if(readFile(BuildUSCacheUtils::INTERMEDIATE_PROJECT_CACHE,projectcache))
+            {
+                return 1;
+            }
             string execPath = BuildUSCacheUtils::getCacheToken(projectcache);
             try
             {
@@ -91,11 +100,11 @@ namespace BuildUS
         }
         
         //Deleting intermediate folder
-        if(fs::exists(BUILDUS_CACHE_INTERMEDIATE_FOLDER))
+        if(fs::exists(BuildUSCacheUtils::INTERMEDIATE_FOLDER))
         {
             try
             {
-                fs::remove_all(BUILDUS_CACHE_INTERMEDIATE_FOLDER);
+                fs::remove_all(BuildUSCacheUtils::INTERMEDIATE_FOLDER);
             }
             catch(const std::exception& e)
             {
