@@ -62,10 +62,6 @@ TEST_CASE("LINKING_FAILURE")
     std::stringstream configcontents;
     string err;
 
-    SECTION("Libs do not exixsts")
-    {
-        configpath = CONFIG_LIBS_DNE_PATH;
-    }
     SECTION("Forward Declaration does not have definition.")
     {
         configpath = CONFIG_LINKERISSUE1_PATH;

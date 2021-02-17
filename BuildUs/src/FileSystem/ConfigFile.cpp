@@ -1,4 +1,5 @@
 #include "ConfigFile.hpp"
+#include "GCCDriver/GCCDriver.hpp"
 #include <boost/algorithm/string.hpp>
 #include <map>
 #include <vector>
@@ -107,6 +108,47 @@ int const ConfigFile::isConfigValid(string& err)
             err += "Error: Library variable is not an environment variable.\n";
             isValid = 1;
         }
+    }
+
+    //All libraries must exists
+    if(!this->getDepLibList().empty())
+    {
+        for(auto library: this->getDepLibList())
+        {
+            string libNameA = GCCDriverUtils::GCC_LIB_PREFIX + library + GCCDriverUtils::GCC_DOT_A_EXT;
+            string libNameSO = GCCDriverUtils::GCC_LIB_PREFIX + library + GCCDriverUtils::GCC_DOT_SO_EXT;
+            
+            //Library can be relative to config file
+            fs::path potentialPath1A  = this->getConfigParentPath().append(libNameA);
+            fs::path potentialPath1SO = this->getConfigParentPath().append(libNameSO);
+            if(fs::exists(potentialPath1A) || fs::exists(potentialPath1SO))
+            {
+                continue;
+            }
+
+            //Library can be relative to environment variable
+            if(!this->getDepInclVar().empty())
+            {
+                if(getenv(this->getDepLibVar().c_str()) != NULL)
+                {
+                    string envVar = string(getenv(this->getDepLibVar().c_str()));
+                    fs::path potentialPath2A  = fs::path(envVar).append(libNameA);
+                    fs::path potentialPath2SO = fs::path(envVar).append(libNameSO);
+                    if(fs::exists(potentialPath2A) || fs::exists(potentialPath2SO))
+                    {
+                        continue;
+                    }
+                }
+
+            }
+
+            //Arriving here, the library doesn't exists
+            err += "Error: Library element does not exists.\n";
+            isValid = 1;
+            break;
+        }
+
+        
     }
     return isValid;
 }
