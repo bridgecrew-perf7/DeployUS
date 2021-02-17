@@ -28,18 +28,14 @@ private:
     YAML::Node config; 
     void parseYAML(std::stringstream& bytestream);
 
-    void verifyCompilationUnitsExists();
-    bool const isConfigInvalid(string& err);
-public:
-    //Can throw an error! (ex: If configfile does not exists)
-    ConfigFile(fs::path filepath);
+    int const verifyCompilationUnitsExists(string& err);
 
-    //Will not throw an error
-    static ConfigFile* safeFactory(fs::path filepath);
+public:
+    ConfigFile(fs::path filepath, std::stringstream& configContents);
+    ConfigFile();
     ~ConfigFile();
 
-    //To string function
-    string const toString();
+    
 
     //getters
     string          const getProjectName() {return this->projectName;};
@@ -49,6 +45,9 @@ public:
     string          const getDepInclVar()  {return this->depInclVar;};
     fs::path getConfigPath() {return fs::path(this->configPath);};
     fs::path getConfigParentPath() {return fs::path(this->configPath.parent_path());};
+
+    int const isConfigValid(string& err);
+    string const toString();
 
 };
 

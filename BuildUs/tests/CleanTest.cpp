@@ -25,8 +25,8 @@ TEST_CASE("CLEAN_SUCCESS")
 {
     setupCleanTest();
 
-    ConfigFile* cf;
-    GCCDriver* gcc;
+    ConfigFile cf;
+    GCCDriver gcc;
     string progname = "app1";
     fs::path configpath;
 
@@ -37,12 +37,16 @@ TEST_CASE("CLEAN_SUCCESS")
     SECTION("PROG1") {configpath = CONFIG_PROG1_PATH;}
     SECTION("PROG2") {configpath = CONFIG_PROG2_PATH;}
 
-    REQUIRE_NOTHROW(cf = new ConfigFile(configpath));
-    REQUIRE_NOTHROW(gcc = new GCCDriver(cf, true));
+    std::stringstream configcontents;
+    REQUIRE(readFile(configpath,configcontents) == 0);
+    cf = ConfigFile(configpath,configcontents);
+    string err;
+    REQUIRE(cf.isConfigValid(err) == 0);
+    gcc = GCCDriver(cf, true);
 
     //Compile, link
-    REQUIRE(gcc->compile() == 0);
-    REQUIRE(gcc->link() == 0);
+    REQUIRE(gcc.compile() == 0);
+    REQUIRE(gcc.link() == 0);
     REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_FOLDER));
     REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_PROJECT_CACHE));
     REQUIRE(fs::exists(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE));

@@ -9,9 +9,14 @@
 #include <iostream>
 
 
-BuildUSCache::BuildUSCache(ConfigFile* configPtr)
+
+BuildUSCache::BuildUSCache()
 {
-    this->config = configPtr;
+}
+
+BuildUSCache::BuildUSCache(ConfigFile& configFile)
+{
+    this->config = configFile;
     this->cached = ThreeStringTupleList();
 
     if(fs::exists(BUILDUS_CACHE_INTERMEDIATE_FOLDER))
@@ -25,25 +30,27 @@ BuildUSCache::BuildUSCache(ConfigFile* configPtr)
     }
 }
 
-BuildUSCache::BuildUSCache()
-{
-}
-
 BuildUSCache::~BuildUSCache()
 {
 }
 
-void BuildUSCache::readCompileCacheOnDisk()
+int BuildUSCache::readCompileCacheOnDisk()
 /* 
     Reads and parses the cache file, if it exists.
+    Returns non-zero if an error occured. Zero otherwise.
 */
 {
     //Verify the file's existence
     if(!fs::exists(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE))
-        return;
+        return 0;
 
     //1. Build Representation of cache (Parsing)
-    std::stringstream cachecontents = readFile(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE);
+    std::stringstream cachecontents;
+    if(readFile(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE,cachecontents))
+    {
+        return 1;
+    }
+
     while(!cachecontents.eof())
     {
         //Read in new line
@@ -56,11 +63,14 @@ void BuildUSCache::readCompileCacheOnDisk()
         this->cached.push_back(tpl);
 
     }
+
+    return 0;
 }
 
-void BuildUSCache::writeCompileCacheToDisk()
+int BuildUSCache::writeCompileCacheToDisk()
 /*
-    Write the cache map to disk. Can throw std::runtime_error;
+    Write the cache map to disk.
+    Returns non-zero if an error occures, 0 otherwise.
 */
 {
     std::stringstream cachecontents;
@@ -79,30 +89,25 @@ void BuildUSCache::writeCompileCacheToDisk()
     //Flush to disk
     if(writeFile(BUILDUS_CACHE_INTERMEDIATE_COMPILE_CACHE, cachecontents.str()))
     {
-        throw std::runtime_error("Unable to write .cache file.");
+        std::cout << "Unable to write .cache file." << std::endl;
+        return 1;
     }
 
+    return 0;
 }
 
-bool const BuildUSCache::mustLink()
+bool const BuildUSCache::mustLink(std::stringstream& projectCacheContents)
 //Returns true if the project.cache will change.
 //  The file will change if the project SHA1 is different, or if the project.file does not exists.
 //Returns false otherwise
 {
-    std::stringstream diskFile;
-    
-    //Load project.cache
-    if(!fs::exists(BUILDUS_CACHE_INTERMEDIATE_PROJECT_CACHE))
-        return true;
-    diskFile = readFile(BUILDUS_CACHE_INTERMEDIATE_PROJECT_CACHE);
-
     //Get executablePath and SHA1 from disk
-    string diskExecutableRelativePath = BuildUSCacheUtils::getCacheToken(diskFile);
-    string diskSHA1 = BuildUSCacheUtils::getCacheToken(diskFile);
+    string diskExecutableRelativePath = BuildUSCacheUtils::getCacheToken(projectCacheContents);
+    string diskSHA1 = BuildUSCacheUtils::getCacheToken(projectCacheContents);
 
     //Get executablePath and SHA1 of config
     string configExecutableRelativePath = this->getExecutablePath().string();
-    string configSHA1 = generateSHA1(this->config->toString());
+    string configSHA1 = generateSHA1(this->config.toString());
 
 
     bool pathHasChanged = diskExecutableRelativePath.compare(configExecutableRelativePath) != 0;
@@ -117,11 +122,11 @@ void const BuildUSCache::writeProjectCacheToDisk()
     std::stringstream out;
     out << this->getExecutablePath().string();
     out << BUILDUS_CACHE_INTRA_SEP;
-    out << generateSHA1(this->config->toString());
+    out << generateSHA1(this->config.toString());
     writeFile(BUILDUS_CACHE_INTERMEDIATE_PROJECT_CACHE, out.str());
 }
 
-StringPairList const BuildUSCache::getFileForMinimalCompilation(const StringPairList& filesForCompilation)
+int const BuildUSCache::getFileForMinimalCompilation(const StringPairList& filesForCompilation, StringPairList& filesToCompile)
 /*
     Argument: List of entries in Config File
 
@@ -129,18 +134,23 @@ StringPairList const BuildUSCache::getFileForMinimalCompilation(const StringPair
         1. have been modified
         2. have never been compiled. 
 
-    Returns list of files that fit these criterias.
+    Sets argument filesToCompile
+    Returns non-zero if an error occured. Zero otherwise.
 */
 {
-    StringPairList filesToCompile;
     for(auto compileUnit: filesForCompilation)
     {
         bool needCompilation = true;
         string compileUnitOutputPath = compileUnit.first + COMPILE_OBJECT_EXT;
         string compileUnitFilePath = compileUnit.second;
 
-        fs::path compileUnitFilePathRelativeToConfig = this->config->getConfigParentPath().append(compileUnitFilePath);
-        string compileUnitSHA1 = generateSHA1(readFile(compileUnitFilePathRelativeToConfig).str());
+        std::stringstream compileUnitContents;
+        fs::path compileUnitFilePathRelativeToConfig = this->config.getConfigParentPath().append(compileUnitFilePath);
+        if(readFile(compileUnitFilePathRelativeToConfig, compileUnitContents))
+        {
+            return 1;
+        }
+        string compileUnitSHA1 = generateSHA1(compileUnitContents.str());
 
         //Compare with every file in cache until hit is found
         for(auto fileInCache : this->cached)
@@ -166,7 +176,7 @@ StringPairList const BuildUSCache::getFileForMinimalCompilation(const StringPair
             filesToCompile.push_back(compileUnit);
     }
 
-    return filesToCompile;
+    return 0;
 }
 
 int BuildUSCache::updateCompiled(const StringPairList& filesCompiled)
@@ -180,7 +190,11 @@ int BuildUSCache::updateCompiled(const StringPairList& filesCompiled)
     for(auto compileUnit: filesCompiled)
     {
         string filepathstr = compileUnit.second;
-        std::stringstream filecontents = readFile(this->config->getConfigParentPath().append(filepathstr));
+        std::stringstream filecontents;
+        if(readFile(this->config.getConfigParentPath().append(filepathstr), filecontents))
+        {
+            return 1;
+        }
 
         //1. Compute SHA1 of file contents to obtain unique id of file version.
         string fileSHA1 = generateSHA1(filecontents.str());
@@ -195,22 +209,12 @@ int BuildUSCache::updateCompiled(const StringPairList& filesCompiled)
     }
 
     //3. Flush cache to disk
-    try
-    {
-        this->writeCompileCacheToDisk();
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-        return 1;
-    }
-   
-    return 0;
+    return this->writeCompileCacheToDisk();
 }
 
 const fs::path BuildUSCache::getExecutablePath()
 {
-    fs::path execPath = BUILDUS_CACHE_INTERMEDIATE_FOLDER.parent_path().append(this->config->getProjectName());
+    fs::path execPath = BUILDUS_CACHE_INTERMEDIATE_FOLDER.parent_path().append(this->config.getProjectName());
     return execPath;
 }
 

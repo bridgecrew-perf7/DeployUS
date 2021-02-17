@@ -36,7 +36,7 @@ namespace ThreeStringTupleUtils
 */
 
 int writeFile(fs::path path, string text);
-std::stringstream readFile(fs::path filepath);
+int readFile(const fs::path& filepath, std::stringstream& contents);
 
 string generateSHA1(string text);
 bool isValidSHA1(string hash);

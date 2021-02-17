@@ -14,23 +14,23 @@ const char BUILDUS_CACHE_INTRA_SEP = '\0';
 class BuildUSCache
 {
 private:
-    ConfigFile* config;
+    ConfigFile config;
     ThreeStringTupleList cached;
 
     const fs::path getExecutablePath(); 
 
-    void readCompileCacheOnDisk();
-    void writeCompileCacheToDisk();
+    int readCompileCacheOnDisk();
+    int writeCompileCacheToDisk();
 
 public:
-    BuildUSCache(ConfigFile* configPtr);
+    BuildUSCache(ConfigFile& config);
     BuildUSCache();
     ~BuildUSCache();
 
-    StringPairList const getFileForMinimalCompilation(const StringPairList& filesForCompilation);
+    int const getFileForMinimalCompilation(const StringPairList& filesForCompilation, StringPairList& filesToCompile);
     int updateCompiled(const StringPairList& filesCompiled);
 
-    bool const mustLink();
+    bool const mustLink(std::stringstream& compileCacheContents);
     void const writeProjectCacheToDisk();
 };
 

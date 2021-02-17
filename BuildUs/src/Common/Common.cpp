@@ -7,18 +7,18 @@
 
 using boost::uuids::detail::sha1;
 
-std::stringstream readFile(fs::path filepath)
+int readFile(const fs::path& filepath, std::stringstream& contents)
 /*
-    Returns stringstream of all characters in file. 
-    Throws std::runtime_error if file does not exists.
+    Updates contents with filecontents.
+    Returns non-zero if an error occured. 0 otherwise.
 */
 {
-    std::stringstream contents;
     if(!fs::exists(filepath))
     {
-        std::stringstream msg;
-        msg << "Filepath " << filepath.string() << " does not exists.\n";
-        throw std::runtime_error(msg.str());
+        string err;
+        err += "Filepath " + filepath.string() + " does not exists.\n";
+        std::cout << err;
+        return 1;
     }
     //Open file
     fs::ifstream file(filepath);
@@ -27,7 +27,7 @@ std::stringstream readFile(fs::path filepath)
     //Close file
     file.close();
 
-    return contents;
+    return 0;
 }
 
 string popenCommand(string command)

@@ -8,13 +8,13 @@ namespace fs = boost::filesystem;
 class GCCDriver
 {
     private:
-        ConfigFile* config; 
+        ConfigFile config; 
         BuildUSCache cache;
         bool isSysCmdSilent;
 
     public:
-        GCCDriver(ConfigFile* _config, bool silentSysCmd = false);
-        static GCCDriver* safeFactory(ConfigFile* _config, bool silentSysCmd = false);
+        GCCDriver(ConfigFile& _config, bool silentSysCmd = false);
+        GCCDriver();
         ~GCCDriver();
 
         //Creation of executable steps
@@ -22,7 +22,7 @@ class GCCDriver
         int link();
 
         //Compilation methods
-        StringPairList toCompile();
+        int toCompile(StringPairList& filesToCompile);
 };
 
 namespace GCCDriverUtils
@@ -33,5 +33,5 @@ namespace GCCDriverUtils
     const string GCC_DOT_SO_EXT = ".so";
     
     //Helper functions
-    string generateCompilationCommand(ConfigFile* config, fs::path filepath, fs::path destination);
+    string generateCompilationCommand(ConfigFile& config, fs::path filepath, fs::path destination);
 }
