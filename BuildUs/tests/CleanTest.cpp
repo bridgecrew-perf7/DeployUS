@@ -37,6 +37,7 @@ TEST_CASE("CLEAN_SUCCESS")
     SECTION("PROG1") {configpath = CONFIG_PROG1_PATH;}
     SECTION("PROG2") {configpath = CONFIG_PROG2_PATH;}
 
+    //Creating ConfigFile object and GCCDriver object
     std::stringstream configcontents;
     REQUIRE(readFile(configpath,configcontents) == 0);
     cf = ConfigFile(configpath,configcontents);
