@@ -79,9 +79,12 @@ TEST_CASE("COMPILATION_SUCCESS_NO_DEPS")
 {
     setupCompilationTest();
 
-    //Run Config1,2project names as they compile the same programe
+    //Run Config1,2projectnames as they compile the same program.
     StringPairList compiled = TestSuccessfulCompilation(CONFIG_PROG1_PATH);
     REQUIRE(compiled.size() == 2);
+
+    //Compile the same program! It is a different config file but it compiles the same program. 
+    //The intermediate files are already built, therefore there is no need to recompile them. Check that they were not recompiled.
     compiled = TestSuccessfulCompilation(CONFIG_2PROJECTNAMES_PATH);
     REQUIRE(compiled.size() == 0);
 
