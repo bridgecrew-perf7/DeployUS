@@ -104,25 +104,17 @@ int GCCDriver::compile()
 
 }
 
+int GCCDriver::mustLink()
+//Returns 1 if linking is necessary
+//  0 otherwise
+{
+    return this->cache.mustLink();
+}
+
 int GCCDriver::link()
 //Performs linkage of compiled units with GNU ld
 //Returns non-zero if an error occured, zero otherwise
 {
-    //Load project.cache
-    if(fs::exists(BuildUSCacheUtils::INTERMEDIATE_PROJECT_CACHE))
-    {
-        std::stringstream projectCacheContents;
-        if(readFile(BuildUSCacheUtils::INTERMEDIATE_PROJECT_CACHE,projectCacheContents))
-        {
-            return 1;
-        }
-        if(!this->cache.mustLink(projectCacheContents))
-        {
-            return 0;
-        }
-    }
-    
-
     string cmd = GCCDriverUtils::GCC_COMPILER + " ";
 
     //1. Append Object files

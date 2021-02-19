@@ -10,6 +10,7 @@ class BuildUSCache
 private:
     ConfigFile config;
     ThreeStringTupleList cached;
+    StringPairList filesCompiled;
 
     const fs::path getExecutablePath(); 
 
@@ -22,9 +23,9 @@ public:
     ~BuildUSCache();
 
     int const getFileForMinimalCompilation(const StringPairList& filesForCompilation, StringPairList& filesToCompile);
-    int updateCompiled(const StringPairList& filesCompiled);
+    int updateCompiled(const StringPairList filesCompiled);
 
-    bool const mustLink(std::stringstream& compileCacheContents);
+    int const mustLink();
     void const writeProjectCacheToDisk();
 };
 

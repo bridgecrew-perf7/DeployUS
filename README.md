@@ -20,7 +20,7 @@ Chaque ligne représente un fichier compilé.
 
 Pour savoir où est l'executable (e.g. pour le supprimer), une cache spéciale qui se nomme project.cache se trouve dans le dossier intermediate. Le format de ce fichier est:
 ```
-<Emplacement de l'executable>\0<SHA1 du fichier de config qui l'a généré>
+<Emplacement de l'executable relatif au dossier parent>
 ...
 
 
