@@ -25,10 +25,6 @@ namespace ThreeStringTupleUtils
     inline string getOutputFileName(ThreeStringTuple tpl) {return std::get<0>(tpl);};
     inline string getSourceFilePath(ThreeStringTuple tpl) {return std::get<1>(tpl);};
     inline string getSourceSHA1(ThreeStringTuple tpl)     {return std::get<2>(tpl);};
-    int countByFunction(ThreeStringTupleList tplList, string sourcefilepath, std::function<string(ThreeStringTuple)> getter );
-    inline int countOutputFileName(ThreeStringTupleList tplList, string sourcefilepath) {return countByFunction(tplList,sourcefilepath,getOutputFileName);};
-    inline int countSourceFilePath(ThreeStringTupleList tplList, string sourcefilepath) {return countByFunction(tplList,sourcefilepath,getSourceFilePath);};
-    inline int countSourceSHA1(ThreeStringTupleList tplList, string sourcefilepath) {return countByFunction(tplList,sourcefilepath,getSourceSHA1);};
 }
 
 /*
@@ -43,6 +39,3 @@ bool isValidSHA1(string hash);
 
 string popenCommand(string command);
 int safePopenCommand(string command, string& stdoutOutput);
-
-StringPairList createStringPairList(int numPairs, string outputfile, string sourcepath, ...);
-StringList createStringList(int num, ...);

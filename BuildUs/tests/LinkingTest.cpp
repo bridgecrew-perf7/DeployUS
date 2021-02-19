@@ -44,10 +44,17 @@ TEST_CASE("LINKING_SUCCESS")
 
     //Linking
     REQUIRE(gcc.link() == 0);
+
+    //Verifying project.cache file
+    std::stringstream projectcache;
+    REQUIRE(readFile(BuildUSCacheUtils::INTERMEDIATE_PROJECT_CACHE,projectcache) == 0);
+    string projectpath = BuildUSCacheUtils::getCacheToken(projectcache);
+    string programNameConfig = cf.getProjectName();
+    REQUIRE(projectpath == programNameConfig);
+    REQUIRE(projectcache.eof());
     
     //Execution of program
-    string programName = cf.getProjectName();
-    string cmd = "./" + programName + " >/dev/null 2>/dev/null";
+    string cmd = "./" + programNameConfig + " >/dev/null 2>/dev/null";
     REQUIRE(system(cmd.c_str()) == 0);
 
     linkingTeardown();

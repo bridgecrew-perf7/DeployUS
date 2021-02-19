@@ -65,10 +65,14 @@ namespace BuildUS
         }
 
         //4. Linking step
-        if(gcc.link())
+        if(gcc.mustLink())
         {
-            return 1;
+            if(gcc.link())
+            {
+                return 1;
+            }
         }
+        
 
         return 0;
     }

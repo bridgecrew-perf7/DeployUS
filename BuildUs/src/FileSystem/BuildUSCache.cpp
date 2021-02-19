@@ -96,24 +96,34 @@ int BuildUSCache::writeCompileCacheToDisk()
     return 0;
 }
 
-bool const BuildUSCache::mustLink(std::stringstream& projectCacheContents)
-//Returns true if the project.cache will change.
-//  The file will change if the project SHA1 is different, or if the project.file does not exists.
-//Returns false otherwise
+int const BuildUSCache::mustLink()
+//Returns 1 if the project.cache will change.
+//  The file will change if a file was compile, if the project name has changed or if the project.file does not exists.
+//Returns 0 otherwise
 {
-    //Get executablePath and SHA1 from disk
-    string diskExecutableRelativePath = BuildUSCacheUtils::getCacheToken(projectCacheContents);
-    string diskSHA1 = BuildUSCacheUtils::getCacheToken(projectCacheContents);
+    //Load project.cache
+    if(fs::exists(BuildUSCacheUtils::INTERMEDIATE_PROJECT_CACHE))
+    {
+        std::stringstream projectCacheContents;
+        if(readFile(BuildUSCacheUtils::INTERMEDIATE_PROJECT_CACHE,projectCacheContents))
+        {
+            return 1;
+        }
 
-    //Get executablePath and SHA1 of config
-    string configExecutableRelativePath = this->getExecutablePath().string();
-    string configSHA1 = generateSHA1(this->config.toString());
+        //Get executablePath and SHA1 from disk
+        string diskExecutableRelativePath = BuildUSCacheUtils::getCacheToken(projectCacheContents);
+
+        //Get executablePath and SHA1 of config
+        string configExecutableRelativePath = this->getExecutablePath().string();
 
 
-    bool pathHasChanged = diskExecutableRelativePath.compare(configExecutableRelativePath) != 0;
-    bool sha1HasChanged = diskSHA1.compare(configSHA1) != 0;
-    bool executableDeleted = !fs::exists(configExecutableRelativePath);
-    return executableDeleted || pathHasChanged || sha1HasChanged;
+        bool pathHasChanged = diskExecutableRelativePath.compare(configExecutableRelativePath) != 0;
+        bool somethingCompiled = this->filesCompiled.size() > 0; 
+        bool executableDeleted = !fs::exists(configExecutableRelativePath);
+        return (executableDeleted || pathHasChanged || somethingCompiled) ? 1 : 0;
+    }
+
+    return 1;
 }
 
 void const BuildUSCache::writeProjectCacheToDisk()
@@ -121,8 +131,6 @@ void const BuildUSCache::writeProjectCacheToDisk()
 {
     std::stringstream out;
     out << this->getExecutablePath().string();
-    out << BuildUSCacheUtils::INTRA_SEP;
-    out << generateSHA1(this->config.toString());
     writeFile(BuildUSCacheUtils::INTERMEDIATE_PROJECT_CACHE, out.str());
 }
 
@@ -179,7 +187,7 @@ int const BuildUSCache::getFileForMinimalCompilation(const StringPairList& files
     return 0;
 }
 
-int BuildUSCache::updateCompiled(const StringPairList& filesCompiled)
+int BuildUSCache::updateCompiled(const StringPairList filesCompiled)
 /*
     Update cached attribut with newly compiled files.
     Each file has its SHA1 computed in order to check if they have changed
@@ -187,6 +195,9 @@ int BuildUSCache::updateCompiled(const StringPairList& filesCompiled)
     Returns zero if success, non-zero if unsucessful.
 */
 {
+    // Saving of files that were compiled.
+    this->filesCompiled = filesCompiled;
+
     for(auto compileUnit: filesCompiled)
     {
         string filepathstr = compileUnit.second;

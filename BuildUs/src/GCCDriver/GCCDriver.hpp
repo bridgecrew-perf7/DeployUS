@@ -23,6 +23,7 @@ class GCCDriver
 
         //Compilation methods
         int toCompile(StringPairList& filesToCompile);
+        int mustLink();
 };
 
 namespace GCCDriverUtils
