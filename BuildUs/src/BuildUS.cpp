@@ -25,7 +25,7 @@ namespace BuildUS
             std::cout << "Usage: ./BuildUS <Config filepath>" << std::endl;
             return 1;
         }
-        fs::path arg1 = argv[1];
+        fs::path arg1 = argv[1]; // SD - nom non significatif -2
         
         //Special command: ./BuildUS clean
         if(arg1.compare(BUILDUS_CLEAN) == 0)

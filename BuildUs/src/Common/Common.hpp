@@ -22,7 +22,7 @@ const string COMPILE_OBJECT_EXT = string(".o");
 */
 namespace ThreeStringTupleUtils
 {
-    inline string getOutputFileName(ThreeStringTuple tpl) {return std::get<0>(tpl);};
+    inline string getOutputFileName(ThreeStringTuple tpl) {return std::get<0>(tpl);}; //SD - passage par reference -2
     inline string getSourceFilePath(ThreeStringTuple tpl) {return std::get<1>(tpl);};
     inline string getSourceSHA1(ThreeStringTuple tpl)     {return std::get<2>(tpl);};
 }

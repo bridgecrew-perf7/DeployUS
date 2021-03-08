@@ -113,7 +113,7 @@ int writeFile(fs::path path, string text)
 {
     std::fstream file;
 	file.open(path.c_str(), std::ios::out);
-	if (!file) {
+	if (!file) { // SD - constance des accolades -2
         //File not created
         return 1;
 	}
