@@ -3,8 +3,6 @@
 * 
 *   Over-engeneering dans la separation des projets -10
 *       Pourquoi 4 projets qui contiennent 1-2 fichiers??
-* 
-*   sous repertoire yaml-cpp manquant -10
 *
 *   .hpp/.h non present dans le CMakeList -5
 * 
@@ -14,7 +12,7 @@
 * 
 *   Passer des objets par reference -2
 * 
-*   69/100 (˵ ͜。 ͡ʖ ͜。˵)
+*   79/100 (˵ ͜。 ͡ʖ ͜。˵)
 * 
 */
 
