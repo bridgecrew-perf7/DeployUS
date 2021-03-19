@@ -47,17 +47,18 @@ def insert_script(cursor, connection, name_, contents):
 @mysql_safe
 def execute_script(cursor, connection, name_):
     cursor.execute(f"SELECT * FROM scripts WHERE name = '{name_}'")
-    results = [(name, str(date), contents) for (name, date, contents) in cursor]
+    results = [(id, name, str(date), contents) for (id, name, date, contents) in cursor]
 
     # Script does not exists
     if len(results) == 0:
         return
-    (name, date, contents) = results[0]
+    (id, name, date, contents) = results[0]
 
     # Write file to disk
-    os.mkdir(name)
+    os.mkdir(os.path.join('/work',name))
     with open(f"{name}/docker-compose.yml", 'wb') as file:
         file.write(contents)
 
-    # Docker in Docker execution
+    # docker compose execution
     
+
