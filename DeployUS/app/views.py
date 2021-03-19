@@ -1,61 +1,11 @@
 from app import app
 from flask import render_template
 from flask import request, redirect
-import mysql.connector
 import json
-import sys
 import os
-import datetime
+from . import db
+from .utils import printus, allowed_file 
 from werkzeug.utils import secure_filename
-
-def printus(thingToPrint):
-    print(thingToPrint, file=sys.stdout)
-
-def get_script():
-    config = {
-        'user': 'root',
-        'password': 'deployus',
-        'host': 'db',
-        'port': '3306',
-        'database': 'deployusdb'
-    }
-    connection = mysql.connector.connect(**config)
-    cursor = connection.cursor()
-    cursor.execute('SELECT * FROM scripts')
-    results = [(name, str(date), str(contents)) for (name, date, contents) in cursor]
-    cursor.close()
-    connection.close()
-
-    return results
-
-def insert_script(name_,contents):
-    config = {
-        'user': 'root',
-        'password': 'deployus',
-        'host': 'db',
-        'port': '3306',
-        'database': 'deployusdb'
-    }
-    connection = mysql.connector.connect(**config)
-    cursor = connection.cursor()
-    sql = 'INSERT INTO scripts (name, cre_date, contents) VALUES (%s, %s, %s );'
-    val = (name_, '2021-02-02', str(contents))
-    cursor.execute(sql,val)
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-def allowed_file(filename):
-    # Must have at least 1 . in filename
-    if not "." in filename:
-        return False
-
-    # Check if the extension is in ALLOWED_IMAGE_EXTENSIONS
-    ext = filename.rsplit(".", 1)[1]
-    if ext.upper() == 'YML':
-        return True
-    else:
-        return False
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -81,7 +31,7 @@ def index():
                     binary_script = file.read()
                 
                 # 3. Upload to the database
-                insert_script(name,binary_script)
+                db.insert_script(name,binary_script)
 
                 return redirect(request.url)
 
@@ -93,4 +43,5 @@ def index():
 
 @app.route('/scripts')
 def scripts():
-    return json.dumps({'scripts':get_script()})
+    import pprint
+    return pprint.pformat(json.dumps({'scripts': db.get_script()}), indent=4)
