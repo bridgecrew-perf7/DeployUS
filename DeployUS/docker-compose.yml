@@ -1,6 +1,5 @@
 version: "3.3"
 services:
-
   db:
     image: mysql:5.7
     ports:
@@ -11,7 +10,7 @@ services:
       - "./db:/docker-entrypoint-initdb.d/"
 
   app:
-    build: ./
+    image: shawnvosburg/deployus:latest
     links:
       - db
     ports:

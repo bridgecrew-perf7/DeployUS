@@ -1,3 +1,9 @@
+FROM curlimages/curl:7.75.0 as dockercomposeinstall
+RUN curl -L "https://github.com/docker/compose/releases/download/1.28.5/docker-compose-$(uname -s)-$(uname -m)" -o ~/docker-compose
+RUN chmod +x ~/docker-compose
+
+# ====================================================
+
 # Using python's official image
 FROM python:3.8-slim
 
@@ -18,11 +24,8 @@ COPY requirements.txt /work
 WORKDIR /work
 RUN pip install -r requirements.txt
 
-# Part0: must install docker-compose
-RUN apt-get update
-RUN apt-get install curl -y
-RUN curl -L "https://github.com/docker/compose/releases/download/1.28.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-RUN chmod +x /usr/local/bin/docker-compose
+# Part 0: Copy docker-compose from curl stage
+COPY --from=dockercomposeinstall /home/curl_user/docker-compose /usr/local/bin/docker-compose
 
 # Executing DeployUS
 CMD python run.py
