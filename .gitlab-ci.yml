@@ -20,13 +20,13 @@ build-sp-hello-world:
 # ========================
 #  Building DeployUS
 # ========================
-build-sp-hello-world:
+build-deployus:
   stage: build-docker-images
   image: docker:latest
   services:
     - docker:dind
   script:
     - cd ./DeployUS
-    - docker build -t shawnvosburg/DeployUS .
+    - docker build -t shawnvosburg/deployus .
     - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
     - docker push shawnvosburg/DeployUS:latest
