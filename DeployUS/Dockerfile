@@ -18,5 +18,11 @@ COPY requirements.txt /work
 WORKDIR /work
 RUN pip install -r requirements.txt
 
+# Part0: must install docker-compose
+RUN apt-get update
+RUN apt-get install curl -y
+RUN curl -L "https://github.com/docker/compose/releases/download/1.28.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+RUN chmod +x /usr/local/bin/docker-compose
+
 # Executing DeployUS
 CMD python run.py

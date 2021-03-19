@@ -40,7 +40,7 @@ def get_script(cursor=None, connection=None):
 @mysql_safe
 def insert_script(cursor, connection, name_, contents):
     sql = 'INSERT INTO scripts (name, cre_date, contents) VALUES (%s, %s, %s );'
-    val = (name_, '2021-02-02', contents)
+    val = (name_, '2010-04-30 07:27:39', contents)
     cursor.execute(sql,val)
     connection.commit()
 
