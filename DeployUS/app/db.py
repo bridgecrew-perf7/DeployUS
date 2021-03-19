@@ -34,7 +34,7 @@ def mysql_safe(func):
 @mysql_safe
 def get_script(cursor=None, connection=None):
     cursor.execute('SELECT * FROM scripts')
-    results = [(name, str(date), str(contents)) for (name, date, contents) in cursor]
+    results = [(id, name, str(date), str(contents)) for (id, name, date, contents) in cursor]
 
     return results
 
