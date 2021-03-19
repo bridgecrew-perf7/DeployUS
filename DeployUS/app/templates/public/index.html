@@ -1,19 +1,20 @@
 
 {% extends "public/templates/public_template.html" %}
 
-{% block title %}DeployUS{% endblock %}
+{% block title %}ClientUS{% endblock %}
 
 {% block main %}
 <div class="container">
     <div class="row">
         <div class="col">
 
-            <h1>Welcome to DeployUS! :-)</h1>
+            <h1>Welcome to ClientUS! :-)</h1>
             <hr>
 
-            <!-- Uploading scripts to the database -->
+            <!-- Uploading script to the database -->
             <h3>Upload a docker-compose.yml script here.</h3>
             <form action="/" method="POST" enctype="multipart/form-data">
+                
                 
                 <!-- Name attribute -->
                 <label for="name">Script name:</label><br>
@@ -31,7 +32,7 @@
             </form>
 
 
-            <!-- Viewing scripts in databases -->
+            <!-- Viewing scripts in database -->
             <div top = 100px></div>
             <h3>Scripts in database</h3>
             <hr>
@@ -42,6 +43,7 @@
                     <th scope="col">Name</th>
                     <th scope="col">Date Uploaded</th>
                     <th scope="col">SHA256</th>
+                    <th scope="col">Delete</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -51,6 +53,7 @@
                             <td>{{ name }}</td>
                             <td>{{ date }}</td>
                             <td>{{ hash }}</td>
+                            <td><button onclick="delete_script({{ id }})" type="button" class="btn btn-danger">Delete</button></td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -59,5 +62,37 @@
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block script %}
+
+<script>
+    function delete_script(script_id) {
+        // Deletes script_id (primary key) of script in database
+
+        var entry = {
+        id: script_id
+        };
+
+        fetch(`${window.origin}/delete_script`, {
+            method: "POST",
+            credentials: "include",
+            body: JSON.stringify(entry),
+            cache: "no-cache",
+            headers: new Headers({
+                "content-type": "application/json"
+            })
+        })
+        .then(function (response) {        
+            // When the response is receive, reload the page to see the changes.
+            window.location.reload(true)
+        })
+        .catch(function (error) {
+            console.log("Fetch error: " + error);
+        });
+    }
+
+</script>
 
 {% endblock %}
