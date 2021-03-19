@@ -1,5 +1,5 @@
 from app import app
-from flask import render_template
+from flask import render_template, make_response, jsonify
 from flask import request, redirect
 import json
 import os
@@ -41,6 +41,15 @@ def index():
 
     # For all methods, render the index.html files
     return render_template('public/index.html',dbscripts=db.get_script())
+
+@app.route('/delete_script', methods=['POST'])
+def delete_script():
+    # Deleting script
+    if request.method == "POST":
+        id = request.get_json()['id']
+        db.delete_script(id=id)
+
+    return make_response("", 200)
 
 @app.route('/execute', methods=['GET'])
 def execute():

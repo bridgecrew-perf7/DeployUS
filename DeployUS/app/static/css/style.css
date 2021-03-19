@@ -11,3 +11,21 @@ h3{
     bottom: 5px; 
     width: 100%;
 }  
+
+.related-left {
+    width: 25%;
+    float: left;
+    overflow: auto;
+}
+
+.related-middle {
+    width: 50%;
+    float: left;
+    overflow: auto;
+}
+
+.related-right {
+    width: 25%;
+    float: left;
+    overflow: auto;
+}

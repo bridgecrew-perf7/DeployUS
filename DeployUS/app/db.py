@@ -45,6 +45,13 @@ def insert_script(cursor, connection, name_, contents):
     cursor.execute(sql,val)
     connection.commit()
 
+
+@mysql_safe
+def delete_script(cursor, connection, id):
+    sql = f'DELETE FROM scripts WHERE id = {id};'
+    cursor.execute(sql)
+    connection.commit()
+
 @mysql_safe
 def execute_script(cursor, connection, name_):
     cursor.execute(f"SELECT * FROM scripts WHERE name = '{name_}'")
