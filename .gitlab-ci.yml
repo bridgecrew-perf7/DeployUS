@@ -1,0 +1,14 @@
+stages:
+  - build-sample-projects
+  - test
+
+build-sp-hello-world:
+  stage: build-sample-projects
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - cd ./sample-projects/helloworld/
+    - docker build -t shawnvosburg/helloworld .
+    - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
+    - docker push shawnvosburg/helloworld:latest
