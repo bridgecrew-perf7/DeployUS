@@ -39,12 +39,8 @@ def index():
                 printus("That file extension is not allowed")
                 return redirect(request.url)
 
-    return render_template('public/index.html')
-
-@app.route('/scripts')
-def scripts():
-    import pprint
-    return pprint.pformat(json.dumps({'scripts': db.get_script()}), indent=4)
+    # For all methods, render the index.html files
+    return render_template('public/index.html',dbscripts=db.get_script())
 
 @app.route('/execute', methods=['GET'])
 def execute():

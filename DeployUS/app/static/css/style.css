@@ -1,6 +1,9 @@
 body{
     background: #a9cdd4;
 }
+h3{
+    margin-top: 15px;
+}
 
 .footer{ 
     position: fixed;     

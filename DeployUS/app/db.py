@@ -34,14 +34,14 @@ def mysql_safe(func):
 @mysql_safe
 def get_script(cursor=None, connection=None):
     cursor.execute('SELECT * FROM scripts')
-    results = [(id, name, str(date), str(contents)) for (id, name, date, contents) in cursor]
+    results = [(id, name, utils.formatDateTimeObj(str(date)), utils.getHash(contents)) for (id, name, date, contents) in cursor]
 
     return results
 
 @mysql_safe
 def insert_script(cursor, connection, name_, contents):
     sql = 'INSERT INTO scripts (name, cre_date, contents) VALUES (%s, %s, %s );'
-    val = (name_, '2010-04-30 07:27:39', contents)
+    val = (name_, utils.getDatetimeNow() , contents)
     cursor.execute(sql,val)
     connection.commit()
 

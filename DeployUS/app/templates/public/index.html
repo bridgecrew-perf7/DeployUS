@@ -30,7 +30,31 @@
                 <button type="submit" class="btn btn-primary">Upload</button>
             </form>
 
-            <!-- Execute a script on distant machines -->
+
+            <!-- Viewing scripts in databases -->
+            <div top = 100px></div>
+            <h3>Scripts in database</h3>
+            <hr>
+            <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Date Uploaded</th>
+                    <th scope="col">SHA256</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for id,name,date, hash in dbscripts %}
+                        <tr>
+                            <th scope="row">{{ id }}</th>
+                            <td>{{ name }}</td>
+                            <td>{{ date }}</td>
+                            <td>{{ hash }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+              </table>
 
         </div>
     </div>
