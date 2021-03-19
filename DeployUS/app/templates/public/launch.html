@@ -35,7 +35,7 @@
                             </td>
                             <td>
                                 <button onclick="launch_job({{ id }})" type="button" class="btn btn-primary">Launch</button>
-                                <div class="spinner-border spinner-border-sm text-primary" role="status" id="spinner{{ id }}" style="visibility: hidden;"></div>
+                                <div class="spinner-border spinner-border-sm text-primary" role="status" id="launchSpinner{{ id }}" style="visibility: hidden;"></div>
                             </td>
                         </tr>
                     {% endfor %}
@@ -59,7 +59,10 @@
                             <th scope="row">{{ id }}</th>
                             <td>{{ script_name }}</td>
                             <td>{{ worker_location }}</td>
-                            <td><button onclick="stop_job({{ id }})" type="button" class="btn btn-danger">Stop</button></td>
+                            <td>
+                                <button onclick="stop_job({{ id }})" type="button" class="btn btn-danger">Stop</button>
+                                <div class="spinner-border spinner-border-sm text-danger" role="status" id="stopSpinner{{ id }}" style="visibility: hidden;"></div>
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -76,7 +79,7 @@
 <script>
     function launch_job(job_id) {
         // Activate the spinner
-        var spinner = document.getElementById("spinner".concat(job_id)); 
+        var spinner = document.getElementById("launchSpinner".concat(job_id)); 
         spinner.style.visibility = "visible";
 
         // Deletes script_id (primary key) of script in database
@@ -106,8 +109,11 @@
     }
 
     function stop_job(job_id) {
-        // Calls backend to stop execution of job where id = job_id
+        // Activate the spinner
+        var spinner = document.getElementById("stopSpinner".concat(job_id)); 
+        spinner.style.visibility = "visible";
 
+        // Calls backend to stop execution of job where id = job_id
         var entry = {
         id: job_id
         };
@@ -122,6 +128,9 @@
             })
         })
         .then(function (response) {        
+            // Deactivate spinner
+            spinner.style.visibility = "hidden";
+
             // When the response is received, reload the page to see the changes.
             window.location.reload(true)
         });
