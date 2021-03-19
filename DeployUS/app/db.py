@@ -1,5 +1,6 @@
 import mysql.connector
 import os
+from app import utils
 
 def mysql_safe(func):
     """
@@ -55,10 +56,15 @@ def execute_script(cursor, connection, name_):
     (id, name, date, contents) = results[0]
 
     # Write file to disk
-    os.mkdir(os.path.join('/work',name))
-    with open(f"{name}/docker-compose.yml", 'wb') as file:
+    parentdir = f"/work/{name}"
+    dockercomposePath = os.path.join(parentdir,"docker-compose.yml")
+    if not os.path.exists(parentdir):
+        os.mkdir(parentdir)
+
+    with open(dockercomposePath, 'wb') as file:
         file.write(contents)
 
     # docker compose execution
-    
+    cmd = f"cd {parentdir};  docker-compose up -d"
+    os.system(cmd)
 

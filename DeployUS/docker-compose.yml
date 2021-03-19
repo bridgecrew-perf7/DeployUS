@@ -10,6 +10,7 @@ services:
       - "./db:/docker-entrypoint-initdb.d/"
 
   app:
+    build: ./
     image: shawnvosburg/deployus:latest
     links:
       - db
