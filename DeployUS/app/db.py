@@ -39,6 +39,13 @@ def get_script(cursor=None, connection=None):
     return results
 
 @mysql_safe
+def get_jobs(cursor=None, connection=None):
+    cursor.execute('SELECT * FROM jobs')
+    results = [(id, script_id, worker_id) for (id, script_id, worker_id) in cursor]
+
+    return results
+
+@mysql_safe
 def insert_script(cursor, connection, name_, contents):
     sql = 'INSERT INTO scripts (name, cre_date, contents) VALUES (%s, %s, %s );'
     val = (name_, utils.getDatetimeNow() , contents)
@@ -53,8 +60,8 @@ def delete_script(cursor, connection, id):
     connection.commit()
 
 @mysql_safe
-def execute_script(cursor, connection, name_):
-    cursor.execute(f"SELECT * FROM scripts WHERE name = '{name_}'")
+def execute_script(cursor, connection, id, location):
+    cursor.execute(f"SELECT * FROM scripts WHERE id = '{id}'")
     results = [(id, name, str(date), contents) for (id, name, date, contents) in cursor]
 
     # Script does not exists
@@ -74,4 +81,10 @@ def execute_script(cursor, connection, name_):
     # docker compose execution
     cmd = f"cd {parentdir};  docker-compose up -d"
     os.system(cmd)
+
+    # Insert job's location into jobs table in db
+    sql = 'INSERT INTO jobs (script_id, worker_id) VALUES (%s, %s );'
+    val = (id, 1 )
+    cursor.execute(sql,val)
+    connection.commit()
 

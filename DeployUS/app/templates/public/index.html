@@ -33,7 +33,6 @@
 
 
             <!-- Viewing scripts in database -->
-            <div top = 100px></div>
             <h3>Scripts in database</h3>
             <hr>
             <table class="table">
@@ -87,9 +86,6 @@
         .then(function (response) {        
             // When the response is receive, reload the page to see the changes.
             window.location.reload(true)
-        })
-        .catch(function (error) {
-            console.log("Fetch error: " + error);
         });
     }
 
