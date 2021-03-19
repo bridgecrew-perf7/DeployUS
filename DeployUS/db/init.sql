@@ -19,7 +19,8 @@ CREATE TABLE jobs (
   script_id INT NOT NULL,
   worker_id INT NOT NULL,
   FOREIGN KEY (script_id) REFERENCES scripts(id),
-  FOREIGN KEY (worker_id) REFERENCES workers(id)
+  FOREIGN KEY (worker_id) REFERENCES workers(id),
+  UNIQUE (script_id, worker_id)
 );
 
 

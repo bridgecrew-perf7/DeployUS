@@ -64,3 +64,11 @@ def launch_job():
     db.execute_script(id=id, location=location)
 
     return make_response("", 200)
+
+@app.route('/stop_job', methods=['POST'])
+def stop_job():
+    # Deleting script
+    job_id = request.get_json()['id']
+    db.stop_job(job_id=job_id)
+
+    return make_response("", 200)
