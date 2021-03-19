@@ -45,3 +45,8 @@ def index():
 def scripts():
     import pprint
     return pprint.pformat(json.dumps({'scripts': db.get_script()}), indent=4)
+
+@app.route('/execute', methods=['GET'])
+def execute():
+    db.execute_script("myscript")
+    return render_template('public/index.html') 
