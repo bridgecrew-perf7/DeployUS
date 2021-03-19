@@ -1,0 +1,131 @@
+
+{% extends "public/templates/public_template.html" %}
+
+{% block title %}Launch{% endblock %}
+
+{% block main %}
+<div class="container">
+    <div class="row">
+        <div class="col">
+
+            <h1>Launch</h1>
+            <hr>
+            
+            <!-- Viewing scripts in database -->
+            <h3>Scripts in database</h3>
+            <hr>
+            <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Worker</th>
+                    <th scope="col">Launch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for id,name,_, _ in dbscripts %}
+                        <tr>
+                            <th scope="row">{{ id }}</th>
+                            <td>{{ name }}</td>
+                            <td>
+                                <select name="location{{ id }}" id="location{{ id }}">
+                                    <option value="127.0.0.1">LocalHost</option>
+                                </select>
+                            </td>
+                            <td>
+                                <button onclick="launch_job({{ id }})" type="button" class="btn btn-primary">Launch</button>
+                                <div class="spinner-border spinner-border-sm text-primary" role="status" id="spinner{{ id }}" style="visibility: hidden;"></div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+              </table>
+
+            <h3>Running Jobs</h3>
+            <hr>
+            <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Script</th>
+                    <th scope="col">Location</th>
+                    <th scope="col">Stop</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for id, script_name, worker_location in dbjobs %}
+                        <tr>
+                            <th scope="row">{{ id }}</th>
+                            <td>{{ script_name }}</td>
+                            <td>{{ worker_location }}</td>
+                            <td><button onclick="stop_job({{ id }})" type="button" class="btn btn-danger">Stop</button></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+              </table>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+
+<script>
+    function launch_job(job_id) {
+        // Activate the spinner
+        var spinner = document.getElementById("spinner".concat(job_id)); 
+        spinner.style.visibility = "visible";
+
+        // Deletes script_id (primary key) of script in database
+        var location = document.getElementById("location".concat(job_id));
+
+        var entry = {
+            id: job_id,
+            location: location.value
+        };
+
+        fetch(`${window.origin}/launch_job`, {
+            method: "POST",
+            credentials: "include",
+            body: JSON.stringify(entry),
+            cache: "no-cache",
+            headers: new Headers({
+                "content-type": "application/json"
+            })
+        })
+        .then(function (response) {    
+            // Deactivate the spinner
+            spinner.style.visibility = "hidden";
+            
+            // When the response is received, reload the page to see the changes.
+            window.location.reload(true)
+        });
+    }
+
+    function stop_job(job_id) {
+        // Calls backend to stop execution of job where id = job_id
+
+        var entry = {
+        id: job_id
+        };
+
+        fetch(`${window.origin}/stop_job`, {
+            method: "POST",
+            credentials: "include",
+            body: JSON.stringify(entry),
+            cache: "no-cache",
+            headers: new Headers({
+                "content-type": "application/json"
+            })
+        })
+        .then(function (response) {        
+            // When the response is received, reload the page to see the changes.
+            window.location.reload(true)
+        });
+    }
+</script>
+
+{% endblock %}
