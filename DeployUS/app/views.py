@@ -42,16 +42,33 @@ def index():
     # For all methods, render the index.html files
     return render_template('public/index.html',dbscripts=db.get_script())
 
+
 @app.route('/delete_script', methods=['POST'])
 def delete_script():
     # Deleting script
-    if request.method == "POST":
-        id = request.get_json()['id']
-        db.delete_script(id=id)
+    id = request.get_json()['id']
+    db.delete_script(id=id)
 
     return make_response("", 200)
 
-@app.route('/execute', methods=['GET'])
-def execute():
-    db.execute_script("myscript")
-    return render_template('public/index.html') 
+
+@app.route('/launch', methods=['GET'])
+def lauch():
+    return render_template('public/launch.html',dbscripts=db.get_script(), dbjobs=db.get_jobs()) 
+
+@app.route('/launch_job', methods=['POST'])
+def launch_job():
+    # Deleting script
+    id = request.get_json()['id']
+    location = request.get_json()['location']
+    db.execute_script(id=id, location=location)
+
+    return make_response("", 200)
+
+@app.route('/stop_job', methods=['POST'])
+def stop_job():
+    # Deleting script
+    job_id = request.get_json()['id']
+    db.stop_job(job_id=job_id)
+
+    return make_response("", 200)
