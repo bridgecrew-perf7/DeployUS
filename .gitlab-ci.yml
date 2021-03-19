@@ -1,9 +1,13 @@
 stages:
-  - build-sample-projects
+  - build-docker-images
   - test
 
+
+# ==========================
+#  Building Sample Projects
+# ==========================
 build-sp-hello-world:
-  stage: build-sample-projects
+  stage: build-docker-images
   image: docker:latest
   services:
     - docker:dind
@@ -12,3 +16,17 @@ build-sp-hello-world:
     - docker build -t shawnvosburg/helloworld .
     - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
     - docker push shawnvosburg/helloworld:latest
+
+# ========================
+#  Building DeployUS
+# ========================
+build-sp-hello-world:
+  stage: build-docker-images
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - cd ./DeployUS
+    - docker build -t shawnvosburg/DeployUS .
+    - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
+    - docker push shawnvosburg/DeployUS:latest
