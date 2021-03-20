@@ -32,12 +32,12 @@ build-deployus:
     - docker push shawnvosburg/deployus:latest
 
 
-# ===========================
-#  Testing here
-# ===========================
+# ================================
+#  Testing the created images here
+# ================================
 tests:
   stage: test
-  image: hmajid2301/dind-docker-compose
+  image: docker/compose
   services:
   - docker:dind
   script:
