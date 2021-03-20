@@ -37,10 +37,13 @@ build-deployus:
 tests-deployus:
   stage: test
   image: 
-    name: guglio/dind-compose:latest
-    entrypoint: ["sh", "-c"]
+    name: docker:stable
   services:
     - docker:dind
+  before_script:
+    - apk update
+    - apk add py-pip python3-dev libffi-dev openssl-dev gcc libc-dev make
+    - pip install docker-compose
   script:    
     - cd DeployUS
     - docker-compose up -d 
