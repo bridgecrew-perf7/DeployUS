@@ -38,8 +38,9 @@ tests-deployus:
   stage: test
   image: 
     name: hmajid2301/dind-docker-compose
+    entrypoint: "/bin/sh"
   variables:
-    DOCKER_HOST: tcp://docker:2375
+    DOCKER_HOST: "tcp://docker:2375"
   services:
     - docker:dind
   before_script:
