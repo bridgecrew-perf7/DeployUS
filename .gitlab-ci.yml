@@ -42,11 +42,15 @@ tests-deployus:
     - docker:20.10-dind
   before_script:
     - apk update
-    - apk add docker-compose
+    - apk add docker-compose curl
+    - pip install --upgrade pip
+    - pip install pytest
 
   script:    
     - cd DeployUS
     - docker-compose up -d 
+    - pytest -s -v
+
   after_script:
     - cd DeployUS
     - docker-compose down
