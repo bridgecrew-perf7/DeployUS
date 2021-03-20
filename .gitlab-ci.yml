@@ -41,8 +41,6 @@ tests:
     entrypoint: [""]
   services:
     - docker:dind
-  volumes:
-    - "/var/run/docker.sock:/var/run/docker.sock"
   script:
     - cd DeployUS
     - docker-compose up --build -d 
