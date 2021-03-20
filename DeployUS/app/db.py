@@ -85,7 +85,7 @@ def delete_script(cursor, connection, id):
     connection.commit()
 
 @mysql_safe
-def execute_script(cursor, connection, id, location):
+def launch_job(cursor, connection, id, location):
     cursor.execute(f"SELECT * FROM scripts WHERE id = '{id}'")
     results = [(id, name, str(date), contents) for (id, name, date, contents) in cursor]
 
@@ -95,7 +95,7 @@ def execute_script(cursor, connection, id, location):
     (id, name, date, contents) = results[0]
 
     # Write file to disk
-    parentdir = f"/work/{name}"
+    parentdir = f"/work/scripts/{name}"
     dockercomposePath = os.path.join(parentdir,"docker-compose.yml")
     if not os.path.exists(parentdir):
         os.mkdir(parentdir)
@@ -131,10 +131,8 @@ def stop_job(cursor, connection, job_id):
         return
     (id, script_name, worker_location) = results[0]
 
-    # Write file to disk
-    parentdir = f"/work/{script_name}"
-
     # docker compose execution
+    parentdir = f"/work/scripts/{script_name}"
     cmd = f"cd {parentdir};  docker-compose down"
     os.system(cmd)
 
