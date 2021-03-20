@@ -47,7 +47,6 @@ tests-deployus:
   script:    
     - cd DeployUS
     - docker-compose up -d 
-
-  after-script:
+  after_script:
     - cd DeployUS
     - docker-compose down
