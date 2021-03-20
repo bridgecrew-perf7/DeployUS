@@ -16,9 +16,9 @@ build-sp-hello-world:
     - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
     - docker push shawnvosburg/helloworld:latest
 
-# ========================
-#  Building DeployUS
-# ========================
+# ========================================================================
+#  Building docker images. Also pushing them to docker hub
+# ========================================================================
 build-deployus:
   stage: build-docker-images
   image: docker:latest
@@ -31,9 +31,24 @@ build-deployus:
     - docker push shawnvosburg/deployus:latest
 
 
-# ================================
+# ==================================
+#  Linting the created images here
+# ==================================
+lint-deployus:
+  stage: test
+  image: 
+    name: python:3.8
+  script:    
+    - cd DeployUS
+    - pip install pylint
+    - find app -type f -name "*.py" | xargs pylint 
+    - find tests -type f -name "*.py" | xargs pylint 
+    - pylint run.py
+
+
+# ==================================
 #  Testing the created images here
-# ================================
+# ==================================
 tests-deployus:
   stage: test
   image: 
