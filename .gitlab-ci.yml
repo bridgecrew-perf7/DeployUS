@@ -37,7 +37,11 @@ build-deployus:
 tests-deployus:
   stage: test
   image: 
-    name: docker/compose:latest
+    name: docker/compose:1.24.1
+    entrypoint: ["sh", "-c"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
   services:
     - docker:dind
   script:    
