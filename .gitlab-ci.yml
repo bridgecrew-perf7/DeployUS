@@ -41,13 +41,11 @@ tests-deployus:
     entrypoint: [""]
   variables:
     DOCKER_HOST: tcp://172.17.0.2:2375
+    DOCKER_DRIVER: overlay
   services:
     - docker:dind
   before_script:
-    - printenv
     - cat /etc/hosts
-    - sh /usr/local/bin/docker-compose-entrypoint.sh
-    - docker-compose -v
   script:    
     - cd DeployUS
     - docker-compose up -d 
