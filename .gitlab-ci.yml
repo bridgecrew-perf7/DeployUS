@@ -2,7 +2,6 @@ stages:
   - build-docker-images
   - test
 
-
 # ==========================
 #  Building Sample Projects
 # ==========================
@@ -42,10 +41,12 @@ tests:
     entrypoint: [""]
   services:
     - docker:dind
+  volumes:
+    - "/var/run/docker.sock:/var/run/docker.sock"
   script:
     - cd DeployUS
     - docker-compose up --build -d 
     - echo "Run Commands Here"
   after_script:
     - cd DeployUS
-    - docker-composedown
+    - docker-compose down
