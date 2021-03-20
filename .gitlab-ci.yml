@@ -38,12 +38,13 @@ tests-deployus:
   stage: test
   image: 
     name: docker/compose:latest
-    entrypoint: ['sh']
+    entrypoint: ["/bin/sh"]
   variables:
     DOCKER_HOST: 'tcp://docker:2375'
   services:
     - docker:dind
   before_script:
+    - printenv
     - sh /usr/local/bin/docker-compose-entrypoint.sh
     - docker-compose -v
   script:    
