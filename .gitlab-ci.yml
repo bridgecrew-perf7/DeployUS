@@ -30,3 +30,17 @@ build-deployus:
     - docker build -t shawnvosburg/deployus .
     - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
     - docker push shawnvosburg/deployus:latest
+
+
+# ===========================
+#  Testing here
+# ===========================
+tests:
+  stage: test
+  image: hmajid2301/dind-docker-compose
+  script:
+    - cd DeployUS
+    - docker-compose -f docker-compose.yml up --build -d 
+    - echo "Run Commands Here"
+  after_script:
+    - docker-compose -f docker-compose.yml down
