@@ -41,10 +41,11 @@ tests:
     name: docker/compose:1.23.2
     entrypoint: [""]
   services:
-  - docker:dind
+    - docker:dind
   script:
     - cd DeployUS
-    - docker-compose -f docker-compose.yml up --build -d 
+    - docker-compose up --build -d 
     - echo "Run Commands Here"
   after_script:
-    - docker-compose -f docker-compose.yml down
+    - cd DeployUS
+    - docker-composedown
