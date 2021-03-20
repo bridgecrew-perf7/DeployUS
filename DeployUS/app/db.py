@@ -52,12 +52,31 @@ def get_jobs(cursor=None, connection=None):
     return results
 
 @mysql_safe
+def get_workers(cursor=None, connection=None):
+    cursor.execute('SELECT * FROM workers')
+    results = [(id, name, location) for (id, name, location) in cursor]
+
+    return results
+
+@mysql_safe
+def insert_worker(cursor, connection, name, location):
+    sql = 'INSERT INTO workers (name,location) VALUES (%s, %s);'
+    val = (name, location)
+    cursor.execute(sql,val)
+    connection.commit()
+
+@mysql_safe
 def insert_script(cursor, connection, name_, contents):
     sql = 'INSERT INTO scripts (name, cre_date, contents) VALUES (%s, %s, %s );'
     val = (name_, utils.getDatetimeNow() , contents)
     cursor.execute(sql,val)
     connection.commit()
-
+    
+@mysql_safe
+def delete_worker(cursor, connection, id):
+    sql = f'DELETE FROM workers WHERE id = {id};'
+    cursor.execute(sql)
+    connection.commit()
 
 @mysql_safe
 def delete_script(cursor, connection, id):

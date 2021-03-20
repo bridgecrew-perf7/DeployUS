@@ -72,3 +72,22 @@ def stop_job():
     db.stop_job(job_id=job_id)
 
     return make_response("", 200)
+
+@app.route('/workers', methods=['GET'])
+def workers():
+    return render_template('public/workers.html',dbworkers=db.get_workers()) 
+
+@app.route('/insert_worker', methods=['POST'])
+def insert_worker():
+    name = request.get_json()['name']
+    location = request.get_json()['location']
+    db.insert_worker(name=name, location=location)
+
+    return make_response("", 200)
+    
+@app.route('/delete_worker', methods=['POST'])
+def delete_worker():
+    id = request.get_json()['id']
+    db.delete_worker(id=id)
+
+    return make_response("", 200)
