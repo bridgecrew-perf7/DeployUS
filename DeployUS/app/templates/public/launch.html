@@ -30,7 +30,11 @@
                             <td>{{ name }}</td>
                             <td>
                                 <select name="location{{ id }}" id="location{{ id }}">
-                                    <option value="127.0.0.1">LocalHost</option>
+                                    {% for worker_id, name, _ in dbworkers %}
+                                        <option value="{{ worker_id }}">{{ name }}</option>
+
+                                    {% endfor %}
+                                    
                                 </select>
                             </td>
                             <td>
