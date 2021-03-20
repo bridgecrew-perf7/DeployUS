@@ -1,0 +1,118 @@
+
+{% extends "public/templates/public_template.html" %}
+
+{% block title %}Workers{% endblock %}
+
+{% block main %}
+<div class="container">
+    <div class="row">
+        <div class="col">
+
+            <h1>Workers</h1>
+            <hr>
+            
+            <!-- Viewing workers in database -->
+            <h3>Scripts in database</h3>
+            <hr>
+            <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Location</th>
+                    <th scope="col">Delete</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for id,name,location in dbworkers %}
+                        <tr>
+                            <th scope="row">{{ id }}</th>
+                            <td>{{ name }}</td>
+                            <td>{{ location }}</td>
+                            <td>
+                                <button onclick="delete_worker({{ id }})" type="button" class="btn btn-danger">Stop</button>
+                                <div class="spinner-border spinner-border-sm text-danger" role="status" id="stopSpinner{{ id }}" style="visibility: hidden;"></div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+              </table>
+
+            
+            <!-- Adding workers to the database -->
+            <h3>Add a worker here.</h3>
+            <hr>
+            <!-- Name attribute -->
+            <label for="worker-name">Worker name:</label><br>
+            <input type="text" id="worker-name" name="worker-name"><br>
+
+            <!-- Location selection -->
+            <label for="worker-location">Location</label><br>
+            <input type="text" id="worker-location" name="worker-location"><br>
+
+            <button onclick="insert_worker()" type="button" class="btn btn-primary">Insert</button>
+
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+
+<script>
+    function insert_worker() {
+        // Fetch entered elements
+        var name = document.getElementById("worker-name").value;
+        var location = document.getElementById("worker-location").value;
+
+        var entry = {
+            name: name,
+            location: location
+        };
+
+        fetch(`${window.origin}/insert_worker`, {
+            method: "POST",
+            credentials: "include",
+            body: JSON.stringify(entry),
+            cache: "no-cache",
+            headers: new Headers({
+                "content-type": "application/json"
+            })
+        })
+        .then(function (response) { 
+            // When the response is received, reload the page to see the changes.
+            window.location.reload(true)
+        });
+    }
+
+    function delete_worker(worker_id) {
+        // Activate the spinner
+        var spinner = document.getElementById("stopSpinner".concat(worker_id)); 
+        spinner.style.visibility = "visible";
+
+        var entry = {
+            id: worker_id
+        };
+
+        fetch(`${window.origin}/delete_worker`, {
+            method: "POST",
+            credentials: "include",
+            body: JSON.stringify(entry),
+            cache: "no-cache",
+            headers: new Headers({
+                "content-type": "application/json"
+            })
+        })
+        .then(function (response) { 
+            // Deactivate spinner
+            spinner.style.visibility = "hidden";
+
+            // When the response is received, reload the page to see the changes.
+            window.location.reload(true)
+        });
+    }
+
+</script>
+{% endblock %}
