@@ -38,6 +38,8 @@ build-deployus:
 tests:
   stage: test
   image: hmajid2301/dind-docker-compose
+  services:
+  - docker:dind
   script:
     - cd DeployUS
     - docker-compose -f docker-compose.yml up --build -d 

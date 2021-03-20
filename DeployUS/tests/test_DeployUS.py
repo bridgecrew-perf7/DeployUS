@@ -1,32 +1,55 @@
+import docker as docker_py
 import pytest
-import requests
-from urllib.parse import urljoin
-from urllib3.util.retry import Retry
-from requests.adapters import HTTPAdapter
 
-pytest_plugins = ["docker_compose"]
-
-# Invoking this fixture: 'function_scoped_container_getter' starts all services
-@pytest.fixture(scope="function")
-def wait_for_api(function_scoped_container_getter):
-    """Wait for the api from my_api_service to become responsive"""
-    request_session = requests.Session()
-    retries = Retry(total=5,
-                    backoff_factor=0.1,
-                    status_forcelist=[500, 502, 503, 504])
-    request_session.mount('http://', HTTPAdapter(max_retries=retries))
-
-    service = function_scoped_container_getter.get("my_api_service").network_info[0]
-    api_url = "http://%s:%s/" % (service.hostname, service.host_port)
-    assert request_session.get(api_url)
-    return request_session, api_url
+docker_client = docker_py.from_env()
+docker_compose = None
 
 
-def test_read_and_write(wait_for_api):
-    """The Api is now verified good to go and tests can interact with it"""
-    request_session, api_url = wait_for_api
-    data_string = 'some_data'
-    request_session.put('%sitems/2?data_string=%s' % (api_url, data_string))
-    item = request_session.get(urljoin(api_url, 'items/2')).json()
-    assert item['data'] == data_string
-    request_session.delete(urljoin(api_url, 'items/2'))
+@pytest.fixture(scope="session", autouse=True)
+def docker(docker_services):
+    global docker_compose
+    docker_compose = docker_services
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup():
+    docker_compose.start()
+    yield
+    docker_compose.shutdown()
+
+
+def kill_container(container_name):
+    container = get_container(container_name)
+    container.kill()
+    container.remove()
+
+
+def get_container(container_name):
+    containers = docker_client.containers.list()
+    for container in containers:
+        if container.name == container_name:
+            return container
+
+
+def start_container(service_name):
+    docker_compose.start(service_name)
+
+
+def test_two_containers():
+    containers = docker_client.containers.list()
+    assert len(containers) == 2
+
+
+def test_kill_container1():
+    kill_container("container1")
+    containers = docker_client.containers.list()
+    container1 = get_container("container1")
+    assert len(containers) == 1
+    assert not container1
+
+def test_start_container1():
+    start_container("service1")
+    containers = docker_client.containers.list()
+    container1 = get_container("container1")
+    assert len(containers) == 2
+    assert container11
