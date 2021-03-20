@@ -45,6 +45,7 @@ tests-deployus:
     - docker:dind
   before_script:
     - printenv
+    - cat /etc/hosts
     - sh /usr/local/bin/docker-compose-entrypoint.sh
     - docker-compose -v
   script:    
