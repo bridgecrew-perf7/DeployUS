@@ -37,13 +37,14 @@ build-deployus:
 tests-deployus:
   stage: test
   image: 
-    name: hmajid2301/dind-docker-compose
-    entrypoint: ["/bin/sh"]
-  variables:
-    DOCKER_HOST: "tcp://docker:2375"
+    name: docker:latest
   services:
     - docker:dind
   before_script:
+    - apk add --no-cache python3
+    - python3 -m ensurepip
+    - pip3 install --upgrade pip setuptools
+    - pip install docker-compose
     - docker-compose -v
   script:    
     - cd DeployUS
