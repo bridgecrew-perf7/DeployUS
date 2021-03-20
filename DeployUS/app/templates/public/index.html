@@ -11,6 +11,35 @@
             <h1>Welcome to ClientUS! :-)</h1>
             <hr>
 
+            <!-- Viewing scripts in database -->
+            <h3>Scripts in database</h3>
+            <hr>
+            <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Date Uploaded</th>
+                    <th scope="col">SHA256</th>
+                    <th scope="col">Delete</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for id,name,date, hash in dbscripts %}
+                        <tr>
+                            <th scope="row">{{ id }}</th>
+                            <td>{{ name }}</td>
+                            <td>{{ date }}</td>
+                            <td>{{ hash }}</td>
+                            <td>
+                                <button onclick="delete_script({{ id }})" type="button" class="btn btn-danger">Delete</button>
+                                <div class="spinner-border spinner-border-sm text-danger" role="status" id="stopSpinner{{ id }}" style="visibility: hidden;"></div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+              </table>
+
             <!-- Uploading script to the database -->
             <h3>Upload a docker-compose.yml script here.</h3>
             <form action="/" method="POST" enctype="multipart/form-data">
@@ -32,32 +61,6 @@
             </form>
 
 
-            <!-- Viewing scripts in database -->
-            <h3>Scripts in database</h3>
-            <hr>
-            <table class="table">
-                <thead>
-                  <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Name</th>
-                    <th scope="col">Date Uploaded</th>
-                    <th scope="col">SHA256</th>
-                    <th scope="col">Delete</th>
-                  </tr>
-                </thead>
-                <tbody>
-                    {% for id,name,date, hash in dbscripts %}
-                        <tr>
-                            <th scope="row">{{ id }}</th>
-                            <td>{{ name }}</td>
-                            <td>{{ date }}</td>
-                            <td>{{ hash }}</td>
-                            <td><button onclick="delete_script({{ id }})" type="button" class="btn btn-danger">Delete</button></td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-              </table>
-
         </div>
     </div>
 </div>
@@ -68,8 +71,11 @@
 
 <script>
     function delete_script(script_id) {
-        // Deletes script_id (primary key) of script in database
+        // Activate the spinner
+        var spinner = document.getElementById("stopSpinner".concat(script_id)); 
+        spinner.style.visibility = "visible";
 
+        // Deletes script_id (primary key) of script in database
         var entry = {
         id: script_id
         };
@@ -83,7 +89,10 @@
                 "content-type": "application/json"
             })
         })
-        .then(function (response) {        
+        .then(function (response) {    
+            // Deactivate spinner
+            spinner.style.visibility = "hidden";
+            
             // When the response is receive, reload the page to see the changes.
             window.location.reload(true)
         });
