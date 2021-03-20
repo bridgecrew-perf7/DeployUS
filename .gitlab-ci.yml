@@ -34,10 +34,10 @@ build-deployus:
 # ================================
 #  Testing the created images here
 # ================================
-tests:
+tests-deployus:
   stage: test
   image: 
-    name: docker:latest
+    name: docker/compose
   services:
     - docker:dind
   script:
