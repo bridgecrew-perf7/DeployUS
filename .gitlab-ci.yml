@@ -37,13 +37,13 @@ build-deployus:
 tests-deployus:
   stage: test
   image: 
-    name: docker:stable
+    name: docker:20.10
   services:
-    - docker:dind
+    - docker:20.10-dind
   before_script:
     - apk update
-    - apk add py-pip python3-dev libffi-dev openssl-dev gcc libc-dev make
-    - pip install docker-compose
+    - apk add docker-compose
+
   script:    
     - cd DeployUS
     - docker-compose up -d 
