@@ -43,8 +43,4 @@ tests:
     - docker:dind
   script:
     - cd DeployUS
-    - docker-compose up --build -d 
-    - echo "Run Commands Here"
-  after_script:
-    - cd DeployUS
-    - docker-compose down
+    - docker run shawnvosburg/deployus
