@@ -38,7 +38,7 @@ tests-deployus:
   stage: test
   image: 
     name: docker/compose:latest
-    entrypoint: '/bin/sh'
+    entrypoint: ['sh']
   variables:
     DOCKER_HOST: 'tcp://docker:2375'
   services:
