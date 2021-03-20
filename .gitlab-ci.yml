@@ -42,4 +42,8 @@ tests-deployus:
     - docker:dind
   script:
     - cd DeployUS
-    - docker run shawnvosburg/deployus
+    - docker-compose up -d 
+
+  after-script:
+    - cd DeployUS
+    - docker-compose down
