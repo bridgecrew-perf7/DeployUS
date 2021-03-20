@@ -37,7 +37,9 @@ build-deployus:
 # ================================
 tests:
   stage: test
-  image: docker/compose
+  image: 
+    name: docker/compose:1.23.2
+    entrypoint: [""]
   services:
   - docker:dind
   script:
