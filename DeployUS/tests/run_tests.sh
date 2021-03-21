@@ -8,7 +8,7 @@ set -x
 docker_compose_cmd="docker-compose -f docker-compose.tests.yml"
 
 # Build all necessary images
-${docker_compose_cmd} build
+${docker_compose_cmd} build tests
 
 # Run service containers, except for test container
 ${docker_compose_cmd} up -d --no-deps db app
