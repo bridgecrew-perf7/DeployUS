@@ -51,6 +51,7 @@ def insert_script():
 
         else:
             printus("That file extension is not allowed")
+            printus(script.filename)
             return redirect('/')
     else:
         return redirect('/')

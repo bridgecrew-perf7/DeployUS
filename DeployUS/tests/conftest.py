@@ -74,9 +74,8 @@ class DeployUSInterface():
         return requests.get(self.addr + '/get_workers') 
 
     def insert_script(self, script_name, script_file):
-        payload = {'name': script_name}
-        files = {'scriptfile': script_file}
-        response = requests.post(self.addr + '/insert_script', data=payload, files=files)
+        files = {'name': script_name, 'scriptfile': script_file}
+        response = requests.post(self.addr + '/insert_script', files=files)
         return response
 
     def delete_script(self, script_id):

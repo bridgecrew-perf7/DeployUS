@@ -64,8 +64,11 @@ tests-deployus:
 
   script:    
     - cd DeployUS
-    - docker-compose up -d --no-build  
+    - docker-compose pull
+    - docker-compose up -d --no-build 
+    - sleep 5 
     - pytest -s -v
 
   after_script:
+    - cd DeployUS
     - docker-compose down
