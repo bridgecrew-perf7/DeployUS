@@ -19,8 +19,19 @@ services:
       - "5000:5000"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "/work/scripts:/work/scripts"
     command: ["/wait-for-it.sh", "db:3306", "--timeout=30","--", "python", "run.py"]
+
+  tests:
+    build: ./tests/
+    links:
+      - db
+      - app
+    ports:
+      - "8080:8080"
+    command: ["/wait-for-it.sh", "app:5000", "--strict" ,"--timeout=30", "--", "pytest"]
+    depends_on:
+      - db
+      - app
 
 
 volumes:

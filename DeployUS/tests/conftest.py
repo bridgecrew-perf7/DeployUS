@@ -11,8 +11,8 @@ class DataBase():
         config = {
             'user': 'root',
             'password': 'deployus',
-            'host': '127.0.0.1',
-            'port': '32000',
+            'host': 'db',
+            'port': '3306',
             'database': 'deployusdb'
         }
         self.connection = mysql.connector.connect(**config)
@@ -53,7 +53,7 @@ class DataBase():
 
 class DeployUSInterface():
     def __init__(self):
-        self.addr = 'http://127.0.0.1:5000'
+        self.addr = 'http://app:5000'
 
     def index_page(self):
         return requests.get(self.addr + '/') 

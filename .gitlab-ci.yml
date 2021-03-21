@@ -63,14 +63,4 @@ tests-deployus:
     - cd ../../
 
   script:    
-    - cd DeployUS
-    - docker-compose pull
-    - docker-compose up -d --no-build 
-    # Waiting for DeployUS to be ready before running tests
-    - ./wait-for-it.sh host.docker.internal:5000 --timeout=30
-    # - sleep 20
-    - pytest -s -v
-
-  after_script:
-    - cd DeployUS
-    - docker-compose down
+    - DeployUS/tests/run_tests.sh
