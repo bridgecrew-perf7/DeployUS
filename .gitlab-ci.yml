@@ -66,6 +66,7 @@ tests-deployus:
     - cd DeployUS
     - docker-compose pull
     - docker-compose up -d --no-build 
+    - ./wait-for-it.sh http://127.0.0.1:5000 --timeout=30
     - pytest -s -v
 
   after_script:
