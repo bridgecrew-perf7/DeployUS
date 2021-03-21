@@ -32,11 +32,16 @@ class DataBase():
         # Return
         return results
 
-    def close(self):
+    def clear_and_close(self):
         # Clearing database for next test
         self.query("DELETE FROM jobs;")
         self.query("DELETE FROM scripts;")
         self.query("DELETE FROM workers;")
+
+        # Resetting the id AUTO_INCREMENT values
+        self.query("ALTER TABLE jobs AUTO_INCREMENT = 1;")
+        self.query("ALTER TABLE scripts AUTO_INCREMENT = 1;")
+        self.query("ALTER TABLE workers AUTO_INCREMENT = 1;")
 
         # Assertions that all tables are empty
         assert len(self.query("SELECT * FROM jobs;")) == 0
@@ -73,8 +78,8 @@ class DeployUSInterface():
     def get_workers(self):
         return requests.get(self.addr + '/get_workers') 
 
-    def insert_script(self, script_name, script_file):
-        files = {'name': script_name, 'scriptfile': script_file}
+    def insert_script(self, script_name, script_filename, script_filecontents):
+        files = {'name': (None,script_name), 'scriptfile': (script_filename, script_filecontents)}
         response = requests.post(self.addr + '/insert_script', files=files)
         return response
 
@@ -114,4 +119,4 @@ def db():
     yield db
 
     # Teardown
-    db.close()
+    db.clear_and_close()
