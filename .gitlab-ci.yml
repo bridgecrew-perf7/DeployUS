@@ -67,7 +67,8 @@ tests-deployus:
     - docker-compose pull
     - docker-compose up -d --no-build 
     # Waiting for DeployUS to be ready before running tests
-    - bash wait-for-it.sh http://127.0.0.1:5000 --timeout=30 
+    # - ./wait-for-it.sh http://127.0.0.1:5000 --timeout=30 
+    - sleep 20
     - pytest -s -v
 
   after_script:
