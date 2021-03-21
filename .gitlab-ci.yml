@@ -60,7 +60,7 @@ tests-deployus:
     - pip3 install --upgrade pip
     - cd DeployUS/tests
     - pip3 install -r requirements.txt
-    - cd ../../
+    - cd ../
 
   script:    
-    - DeployUS/tests/run_tests.sh
+    - tests/run_tests.sh
