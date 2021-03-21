@@ -9,8 +9,19 @@ from werkzeug.utils import secure_filename
 
 @app.route('/', methods=['GET'])
 def index():
-    return render_template('public/index.html',dbscripts=db.get_script())
+    return render_template('public/index.html',dbscripts=db.get_scripts())
 
+@app.route('/get_scripts', methods=['GET'])
+def get_scripts():
+    return jsonify(db.get_scripts)
+
+@app.route('/get_jobs', methods=['GET'])
+def get_jobs():
+    return jsonify(db.get_jobs)
+
+@app.route('/get_workers', methods=['GET'])
+def get_workers():
+    return jsonify(db.get_workers)
 
 @app.route('/insert_script', methods=['POST'])
 def insert_script():
@@ -55,7 +66,7 @@ def delete_script():
 
 @app.route('/launch', methods=['GET'])
 def lauch():
-    return render_template('public/launch.html',dbscripts=db.get_script(), dbjobs=db.get_jobs(), dbworkers=db.get_workers()) 
+    return render_template('public/launch.html',dbscripts=db.get_scripts(), dbjobs=db.get_jobs(), dbworkers=db.get_workers()) 
 
 @app.route('/launch_job', methods=['POST'])
 def launch_job():

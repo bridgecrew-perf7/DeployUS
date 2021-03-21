@@ -32,7 +32,7 @@ def mysql_safe(func):
 # ========================================================
 
 @mysql_safe
-def get_script(cursor=None, connection=None):
+def get_scripts(cursor=None, connection=None):
     cursor.execute('SELECT * FROM scripts')
     results = [(id, name, utils.formatDateTimeObj(str(date)), utils.getHash(contents)) for (id, name, date, contents) in cursor]
 
