@@ -13,15 +13,15 @@ def index():
 
 @app.route('/get_scripts', methods=['GET'])
 def get_scripts():
-    return jsonify(db.get_scripts)
+    return jsonify(db.get_scripts())
 
 @app.route('/get_jobs', methods=['GET'])
 def get_jobs():
-    return jsonify(db.get_jobs)
+    return jsonify(db.get_jobs())
 
 @app.route('/get_workers', methods=['GET'])
 def get_workers():
-    return jsonify(db.get_workers)
+    return jsonify(db.get_workers())
 
 @app.route('/insert_script', methods=['POST'])
 def insert_script():

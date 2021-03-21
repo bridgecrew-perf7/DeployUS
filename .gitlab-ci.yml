@@ -1,6 +1,23 @@
 stages:
+  - lint
   - build-docker-images
   - test
+
+# ==================================
+#  Linting the applications here
+# ==================================
+lint-deployus:
+  stage: test #TODO: put this to lint
+  image: 
+    name: python:3.8
+  script:    
+    - cd DeployUS
+    - pip install pylint
+    - find app -type f -name "*.py" | xargs pylint 
+    - find tests -type f -name "*.py" | xargs pylint 
+    - pylint run.py
+
+
 
 # ==========================
 #  Building Sample Projects
@@ -30,22 +47,6 @@ build-deployus:
     - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
     - docker push shawnvosburg/deployus:latest
 
-
-# ==================================
-#  Linting the created images here
-# ==================================
-lint-deployus:
-  stage: test
-  image: 
-    name: python:3.8
-  script:    
-    - cd DeployUS
-    - pip install pylint
-    - find app -type f -name "*.py" | xargs pylint 
-    - find tests -type f -name "*.py" | xargs pylint 
-    - pylint run.py
-
-
 # ==================================
 #  Testing the created images here
 # ==================================
@@ -59,7 +60,9 @@ tests-deployus:
     - apk update
     - apk add docker-compose py3-pip python3
     - pip3 install --upgrade pip
-    - pip3 install pytest
+    - cd DeployUS/tests
+    - pip3 install -r requirements.txt
+    - cd ../../
 
   script:    
     - cd DeployUS
@@ -67,5 +70,4 @@ tests-deployus:
     - pytest -s -v
 
   after_script:
-    - cd DeployUS
     - docker-compose down
