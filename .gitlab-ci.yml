@@ -17,8 +17,6 @@ lint-deployus:
     - find tests -type f -name "*.py" | xargs pylint 
     - pylint run.py
 
-
-
 # ==========================
 #  Building Sample Projects
 # ==========================
@@ -66,7 +64,7 @@ tests-deployus:
 
   script:    
     - cd DeployUS
-    - docker-compose up -d 
+    - docker-compose up -d --no-build  
     - pytest -s -v
 
   after_script:

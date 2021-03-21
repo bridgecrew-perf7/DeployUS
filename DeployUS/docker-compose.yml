@@ -14,7 +14,8 @@ services:
     build: ./
     image: shawnvosburg/deployus:latest
     depends_on: 
-      - db
+      db:
+        condition: service_healthy
     links:
       - db
     ports:
