@@ -66,7 +66,6 @@ tests-deployus:
     - cd DeployUS
     - docker-compose pull
     - docker-compose up -d --no-build 
-    - sleep 5 
     - pytest -s -v
 
   after_script:
