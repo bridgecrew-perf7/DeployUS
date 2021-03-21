@@ -11,6 +11,6 @@ COPY --from=curly /home/curl_user/wait-for-it.sh /wait-for-it.sh
 
 # Downloading dependancies
 WORKDIR /work
-RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt 
 
 CMD ["pytest",'-s','-v']
