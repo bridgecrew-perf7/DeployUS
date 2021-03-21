@@ -11,7 +11,8 @@ docker_compose_cmd="docker-compose -f docker-compose.tests.yml"
 ${docker_compose_cmd} build tests
 
 # Run service containers, except for test container
-${docker_compose_cmd} up -d --no-deps db app
+${docker_compose_cmd} pull
+${docker_compose_cmd} up -d --no-deps --no-build db app
 
 # Run the tests
 ${docker_compose_cmd} run --rm tests
