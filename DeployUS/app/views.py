@@ -72,9 +72,9 @@ def lauch():
 @app.route('/launch_job', methods=['POST'])
 def launch_job():
     # Deleting script
-    id = request.get_json()['id']
-    location = request.get_json()['location']
-    db.launch_job(id=id, location=location)
+    script_id = request.get_json()['id']
+    worker_id = request.get_json()['location']
+    db.launch_job(_script_id=script_id, _worker_id=worker_id)
 
     return make_response("", 200)
 

@@ -74,15 +74,24 @@ def get_workers(cursor=None, connection=None):
 def insert_worker(cursor, connection, name, location):
     sql = 'INSERT INTO workers (name,location) VALUES (%s, %s);'
     val = (name, location)
-    cursor.execute(sql,val)
-    connection.commit()
+    # There might be an error due to unique keys
+    try:
+        cursor.execute(sql,val)
+        connection.commit()
+    except mysql.connector.errors.IntegrityError:
+        pass
 
 @mysql_safe
 def insert_script(cursor, connection, name_, contents):
     sql = 'INSERT INTO scripts (name, cre_date, contents) VALUES (%s, %s, %s );'
     val = (name_, utils.getDatetimeNow() , contents)
-    cursor.execute(sql,val)
-    connection.commit()
+    
+    # There might be an error due to unique keys
+    try:
+        cursor.execute(sql,val)
+        connection.commit()
+    except mysql.connector.errors.IntegrityError:
+        pass
     
 @mysql_safe
 def delete_worker(cursor, connection, id):
@@ -97,14 +106,20 @@ def delete_script(cursor, connection, id):
     connection.commit()
 
 @mysql_safe
-def launch_job(cursor, connection, id, location):
-    cursor.execute(f"SELECT * FROM scripts WHERE id = '{id}'")
+def launch_job(cursor, connection, _script_id, _worker_id):
+    # Verifying that script exists
+    cursor.execute(f"SELECT * FROM scripts WHERE id = '{_script_id}'")
     results = [(id, name, str(date), contents) for (id, name, date, contents) in cursor]
-
-    # Script does not exists
     if len(results) == 0:
         return
-    (id, name, date, contents) = results[0]
+    (script_id, name, date, contents) = results[0]
+
+    # Verifying that worker exists
+    cursor.execute(f"SELECT * FROM workers WHERE id = '{_worker_id}'")
+    results = [(worker_id, name, location) for (worker_id, name, location) in cursor]
+    if len(results) == 0:
+        return
+    (worker_id, _, _) = results[0]
 
     # Write file to disk
     parentdir = f"/work/scripts/{name}"
@@ -121,7 +136,7 @@ def launch_job(cursor, connection, id, location):
 
     # Insert job's location into jobs table in db
     sql = 'INSERT INTO jobs (script_id, worker_id) VALUES (%s, %s );'
-    val = (id, 1 )
+    val = (script_id, worker_id )
     cursor.execute(sql,val)
     connection.commit()
 

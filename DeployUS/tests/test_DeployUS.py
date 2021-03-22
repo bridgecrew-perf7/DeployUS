@@ -71,7 +71,6 @@ def test_insert_script_not_yaml(db):
     filecontents = b"""
         blah blah blah
     """
-    hash = hashlib.sha256(filecontents).hexdigest()
 
     response = DeployUS.insert_script(name, filename, filecontents)
     dbscripts = DeployUS.get_scripts().json()
@@ -79,6 +78,30 @@ def test_insert_script_not_yaml(db):
     # Testing reponse. No file should be added to the database
     assert response.status_code == 200
     assert len(dbscripts) == 0
+
+def test_insert_script_unique_name(db):
+    name = 'myscript'
+    filename1 = 'docker-compose.yml'
+    filename2 = 'docker-compose.yml'
+    filecontents = b"""
+        the contents
+    """
+
+    # Adding script
+    response = DeployUS.insert_script(name, filename1, filecontents)
+    dbscripts = DeployUS.get_scripts().json()
+
+    # Testing reponse. Should be a success
+    assert response.status_code == 200
+    assert len(dbscripts) == 1
+
+    # Adding script again
+    response = DeployUS.insert_script(name, filename2, filecontents)
+    dbscripts = DeployUS.get_scripts().json()
+
+    # Testing reponse. The script should not be added again as the name is the same
+    assert response.status_code == 200
+    assert len(dbscripts) == 1
 
 def test_delete_script_normal(db):
     # Insert script into database
@@ -105,7 +128,7 @@ def test_insert_worker_normal(db):
     response = DeployUS.insert_worker(name, location)
     dbworkers = DeployUS.get_workers().json()
 
-    # Testing reponse. Not testing datetime uploaded because it is server specific.
+    # Testing reponse. Worker should be added
     assert response.status_code == 200
     assert len(dbworkers) == 2
 
@@ -116,6 +139,42 @@ def test_insert_worker_normal(db):
 
     assert dbworkers[1][0] == 2 #id
     assert dbworkers[1][1] == name #name
+    assert dbworkers[1][2] == location #location
+
+def test_insert_worker_unique_name(db):
+    name = 'worker1'
+    location1 = '123.456.7.8'
+    location2 = '987.654.3.2'
+
+    # Adding two workers with the same name
+    DeployUS.insert_worker(name, location1)
+    response = DeployUS.insert_worker(name, location2)
+    dbworkers = DeployUS.get_workers().json()
+
+    # Testing reponse. Worker should be added.
+    assert response.status_code == 200
+    assert len(dbworkers) == 2
+
+    assert dbworkers[1][0] == 2 #id
+    assert dbworkers[1][1] == name #name
+    assert dbworkers[1][2] == location1 #
+    
+def test_insert_worker_unique_location(db):
+    name1 = 'worker1'
+    name2 = 'worker2'
+    location = '123.456.7.8'
+
+    # Adding two workers with the same name
+    DeployUS.insert_worker(name1, location)
+    response = DeployUS.insert_worker(name2, location)
+    dbworkers = DeployUS.get_workers().json()
+
+    # Testing reponse. Worker should be added.
+    assert response.status_code == 200
+    assert len(dbworkers) == 2
+
+    assert dbworkers[1][0] == 2 #id
+    assert dbworkers[1][1] == name1 #name
     assert dbworkers[1][2] == location #location
 
 def test_delete_worker_normal(db):
@@ -170,6 +229,32 @@ def test_launch_and_stop_job_normal(db):
 
     # Stopping the job
     response = DeployUS.stop_job(job_id=1)
+    dbjobs = DeployUS.get_jobs().json()
+
+    # Testing reponse.
+    assert response.status_code == 200
+    assert len(dbjobs) == 0
+
+def test_launch_job_bad_script_id(db):
+    # Inserting the hello-world script
+    test_insert_script_normal(db)
+    script_id = 10 # This script doesn't exists. Therefore, the job should not launch
+    worker_id = 1 #localhost
+
+    response = DeployUS.launch_job(script_id, worker_id)
+    dbjobs = DeployUS.get_jobs().json()
+
+    # Testing reponse.
+    assert response.status_code == 200
+    assert len(dbjobs) == 0
+
+def test_launch_job_bad_worker_id(db):
+    # Inserting the hello-world script
+    test_insert_script_normal(db)
+    script_id = 1 
+    worker_id = 10 # This worker doesn't exists. Therefore, the job should not launch
+
+    response = DeployUS.launch_job(script_id, worker_id)
     dbjobs = DeployUS.get_jobs().json()
 
     # Testing reponse.

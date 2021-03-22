@@ -3,15 +3,18 @@ use deployusdb;
 
 CREATE TABLE scripts (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  name TEXT NOT NULL,
+  name VARCHAR(100) NOT NULL,
   cre_date DATETIME NOT NULL,
-  contents BLOB NOT NULL
+  contents BLOB NOT NULL,
+  UNIQUE (name)
 );
 
 CREATE TABLE workers (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  name TEXT NOT NULL,
-  location TEXT NOT NULL
+  name VARCHAR(100) NOT NULL,
+  location VARCHAR(100) NOT NULL,
+  UNIQUE (name),
+  UNIQUE (location)
 );
 
 CREATE TABLE jobs (
