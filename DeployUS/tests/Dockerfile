@@ -3,14 +3,20 @@ RUN curl -L "https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait
 RUN chmod +x ~/wait-for-it.sh
 
 # =========================================
-# Using python:3.8 and not python:3.8-slim as we need some standard modules
-FROM python:3.8 
+# Using as we need the docker command for tests
+FROM docker:20.10
+
+# Installing python
+RUN apk update
+RUN apk add --no-cache py3-pip python3 bash
+RUN pip3 install --upgrade pip
+
 # Copying tests files and wait-for-it.sh
 COPY . /work
 COPY --from=curly /home/curl_user/wait-for-it.sh /wait-for-it.sh
 
 # Downloading dependancies
 WORKDIR /work
-RUN pip install -r requirements.txt 
+RUN pip3 install -r requirements.txt 
 
 CMD ["pytest",'-s','-v']

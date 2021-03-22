@@ -26,4 +26,4 @@ CREATE TABLE jobs (
 
 -- Adding localhost for Part0
 INSERT INTO workers (name, location) VALUES
-('Localhost','127.0.0.1');
+('localhost','127.0.0.1');

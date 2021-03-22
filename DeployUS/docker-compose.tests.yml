@@ -28,6 +28,8 @@ services:
       - app
     ports:
       - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
     command: ["/wait-for-it.sh", "app:5000", "--strict" ,"--timeout=30", "--", "pytest"]
     depends_on:
       - db

@@ -39,7 +39,7 @@ def get_scripts(cursor=None, connection=None):
     return results
 
 @mysql_safe
-def get_jobs(cursor=None, connection=None):
+def get_jobs_verbose(cursor=None, connection=None):
     sql = f"""
         SELECT j.id, s.name, w.location
         FROM jobs AS j
@@ -48,6 +48,18 @@ def get_jobs(cursor=None, connection=None):
     """
     cursor.execute(sql)
     results = [(id, script_name, worker_location) for (id, script_name, worker_location) in cursor]
+
+    return results
+
+
+@mysql_safe
+def get_jobs(cursor=None, connection=None):
+    sql = f"""
+        SELECT *
+        FROM jobs;
+    """
+    cursor.execute(sql)
+    results = [(id, script_id, worker_id) for (id, script_id, worker_id) in cursor]
 
     return results
 
@@ -98,7 +110,7 @@ def launch_job(cursor, connection, id, location):
     parentdir = f"/work/scripts/{name}"
     dockercomposePath = os.path.join(parentdir,"docker-compose.yml")
     if not os.path.exists(parentdir):
-        os.mkdir(parentdir)
+        os.makedirs(parentdir)
 
     with open(dockercomposePath, 'wb') as file:
         file.write(contents)

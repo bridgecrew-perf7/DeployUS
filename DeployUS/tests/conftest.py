@@ -49,7 +49,7 @@ class DataBase():
         assert len(self.query("SELECT * FROM workers;")) == 0
         
         # Part 0 specifics
-        self.query("INSERT INTO workers (name, location) VALUES ('Localhost','127.0.0.1');")
+        self.query("INSERT INTO workers (name, location) VALUES ('localhost','127.0.0.1');")
         assert len(self.query("SELECT * FROM workers;")) == 1
 
         # Close connection
@@ -88,8 +88,8 @@ class DeployUSInterface():
         response = requests.post(self.addr + '/delete_script', json=payload)
         return response
 
-    def launch_job(self, script_id, location):
-        payload = {'id': script_id, 'location':location}
+    def launch_job(self, script_id, worker_id):
+        payload = {'id': script_id, 'location':worker_id}
         response = requests.post(self.addr + '/launch_job', json=payload)
         return response
 
