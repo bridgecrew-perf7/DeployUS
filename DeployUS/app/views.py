@@ -1,7 +1,6 @@
 from app import app
 from flask import render_template, make_response, jsonify
 from flask import request, redirect
-import json
 import os
 from . import db
 from .utils import printus, allowed_file 
