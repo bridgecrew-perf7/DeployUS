@@ -16,7 +16,7 @@ def allowed_file(filename):
 
     # Check if the extension is in ALLOWED_IMAGE_EXTENSIONS
     ext = filename.rsplit(".", 1)[1]
-    if ext.upper() == 'YML':
+    if ext == 'yml':
         return True
     else:
         return False

@@ -111,7 +111,7 @@ class DeployUSInterface():
 
 # Takes care of setup & teardown of database interface
 @pytest.fixture()
-def db():
+def _db():
     # Create DataBase object
     db = DataBase()
 

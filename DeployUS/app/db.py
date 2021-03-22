@@ -78,8 +78,9 @@ def insert_worker(cursor, connection, name, location):
     try:
         cursor.execute(sql,val)
         connection.commit()
+        return True
     except mysql.connector.errors.IntegrityError:
-        pass
+        return False
 
 @mysql_safe
 def insert_script(cursor, connection, name_, contents):
@@ -90,8 +91,9 @@ def insert_script(cursor, connection, name_, contents):
     try:
         cursor.execute(sql,val)
         connection.commit()
+        return True
     except mysql.connector.errors.IntegrityError:
-        pass
+        return False
     
 @mysql_safe
 def delete_worker(cursor, connection, id):
@@ -111,14 +113,14 @@ def launch_job(cursor, connection, _script_id, _worker_id):
     cursor.execute(f"SELECT * FROM scripts WHERE id = '{_script_id}'")
     results = [(id, name, str(date), contents) for (id, name, date, contents) in cursor]
     if len(results) == 0:
-        return
+        return False
     (script_id, name, date, contents) = results[0]
 
     # Verifying that worker exists
     cursor.execute(f"SELECT * FROM workers WHERE id = '{_worker_id}'")
     results = [(worker_id, name, location) for (worker_id, name, location) in cursor]
     if len(results) == 0:
-        return
+        return False
     (worker_id, _, _) = results[0]
 
     # Write file to disk
@@ -130,15 +132,17 @@ def launch_job(cursor, connection, _script_id, _worker_id):
     with open(dockercomposePath, 'wb') as file:
         file.write(contents)
 
-    # docker compose execution
+    # docker-compose execution. Return False if failure to bring docker-compose up.
     cmd = f"cd {parentdir};  docker-compose up -d"
-    os.system(cmd)
+    if os.system(cmd):
+        return False
 
     # Insert job's location into jobs table in db
     sql = 'INSERT INTO jobs (script_id, worker_id) VALUES (%s, %s );'
     val = (script_id, worker_id )
     cursor.execute(sql,val)
     connection.commit()
+    return True
 
 
 @mysql_safe
