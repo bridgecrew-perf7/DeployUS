@@ -1,5 +1,7 @@
-from flask import Flask
+"""
+DeployUS/app/__init__.py
 
-app = Flask(__name__)
-
+Imports appropriate modules for the flask app.
+"""
 from app import views
+from app.views import flaskapp
