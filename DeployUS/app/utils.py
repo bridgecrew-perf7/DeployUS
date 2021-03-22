@@ -22,9 +22,9 @@ def allowed_file(filename):
         return False
 
 def getHash(bytes):
-        hashobj = sha256()
-        hashobj.update(bytes)
-        return hashobj.hexdigest()
+    hashobj = sha256()
+    hashobj.update(bytes)
+    return hashobj.hexdigest()
 
 def getDatetimeNow():
     # Adding current datetime of upload
