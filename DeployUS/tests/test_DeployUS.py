@@ -65,6 +65,44 @@ def test_insert_script_normal(db):
     assert dbscripts[0][1] == name #name
     assert dbscripts[0][3] == hash #filehash
 
+def test_insert_script_normal_multiple(db):
+    name1 = 'myscript1'
+    name2 = 'myscript2'
+    filename = 'docker-compose.yml'
+    filecontents1 = b"""
+        version: "3.3"
+        services:
+          app:
+            image: shawnvosburg/helloworld:latest
+            ports:
+              - "8000:80"
+    """
+    filecontents2 = b"""
+        version: "3.3"
+        services:
+          app:
+            image: shawnvosburg/helloworld:latest
+            ports:
+              - "8001:80"
+    """
+    hash1 = hashlib.sha256(filecontents1).hexdigest()
+    hash2 = hashlib.sha256(filecontents2).hexdigest()
+
+    DeployUS.insert_script(name1, filename, filecontents1)
+    response = DeployUS.insert_script(name2, filename, filecontents2)
+    dbscripts = DeployUS.get_scripts().json()
+
+    # Testing reponse. Not testing datetime uploaded because it is server specific.
+    assert response.status_code == 200
+    assert len(dbscripts) == 2
+    assert dbscripts[0][0] == 1 #id
+    assert dbscripts[0][1] == name1 #name
+    assert dbscripts[0][3] == hash1 #filehash
+    assert dbscripts[1][0] == 2 #id
+    assert dbscripts[1][1] == name2 #name
+    assert dbscripts[1][3] == hash2 #filehash
+
+
 def test_insert_script_not_yaml(db):
     name = 'myscript'
     filename = 'scriptname.notyaml'
@@ -229,6 +267,46 @@ def test_launch_and_stop_job_normal(db):
 
     # Stopping the job
     response = DeployUS.stop_job(job_id=1)
+    dbjobs = DeployUS.get_jobs().json()
+
+    # Testing reponse.
+    assert response.status_code == 200
+    assert len(dbjobs) == 0
+
+def test_launch_and_stop_job_normal_multiple(db):
+    # Inserting the hello-world script multiple times
+    test_insert_script_normal_multiple(db)
+    DeployUS.launch_job(script_id=1, worker_id=1)
+    response = DeployUS.launch_job(script_id=2, worker_id=1)
+    dbjobs = DeployUS.get_jobs().json()
+
+    # Testing reponse.
+    assert response.status_code == 200
+    assert len(dbjobs) == 2
+
+    # Testing entries in database
+    assert dbjobs[0][0] == 1 #job id
+    assert dbjobs[0][1] == 1 # script id
+    assert dbjobs[0][2] == 1 # worker id
+    assert dbjobs[1][0] == 2 #job id
+    assert dbjobs[1][1] == 2 # script id
+    assert dbjobs[1][2] == 1 # worker id
+
+    # Testing if myscript1 is functioning
+    ps = subprocess.Popen(('docker', 'ps'), stdout=subprocess.PIPE)
+    result = subprocess.check_output(('grep', 'myscript1'), stdin=ps.stdout)
+    ps.wait()
+    assert len(result) > 0 # The script is started!
+
+    # Testing if myscript2 is functioning
+    ps = subprocess.Popen(('docker', 'ps'), stdout=subprocess.PIPE)
+    result = subprocess.check_output(('grep', 'myscript1'), stdin=ps.stdout)
+    ps.wait()
+    assert len(result) > 0 # The script is started!
+
+    # Stopping the jobs
+    DeployUS.stop_job(job_id=1)
+    response = DeployUS.stop_job(job_id=2)
     dbjobs = DeployUS.get_jobs().json()
 
     # Testing reponse.
