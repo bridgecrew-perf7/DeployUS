@@ -1,5 +1,10 @@
-import mysql.connector
+"""
+DeployUS/app/db.py
+
+Modules that wraps the MySQL database specific to the DeployUS application.
+"""
 import os
+import mysql.connector
 from app import utils
 
 def mysql_safe(func):
@@ -18,7 +23,7 @@ def mysql_safe(func):
         cursor = connection.cursor()
 
         # Execute function
-        result = func(cursor, connection, *args, **kwargs)
+        result = func(*args,cursor=cursor, connection=connection, **kwargs)
 
         cursor.close()
         connection.close()
@@ -32,46 +37,90 @@ def mysql_safe(func):
 # ========================================================
 
 @mysql_safe
-def get_scripts(cursor=None, connection=None):
+def get_scripts(**kwargs):
+    """
+    Retrieve all data in the scripts table
+    Parameters:
+        kwargs:
+            cursor: mysql-connector cursor. Executes SQL commands.
+    Returns:
+        List of [script_id, script_name, script_date, script_hash]
+    """
+    cursor = kwargs['cursor']
     cursor.execute('SELECT * FROM scripts')
-    results = [(id, name, utils.formatDateTimeObj(str(date)), utils.getHash(contents)) for (id, name, date, contents) in cursor]
+    results = [(id, name, utils.format_datetime_obj(str(date)), utils.get_hash(contents))
+                                                    for (id, name, date, contents) in cursor]
 
     return results
 
 @mysql_safe
-def get_jobs_verbose(cursor=None, connection=None):
-    sql = f"""
+def get_jobs_verbose(**kwargs):
+    """
+    Retrieves jobs with script name and worker location.
+
+    Returns:
+        list of [job_id, script_name, worker_location]
+    """
+    cursor = kwargs['cursor']
+    sql = """
         SELECT j.id, s.name, w.location
         FROM jobs AS j
         JOIN scripts AS s ON j.script_id = s.id
         JOIN workers AS w on j.worker_id = w.id;
     """
     cursor.execute(sql)
-    results = [(id, script_name, worker_location) for (id, script_name, worker_location) in cursor]
+    results = list(cursor)
 
     return results
 
 
 @mysql_safe
-def get_jobs(cursor=None, connection=None):
-    sql = f"""
+def get_jobs(**kwargs):
+    """
+    Retrieves jobs with script id and worker id.
+
+    Returns:
+        list of [job_id, script_id, worker_id]
+    """
+    cursor = kwargs['cursor']
+    sql = """
         SELECT *
         FROM jobs;
     """
     cursor.execute(sql)
-    results = [(id, script_id, worker_id) for (id, script_id, worker_id) in cursor]
+    results =list(cursor)
 
     return results
 
 @mysql_safe
-def get_workers(cursor=None, connection=None):
+def get_workers(**kwargs):
+    """
+    Retrieves workers information
+
+    Returns:
+        list of [worker_id, worker_name, worker_location]
+    """
+    cursor = kwargs['cursor']
     cursor.execute('SELECT * FROM workers')
-    results = [(id, name, location) for (id, name, location) in cursor]
-
+    results = list(cursor)
     return results
 
 @mysql_safe
-def insert_worker(cursor, connection, name, location):
+def insert_worker(**kwargs):
+    """
+    Attempts to insert new worker in table workers.
+    Must give name and location of worker.
+    Parameters:
+        kwargs:
+            name: string. Alias of worker.
+            location: string. IP address to communicate with worker.
+    Returns:
+        True if successful. False if an error occured.
+    """
+    cursor = kwargs['cursor']
+    connection = kwargs['connection']
+    name = kwargs['name']
+    location = kwargs['location']
     sql = 'INSERT INTO workers (name,location) VALUES (%s, %s);'
     val = (name, location)
     # There might be an error due to unique keys
@@ -83,10 +132,27 @@ def insert_worker(cursor, connection, name, location):
         return False
 
 @mysql_safe
-def insert_script(cursor, connection, name_, contents):
+def insert_script(**kwargs):
+    """
+    Attempts to insert new script in table scripts.
+    Must give name and filecontents of scripts.
+    Parameters:
+        kwargs:
+            name: string. Alias of script.
+            contents: string. File contents of script contents.
+    Returns:
+        True if successful. False if an error occured.
+    """
+    # Parse kwargs to get arguments.
+    cursor = kwargs['cursor']
+    connection = kwargs['connection']
+    name = kwargs['name']
+    contents = kwargs['contents']
+
+    # Executes MySQL command
     sql = 'INSERT INTO scripts (name, cre_date, contents) VALUES (%s, %s, %s );'
-    val = (name_, utils.getDatetimeNow() , contents)
-    
+    val = (name, utils.get_datetime_now() , contents)
+
     # There might be an error due to unique keys
     try:
         cursor.execute(sql,val)
@@ -94,42 +160,78 @@ def insert_script(cursor, connection, name_, contents):
         return True
     except mysql.connector.errors.IntegrityError:
         return False
-    
+
 @mysql_safe
-def delete_worker(cursor, connection, id):
-    sql = f'DELETE FROM workers WHERE id = {id};'
+def delete_worker(**kwargs):
+    """
+    Deletes worker from table workers.
+    Parameters:
+        kwgars:
+            id: Unique identifyer under the 'id' column in the MySQL workers table.
+    Returns:
+        Nothing.
+    """
+    cursor = kwargs['cursor']
+    connection = kwargs['connection']
+    id_ = kwargs['id']
+    sql = f'DELETE FROM workers WHERE id = {id_};'
     cursor.execute(sql)
     connection.commit()
 
 @mysql_safe
-def delete_script(cursor, connection, id):
-    sql = f'DELETE FROM scripts WHERE id = {id};'
+def delete_script(**kwargs):
+    """
+    Deletes script from table scripts.
+    Parameters:
+        kwgars:
+            id: Unique identifyer under the 'id' column in the MySQL scripts table.
+    Returns:
+        Nothing.
+    """
+    cursor = kwargs['cursor']
+    connection = kwargs['connection']
+    id_ = kwargs['id']
+    sql = f'DELETE FROM scripts WHERE id = {id_};'
     cursor.execute(sql)
     connection.commit()
 
 @mysql_safe
-def launch_job(cursor, connection, _script_id, _worker_id):
+def launch_job(**kwargs):
+    """
+    Lauch jobs with a script and worker in database.
+    Parameters:
+        kwgars:
+            _script_id: Unique identifyer under the 'id' column in the MySQL scripts table.
+            _worker_id: Unique identifyer under the 'id' column in the MySQL workers table.
+    Returns:
+        True if successful. False otherwise.
+    """
+    cursor = kwargs['cursor']
+    connection = kwargs['connection']
+    script_id = kwargs['script_id']
+    worker_id = kwargs['worker_id']
+
     # Verifying that script exists
-    cursor.execute(f"SELECT * FROM scripts WHERE id = '{_script_id}'")
-    results = [(id, name, str(date), contents) for (id, name, date, contents) in cursor]
+    cursor.execute(f"SELECT * FROM scripts WHERE id = '{script_id}'")
+    results = list(cursor)
     if len(results) == 0:
         return False
-    (script_id, name, date, contents) = results[0]
+    (script_id, name, _, contents) = results[0]
 
     # Verifying that worker exists
-    cursor.execute(f"SELECT * FROM workers WHERE id = '{_worker_id}'")
-    results = [(worker_id, name, location) for (worker_id, name, location) in cursor]
+    cursor.execute(f"SELECT * FROM workers WHERE id = '{worker_id}'")
+    results = list(cursor)
     if len(results) == 0:
         return False
     (worker_id, _, _) = results[0]
 
     # Write file to disk
     parentdir = f"/work/scripts/{name}"
-    dockercomposePath = os.path.join(parentdir,"docker-compose.yml")
+    dockercompose_path = os.path.join(parentdir,"docker-compose.yml")
     if not os.path.exists(parentdir):
         os.makedirs(parentdir)
 
-    with open(dockercomposePath, 'wb') as file:
+    with open(dockercompose_path, 'wb') as file:
         file.write(contents)
 
     # docker-compose execution. Return False if failure to bring docker-compose up.
@@ -146,7 +248,19 @@ def launch_job(cursor, connection, _script_id, _worker_id):
 
 
 @mysql_safe
-def stop_job(cursor, connection, job_id):
+def stop_job(**kwargs):
+    """
+    Stops a job that is running.
+    Parameters:
+        kwargs:
+            job_id: int. Unique identifyer of the job.
+    Returns:
+
+    """
+    cursor = kwargs['cursor']
+    connection = kwargs['connection']
+    job_id = kwargs['job_id']
+
     sql = f"""
         SELECT j.id, s.name, w.location
         FROM jobs AS j
@@ -155,12 +269,12 @@ def stop_job(cursor, connection, job_id):
         WHERE j.id = {job_id};
     """
     cursor.execute(sql)
-    results = [(id, script_name, worker_location) for (id, script_name, worker_location) in cursor]
+    results = list(cursor)
 
     # Script does not exists
     if len(results) == 0:
-        return
-    (id, script_name, worker_location) = results[0]
+        return False
+    (_, script_name, _) = results[0]
 
     # docker compose execution
     parentdir = f"/work/scripts/{script_name}"
@@ -171,4 +285,4 @@ def stop_job(cursor, connection, job_id):
     sql = f'DELETE FROM jobs WHERE id = {job_id}'
     cursor.execute(sql)
     connection.commit()
-
+    return True

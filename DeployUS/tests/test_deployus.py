@@ -501,3 +501,12 @@ def test_launch_job_failed_execution():
     # Testing reponse.
     assert response.status_code == 422
     assert len(dbjobs) == 0
+
+def test_stop_job_dne():
+    """
+    Attempt to stop a job that does not exists.
+    """
+
+    # Sends POST request to stop job.
+    response = DEPLOYUS.stop_job(100)
+    assert response.status_code == 422
