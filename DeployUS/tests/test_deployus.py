@@ -66,7 +66,7 @@ def test_get_jobs():
 # =====================================================
 #  Testing insertions/deletions of scripts
 # =====================================================
-def test_insert_script_normal(_db):
+def test_insert_script_normal():
     """
     Creating a hello world example docker-compose project
     and uploading it to DeployUS.
@@ -98,7 +98,7 @@ def test_insert_script_normal(_db):
     assert dbscripts[0][1] == name #name
     assert dbscripts[0][3] == hash1 #filehash
 
-def test_insert_script_normal_multiple(_db):
+def test_insert_script_normal_multiple():
     """
     Creates two helloworld projects that open different ports (8000 and 8001 respectively).
     Their names are also different (myscript1 and myscript2 respectively).
@@ -148,7 +148,7 @@ def test_insert_script_normal_multiple(_db):
     assert dbscripts[1][3] == hash2     # filehash of myscript2's script
 
 
-def test_insert_script_not_yaml(_db):
+def test_insert_script_not_yaml():
     """
     Verifies that only .yml files can be uploaded.
 
@@ -177,7 +177,7 @@ def test_insert_script_not_yaml(_db):
     assert response.status_code == 422
     assert len(dbscripts) == 0
 
-def test_insert_script_unique_name(_db):
+def test_insert_script_unique_name():
     """
     Verifying that a user can not give the same name
     to two different docker-compose scripts.
@@ -218,7 +218,7 @@ def test_insert_script_unique_name(_db):
     assert response.status_code == 200
     assert len(dbscripts) == 1
 
-def test_delete_script_normal(_db):
+def test_delete_script_normal():
     """
     Verifying that deleting a script works in DeployUS.
 
@@ -227,7 +227,7 @@ def test_delete_script_normal(_db):
     """
 
     # Insert script into database
-    test_insert_script_normal(_db)
+    test_insert_script_normal()
     dbscripts = DEPLOYUS.get_scripts().json()
     assert len(dbscripts) == 1
 
@@ -243,7 +243,7 @@ def test_delete_script_normal(_db):
 # =====================================================
 #  Testing insertions/deletions of workers
 # =====================================================
-def test_insert_worker_normal(_db):
+def test_insert_worker_normal():
     """
     Verifying that a worker and its address (known as location in DeployUS) can be added.
     """
@@ -268,7 +268,7 @@ def test_insert_worker_normal(_db):
     assert dbworkers[1][1] == name #name
     assert dbworkers[1][2] == location #location
 
-def test_insert_worker_unique_name(_db):
+def test_insert_worker_unique_name():
     """
     DeployUS should refuse the second insertion of
     workers being named the same.
@@ -292,7 +292,7 @@ def test_insert_worker_unique_name(_db):
     assert dbworkers[1][1] == name #name
     assert dbworkers[1][2] == location1 #
 
-def test_insert_worker_unique_location(_db):
+def test_insert_worker_unique_location():
     """
     DeployUS should refuse the insertion of the second worker
     as the location is the same as the first
@@ -315,12 +315,12 @@ def test_insert_worker_unique_location(_db):
     assert dbworkers[1][1] == name1 #name
     assert dbworkers[1][2] == location #location
 
-def test_delete_worker_normal(_db):
+def test_delete_worker_normal():
     """
     Inserting a new worker and testing that it can be deleted sucessfully.
     """
     # Inserting worker
-    test_insert_worker_normal(_db)
+    test_insert_worker_normal()
 
     # Deletion of worker and querying result with database
     response = DEPLOYUS.delete_worker(worker_id=2)
@@ -330,13 +330,13 @@ def test_delete_worker_normal(_db):
     assert response.status_code == 200
     assert len(dbworkers) == 1
 
-def test_delete_worker_non_existant(_db):
+def test_delete_worker_non_existant():
     """
     The deletion of worker that does not exists should return a
     200 status code as the final state of the database is that the worker is not present.
     """
     # Inserting worker
-    test_insert_worker_normal(_db)
+    test_insert_worker_normal()
 
     response = DEPLOYUS.delete_worker(worker_id=10) #This id does not exists in db
     dbworkers = DEPLOYUS.get_workers().json()
@@ -349,7 +349,7 @@ def test_delete_worker_non_existant(_db):
 # =====================================================
 #  Testing launch/stopings of jobs
 # =====================================================
-def test_launch_and_stop_job_normal(_db):
+def test_launch_and_stop_job_normal():
     """
     Launching a job with a basic helloworld project.
     Verifying with docker that the docker-compose file is up.
@@ -358,7 +358,7 @@ def test_launch_and_stop_job_normal(_db):
     """
 
     # Inserting the hello-world script
-    test_insert_script_normal(_db)
+    test_insert_script_normal()
     script_id = 1 # Following MySQL AUTO_INCREMENT convention
     worker_id = 1 # localhost
 
@@ -388,7 +388,7 @@ def test_launch_and_stop_job_normal(_db):
     assert response.status_code == 200
     assert len(dbjobs) == 0
 
-def test_launch_and_stop_job_normal_multiple(_db):
+def test_launch_and_stop_job_normal_multiple():
     """
     Launching a job with two basic helloworld projects.
     Verifying with docker that the docker-compose files is up.
@@ -396,7 +396,7 @@ def test_launch_and_stop_job_normal_multiple(_db):
     Stopping projects afterwards as to not affect the other tests.
     """
     # Inserting the hello-world script multiple times
-    test_insert_script_normal_multiple(_db)
+    test_insert_script_normal_multiple()
     DEPLOYUS.launch_job(script_id=1, worker_id=1)
     response = DEPLOYUS.launch_job(script_id=2, worker_id=1)
     dbjobs = DEPLOYUS.get_jobs().json()
@@ -434,14 +434,14 @@ def test_launch_and_stop_job_normal_multiple(_db):
     assert response.status_code == 200
     assert len(dbjobs) == 0
 
-def test_launch_job_bad_script_id(_db):
+def test_launch_job_bad_script_id():
     """
     A docker-compose file should not launch if the script does not
     exists in DeployUS
     """
 
     # Inserting the hello-world script
-    test_insert_script_normal(_db)
+    test_insert_script_normal()
     script_id = 10 # This script doesn't exists. Therefore, the job should not launch
     worker_id = 1 # localhost
 
@@ -452,14 +452,14 @@ def test_launch_job_bad_script_id(_db):
     assert response.status_code == 422
     assert len(dbjobs) == 0
 
-def test_launch_job_bad_worker_id(_db):
+def test_launch_job_bad_worker_id():
     """
     A docker-compose file should not launch if the worker does not
     exists in DeployUS
     """
 
     # Inserting the hello-world script
-    test_insert_script_normal(_db)
+    test_insert_script_normal()
     script_id = 1
     worker_id = 10 # This worker doesn't exists. Therefore, the job should not launch
 
@@ -470,7 +470,7 @@ def test_launch_job_bad_worker_id(_db):
     assert response.status_code == 422
     assert len(dbjobs) == 0
 
-def test_launch_job_failed_execution(_db):
+def test_launch_job_failed_execution():
     """
     If launching a job has a runtime error (like image of docker hub does not exists),
     DeployUS should send back a 422 status code.
