@@ -1,5 +1,5 @@
-FROM ubuntu:latest as IndexFile
-RUN echo "Hello World!" > index.html
-
 FROM httpd:latest
-COPY --from=IndexFile index.html /usr/local/apache2/htdocs/
+COPY setup.sh /usr/local/bin/setup.sh
+RUN chmod +x /usr/local/bin/setup.sh
+WORKDIR /usr/local/bin
+CMD ["setup.sh"]

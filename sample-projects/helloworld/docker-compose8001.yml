@@ -3,6 +3,6 @@ services:
   app:
     image: shawnvosburg/helloworld:latest
     environment:
-      INDEX_TEXT: Hello World from port 8000!
+      INDEX_TEXT: Hello World from port 8001!
     ports:
-      - "8000:80"
+      - "8001:80"

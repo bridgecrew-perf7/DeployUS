@@ -21,6 +21,7 @@ services:
       - "5000:5000"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
+      - "/work/scripts:/work/scripts"
     command: ["/wait-for-it.sh", "db:3306", "--timeout=30","--", "python", "run.py"]
 
 
