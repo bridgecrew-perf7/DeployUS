@@ -129,6 +129,32 @@ def test_insert_script_not_yaml():
     assert len(dbscripts) == 0
 
 @pytest.mark.usefixtures('_db')
+def test_insert_script_invalid_filecontents():
+    """
+    Verifies that only the file contents is valid.
+    Valid file contents should pass the "docker-compose config" test
+    """
+    name = 'myscript'
+    filename = 'scriptname.yml'
+    # Note the invalid field.
+    filecontents = b"""
+        version: "3.3"
+        InvalidField:
+          app:
+            image: shawnvosburg/helloworld:latest
+            ports:
+              - "8000:80"
+    """
+
+    # Attempting to insert script and querying database for resulting state.
+    response = DEPLOYUS.insert_script(name, filename, filecontents)
+    dbscripts = DEPLOYUS.get_scripts().json()
+
+    # Testing reponse. No file should be added to the database.
+    assert response.status_code == 422
+    assert len(dbscripts) == 0
+
+@pytest.mark.usefixtures('_db')
 def test_insert_script_unique_name():
     """
     Verifying that a user can not give the same name
