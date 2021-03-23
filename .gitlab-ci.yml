@@ -47,6 +47,17 @@ build-deployus:
     - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
     - docker push shawnvosburg/deployus:latest
 
+build-database:
+  stage: build-docker-images
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - cd ./DeployUS
+    - docker build -f Dockerfile.db -t shawnvosburg/deployusdb .
+    - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
+    - docker push shawnvosburg/deployusdb:latest
+
 # ==================================
 #  Testing the created images here
 # ==================================
