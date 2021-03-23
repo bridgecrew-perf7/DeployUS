@@ -12,7 +12,8 @@ RUN apk add --no-cache py3-pip python3 bash docker-compose
 RUN pip3 install --upgrade pip
 
 # Copying tests files and wait-for-it.sh
-COPY . /work
+COPY tests /work
+COPY docker-compose.tests.yml /DeployUS/docker-compose.tests.yml
 COPY --from=curly /home/curl_user/wait-for-it.sh /wait-for-it.sh
 
 # Downloading dependancies
