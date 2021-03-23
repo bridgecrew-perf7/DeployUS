@@ -215,9 +215,8 @@ class DeployUSInterface():
         response = requests.post(self.addr + '/delete_worker', json=payload)
         return response
 
-
 # Takes care of setup & teardown of database interface
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def _db():
     """
     Pytest Fixture _db.
@@ -231,7 +230,7 @@ def _db():
     db_ = DataBase()
 
     # Perform test
-    yield
+    yield db_
 
     # Teardown
     db_.clear_and_close()
