@@ -8,7 +8,7 @@ FROM docker:20.10
 
 # Installing python
 RUN apk update
-RUN apk add --no-cache py3-pip python3 bash
+RUN apk add --no-cache py3-pip python3 bash docker-compose
 RUN pip3 install --upgrade pip
 
 # Copying tests files and wait-for-it.sh
