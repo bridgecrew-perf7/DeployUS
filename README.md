@@ -23,12 +23,13 @@ Pour executer DeployUS, la machine hôte doit avoir ces programes suivant.
 2. docker-compose
 3. python3 (testé avec python3.8 mais peut possiblement fonctionner avec des versions antérieures)
 
-### Bibliothèques externes
+# Micro-service DeployUS
+
+## Bibliothèques externes
 * DeployUS est ecrit avec la bilbiotèque Flask, disponible sur PyPI.
 * Pour connecter avec la base de données MySQL, j'utilise la librairie mysql-connector de PyPI.
 * Pour faire de requêtes REST dans mes tests, j'utilise la librairie requests de PyPI.
 
-# Micro-service DeployUS
 ## Fonctionnement
 DeployUS utilise des requêtes REST pour recevoir des scripts valide de docker-compose.yml.
 Ces scripts doivent:
