@@ -80,7 +80,7 @@ def get_jobs(**kwargs):
     Retrieves jobs with script id and worker id.
 
     Returns:
-        list of [job_id, script_id, worker_id]
+        list of [job_id, script_id, worker_id, launch_date]
     """
     cursor = kwargs['cursor']
     sql = """
@@ -88,7 +88,8 @@ def get_jobs(**kwargs):
         FROM jobs;
     """
     cursor.execute(sql)
-    results =list(cursor)
+    results = [(job_id, script_id, worker_id, utils.format_datetime_obj(str(date)))
+                    for (job_id, script_id, worker_id, date) in cursor]
 
     return results
 
@@ -240,8 +241,8 @@ def launch_job(**kwargs):
         return False
 
     # Insert job's location into jobs table in db
-    sql = 'INSERT INTO jobs (script_id, worker_id) VALUES (%s, %s );'
-    val = (script_id, worker_id )
+    sql = 'INSERT INTO jobs (script_id, worker_id, launch_date) VALUES (%s, %s, %s);'
+    val = (script_id, worker_id, utils.get_datetime_now() )
     cursor.execute(sql,val)
     connection.commit()
     return True
