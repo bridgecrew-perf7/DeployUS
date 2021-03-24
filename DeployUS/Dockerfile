@@ -20,6 +20,7 @@ ENV PYTHONUNBUFFERED=1
 
 # The app will be contained with the /work directory on the container
 COPY app/ /work/app
+COPY db/dbconfig.json /work/dbconfig.json
 COPY run.py /work
 COPY requirements.txt /work
 

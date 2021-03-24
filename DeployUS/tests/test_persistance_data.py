@@ -16,7 +16,7 @@ DEPLOYUS = DeployUSInterface()
 # =====================================================
 #  Testing persistance data
 # =====================================================
-@pytest.mark.usefixtures('_db')
+@pytest.mark.usefixtures("_db")
 def test_persistance_data(_db):
     """
     This test inserts a new script into the database through DeployUS,
@@ -33,14 +33,29 @@ def test_persistance_data(_db):
     test_insert_script_normal()
 
     # Shut down DeployUS via docker-compose
-    cmd = ["docker-compose","-f","/DeployUS/docker-compose.tests.yml", "kill", "app", "db"]
+    cmd = [
+        "docker-compose",
+        "-f",
+        "/DeployUS/docker-compose.tests.yml",
+        "kill",
+        "app",
+        "db",
+    ]
     assert subprocess.call(cmd) == 0
 
     # Boot DeployUS back up.
-    cmd = [ "docker-compose","-f","/DeployUS/docker-compose.tests.yml",
-            "up", "-d", "--no-build", "db", "app"]
+    cmd = [
+        "docker-compose",
+        "-f",
+        "/DeployUS/docker-compose.tests.yml",
+        "up",
+        "-d",
+        "--no-build",
+        "db",
+        "app",
+    ]
     assert subprocess.call(cmd) == 0
-    subprocess.call(["/wait-for-it.sh", "app:5000", "--strict" ,"--timeout=30"])
+    subprocess.call(["/wait-for-it.sh", "app:5000", "--strict", "--timeout=30"])
 
     # Re-initialize connection to database
     _db.__init__()
@@ -48,5 +63,5 @@ def test_persistance_data(_db):
     # Assert the data is still in the database
     dbscripts = DEPLOYUS.get_scripts().json()
     assert len(dbscripts) == 1
-    assert dbscripts[0][0] == 1          #id
-    assert dbscripts[0][1] == "myscript" #name
+    assert dbscripts[0][0] == 1  # id
+    assert dbscripts[0][1] == "myscript"  # name

@@ -10,5 +10,5 @@ Run the flaskapp, which contains the infinite while loop.
 
 from app import flaskapp
 
-if __name__ == '__main__':
-    flaskapp.run(host='0.0.0.0')
+if __name__ == "__main__":
+    flaskapp.run(host="0.0.0.0")

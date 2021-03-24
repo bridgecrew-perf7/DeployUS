@@ -20,7 +20,9 @@ import sys
 DeployUS_dir = pathlib.Path(__file__).absolute().parent.parent
 
 # Shortcut the bash command
-docker_compose_cmd = f"cd {DeployUS_dir};" + " docker-compose -f docker-compose.tests.yml"
+docker_compose_cmd = (
+    f"cd {DeployUS_dir};" + " docker-compose -f docker-compose.tests.yml"
+)
 
 # Build the tests image form its docker file. The other images will be pulled from docker hub
 cmd = docker_compose_cmd + " build tests "

@@ -3,29 +3,31 @@ DeployUS/tests/conftest.py
 
 Creates useful classes and pytest fixtures to test DeployUS.
 """
+import pathlib
+import json
 import requests
 import pytest
 import mysql.connector
 
-class DataBase():
+# This ensures that the path is not hard-coded to where the script is executed.
+DB_CONFIG_FILE = pathlib.Path(__file__).parent.joinpath("dbconfig.json")
+
+
+class DataBase:
     """
     Class that wraps the MySQL database with config specifics to DeployUS
     """
+
     def __init__(self):
         """
         Connects to the MySQL database.
         """
-        config = {
-            'user': 'root',
-            'password': 'deployus',
-            'host': 'db',
-            'port': '3306',
-            'database': 'deployusdb'
-        }
+        with open(DB_CONFIG_FILE) as config_file:
+            config = json.load(config_file)
         self.connection = mysql.connector.connect(**config)
         self.cursor = self.connection.cursor()
 
-    def query(self,query):
+    def query(self, query):
         """
         Standarizes a SQL query.
 
@@ -33,11 +35,11 @@ class DataBase():
             query: string. A valid SQL query
         """
         # Send command. Must set argument if multiple querys (marked by semi-colon)
-        multi = query.count(';') > 1
+        multi = query.count(";") > 1
         self.cursor.execute(query, multi=multi)
 
         # Fetch results, if any
-        results =  list(self.cursor)
+        results = list(self.cursor)
 
         # Commit to the mysql connection
         self.connection.commit()
@@ -68,24 +70,28 @@ class DataBase():
         assert len(self.query("SELECT * FROM workers;")) == 0
 
         # Part 0 specifics
-        self.query("INSERT INTO workers (name, location) VALUES ('localhost','127.0.0.1');")
+        self.query(
+            "INSERT INTO workers (name, location) VALUES ('localhost','127.0.0.1');"
+        )
         assert len(self.query("SELECT * FROM workers;")) == 1
 
         # Close connection
         self.connection.close()
         self.cursor.close()
 
-class DeployUSInterface():
+
+class DeployUSInterface:
     """
     Useful class that wraps REST endpoints under test.
     """
+
     def __init__(self):
         """
         Defines the location and port of DeployUS.
         Assumes that the docker-compose file has the
         DeployUS service named as app.
         """
-        self.addr = 'http://app:5000'
+        self.addr = "http://app:5000"
 
     def index_page(self):
         """
@@ -93,7 +99,7 @@ class DeployUSInterface():
         Returns:
           response to the requests.
         """
-        return requests.get(self.addr + '/')
+        return requests.get(self.addr + "/")
 
     def workers_page(self):
         """
@@ -101,7 +107,7 @@ class DeployUSInterface():
         Returns:
           response to the requests.
         """
-        return requests.get(self.addr + '/workers')
+        return requests.get(self.addr + "/workers")
 
     def launch_page(self):
         """
@@ -109,7 +115,7 @@ class DeployUSInterface():
         Returns:
           response to the requests.
         """
-        return requests.get(self.addr + '/launch')
+        return requests.get(self.addr + "/launch")
 
     def get_scripts(self):
         """
@@ -117,7 +123,7 @@ class DeployUSInterface():
         Returns:
           response to the requests.
         """
-        return requests.get(self.addr + '/get_scripts')
+        return requests.get(self.addr + "/get_scripts")
 
     def get_jobs(self):
         """
@@ -125,7 +131,7 @@ class DeployUSInterface():
         Returns:
           response to the requests.
         """
-        return requests.get(self.addr + '/get_jobs')
+        return requests.get(self.addr + "/get_jobs")
 
     def get_workers(self):
         """
@@ -133,7 +139,7 @@ class DeployUSInterface():
         Returns:
           response to the requests.
         """
-        return requests.get(self.addr + '/get_workers')
+        return requests.get(self.addr + "/get_workers")
 
     def insert_script(self, script_name, script_filename, script_filecontents):
         """
@@ -146,8 +152,11 @@ class DeployUSInterface():
         Returns:
           response to the requests.
         """
-        files = {'name': (None,script_name), 'scriptfile': (script_filename, script_filecontents)}
-        response = requests.post(self.addr + '/insert_script', files=files)
+        files = {
+            "name": (None, script_name),
+            "scriptfile": (script_filename, script_filecontents),
+        }
+        response = requests.post(self.addr + "/insert_script", files=files)
         return response
 
     def delete_script(self, script_id):
@@ -157,8 +166,8 @@ class DeployUSInterface():
         Parameters:
           script_id: int. Index of script to delete from database
         """
-        payload = {'id': script_id}
-        response = requests.post(self.addr + '/delete_script', json=payload)
+        payload = {"id": script_id}
+        response = requests.post(self.addr + "/delete_script", json=payload)
         return response
 
     def launch_job(self, script_id, worker_id):
@@ -171,8 +180,8 @@ class DeployUSInterface():
         Returns:
           response to the request.
         """
-        payload = {'id': script_id, 'location':worker_id}
-        response = requests.post(self.addr + '/launch_job', json=payload)
+        payload = {"id": script_id, "location": worker_id}
+        response = requests.post(self.addr + "/launch_job", json=payload)
         return response
 
     def stop_job(self, job_id):
@@ -184,8 +193,8 @@ class DeployUSInterface():
         Returns:
           response to the request.
         """
-        payload = {'id': job_id}
-        response = requests.post(self.addr + '/stop_job', json=payload)
+        payload = {"id": job_id}
+        response = requests.post(self.addr + "/stop_job", json=payload)
         return response
 
     def insert_worker(self, name, location):
@@ -198,8 +207,8 @@ class DeployUSInterface():
         Returns:
           response to the request.
         """
-        payload = {'name': name, 'location': location}
-        response = requests.post(self.addr + '/insert_worker', json=payload)
+        payload = {"name": name, "location": location}
+        response = requests.post(self.addr + "/insert_worker", json=payload)
         return response
 
     def delete_worker(self, worker_id):
@@ -211,9 +220,10 @@ class DeployUSInterface():
         Returns:
           response to the request.
         """
-        payload = {'id': worker_id}
-        response = requests.post(self.addr + '/delete_worker', json=payload)
+        payload = {"id": worker_id}
+        response = requests.post(self.addr + "/delete_worker", json=payload)
         return response
+
 
 # Takes care of setup & teardown of database interface
 @pytest.fixture()

@@ -15,7 +15,7 @@ DEPLOYUS = DeployUSInterface()
 # =====================================================
 #  Testing insertions/deletions of scripts
 # =====================================================
-@pytest.mark.usefixtures('_db')
+@pytest.mark.usefixtures("_db")
 def test_insert_script_normal():
     """
     Creating a hello world example docker-compose project
@@ -23,8 +23,8 @@ def test_insert_script_normal():
 
     Testing the state of the mysql database.
     """
-    name = 'myscript'
-    filename = 'docker-compose.yml'
+    name = "myscript"
+    filename = "docker-compose.yml"
     filecontents = b"""
         version: "3.3"
         services:
@@ -44,11 +44,12 @@ def test_insert_script_normal():
     # Testing reponse. Not testing datetime uploaded because it is server specific.
     assert response.status_code == 200
     assert len(dbscripts) == 1
-    assert dbscripts[0][0] == 1 #id
-    assert dbscripts[0][1] == name #name
-    assert dbscripts[0][3] == hash1 #filehash
+    assert dbscripts[0][0] == 1  # id
+    assert dbscripts[0][1] == name  # name
+    assert dbscripts[0][3] == hash1  # filehash
 
-@pytest.mark.usefixtures('_db')
+
+@pytest.mark.usefixtures("_db")
 def test_insert_script_normal_multiple():
     """
     Creates two helloworld projects that open different ports (8000 and 8001 respectively).
@@ -58,9 +59,9 @@ def test_insert_script_normal_multiple():
 
     Uploads the scripts to DeployUS and queries database for sucessful upload.
     """
-    name1 = 'myscript1'
-    name2 = 'myscript2'
-    filename = 'docker-compose.yml'
+    name1 = "myscript1"
+    name2 = "myscript2"
+    filename = "docker-compose.yml"
     filecontents1 = b"""
         version: "3.3"
         services:
@@ -90,15 +91,16 @@ def test_insert_script_normal_multiple():
 
     # Testing reponse. Not testing datetime uploaded because it is server specific.
     assert response.status_code == 200  # Successful reponse
-    assert len(dbscripts) == 2          # The two scripts must be added
-    assert dbscripts[0][0] == 1         # id myscript1
-    assert dbscripts[0][1] == name1     # myscript1
-    assert dbscripts[0][3] == hash1     # filehash of myscript1's script
-    assert dbscripts[1][0] == 2         # id myscript2
-    assert dbscripts[1][1] == name2     # myscript2
-    assert dbscripts[1][3] == hash2     # filehash of myscript2's script
+    assert len(dbscripts) == 2  # The two scripts must be added
+    assert dbscripts[0][0] == 1  # id myscript1
+    assert dbscripts[0][1] == name1  # myscript1
+    assert dbscripts[0][3] == hash1  # filehash of myscript1's script
+    assert dbscripts[1][0] == 2  # id myscript2
+    assert dbscripts[1][1] == name2  # myscript2
+    assert dbscripts[1][3] == hash2  # filehash of myscript2's script
 
-@pytest.mark.usefixtures('_db')
+
+@pytest.mark.usefixtures("_db")
 def test_insert_script_not_yaml():
     """
     Verifies that only .yml files can be uploaded.
@@ -109,8 +111,8 @@ def test_insert_script_not_yaml():
     No warning should be given by DeployUS about the wrong file extension.
     Other than a 422 status code.
     """
-    name = 'myscript'
-    filename = 'scriptname.notyaml'
+    name = "myscript"
+    filename = "scriptname.notyaml"
     filecontents = b"""
         version: "3.3"
         services:
@@ -128,14 +130,15 @@ def test_insert_script_not_yaml():
     assert response.status_code == 422
     assert len(dbscripts) == 0
 
-@pytest.mark.usefixtures('_db')
+
+@pytest.mark.usefixtures("_db")
 def test_insert_script_invalid_filecontents():
     """
     Verifies that only the file contents is valid.
     Valid file contents should pass the "docker-compose config" test
     """
-    name = 'myscript'
-    filename = 'scriptname.yml'
+    name = "myscript"
+    filename = "scriptname.yml"
     # Note the invalid field.
     filecontents = b"""
         version: "3.3"
@@ -154,15 +157,16 @@ def test_insert_script_invalid_filecontents():
     assert response.status_code == 422
     assert len(dbscripts) == 0
 
-@pytest.mark.usefixtures('_db')
+
+@pytest.mark.usefixtures("_db")
 def test_insert_script_unique_name():
     """
     Verifying that a user can not give the same name
     to two different docker-compose scripts.
     """
-    name = 'myscript'
-    filename1 = 'docker-compose1.yml'
-    filename2 = 'docker-compose2.yml'
+    name = "myscript"
+    filename1 = "docker-compose1.yml"
+    filename2 = "docker-compose2.yml"
     filecontents1 = b"""
         version: "3.3"
         services:
@@ -196,7 +200,8 @@ def test_insert_script_unique_name():
     assert response.status_code == 200
     assert len(dbscripts) == 1
 
-@pytest.mark.usefixtures('_db')
+
+@pytest.mark.usefixtures("_db")
 def test_delete_script_normal():
     """
     Verifying that deleting a script works in DeployUS.

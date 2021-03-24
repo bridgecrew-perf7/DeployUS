@@ -10,7 +10,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: deployus
     volumes:
-      - my-datavolume:/var/lib/mysql
+      - mysql-volume:/var/lib/mysql
 
   app:
     build: ./
@@ -26,4 +26,4 @@ services:
 
 
 volumes:
-  my-datavolume:
+  mysql-volume:

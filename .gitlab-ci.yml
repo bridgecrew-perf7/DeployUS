@@ -1,23 +1,24 @@
 stages:
-  - lint
+  - linting-stylecheck
   - build-docker-images
-  - test
+  - testing
 
 # ==================================
 #  Linting the applications here
 # ==================================
-lint-deployus:
-  stage: lint
+lint-sc-deployus:
+  stage: linting-stylecheck
   image: 
     name: python:3.8
   script:    
     - cd DeployUS
-    - pip install pylint
-    - pip install -r requirements.txt
+    - pip install pylint pycodestyle
     - pip install -r tests/requirements.txt
-    - find app -type f -name "*.py" | xargs pylint 
-    - find tests -type f -name "*.py" | xargs pylint 
-    - pylint run.py
+    - pylint app tests run.py
+
+    # Going one step furthur and ensuring PEP8 styling. 
+    # Changing max line length to 100 because I disagree with the default 79.
+    - pycodestyle --max-line-length=100 app tests run.py
 
 # ==========================
 #  Building Sample Projects
@@ -62,7 +63,7 @@ build-database:
 #  Testing the created images here
 # ==================================
 tests-deployus:
-  stage: test
+  stage: testing
   image: 
     name: docker:20.10
   services:

@@ -4,37 +4,45 @@ DeployUS/app/db.py
 Modules that wraps the MySQL database specific to the DeployUS application.
 """
 import os
+import pathlib
+import json
 import mysql.connector
 from app import utils
 
+# This ensures that the path is not hard-coded to where the script is executed.
+DB_CONFIG_FILE = pathlib.Path(__file__).parent.parent.joinpath("dbconfig.json")
+
+
 def mysql_safe(func):
     """
-        Decorator to safely connect/disconnect from database
+    Decorator to safely connect/disconnect from database
     """
+
     def inner(*args, **kwargs):
-        config = {
-        'user': 'root',
-        'password': 'deployus',
-        'host': 'db',
-        'port': '3306',
-        'database': 'deployusdb'
-        }
+        """
+        Creates mysql-connector objects and releases them after the function
+        is executed
+        """
+        with open(DB_CONFIG_FILE) as config_file:
+            config = json.load(config_file)
         connection = mysql.connector.connect(**config)
         cursor = connection.cursor()
 
         # Execute function
-        result = func(*args,cursor=cursor, connection=connection, **kwargs)
+        result = func(*args, cursor=cursor, connection=connection, **kwargs)
 
         cursor.close()
         connection.close()
 
         return result
+
     return inner
 
 
 # ========================================================
 #   Interface with database
 # ========================================================
+
 
 @mysql_safe
 def get_scripts(**kwargs):
@@ -46,12 +54,15 @@ def get_scripts(**kwargs):
     Returns:
         List of [script_id, script_name, script_date, script_hash]
     """
-    cursor = kwargs['cursor']
-    cursor.execute('SELECT * FROM scripts')
-    results = [(id, name, utils.format_datetime_obj(str(date)), utils.get_hash(contents))
-                                                    for (id, name, date, contents) in cursor]
+    cursor = kwargs["cursor"]
+    cursor.execute("SELECT * FROM scripts")
+    results = [
+        (id, name, utils.format_datetime_obj(str(date)), utils.get_hash(contents))
+        for (id, name, date, contents) in cursor
+    ]
 
     return results
+
 
 @mysql_safe
 def get_jobs_verbose(**kwargs):
@@ -61,7 +72,7 @@ def get_jobs_verbose(**kwargs):
     Returns:
         list of [job_id, script_name, worker_location]
     """
-    cursor = kwargs['cursor']
+    cursor = kwargs["cursor"]
     sql = """
         SELECT j.id, s.name, w.location
         FROM jobs AS j
@@ -82,16 +93,19 @@ def get_jobs(**kwargs):
     Returns:
         list of [job_id, script_id, worker_id, launch_date]
     """
-    cursor = kwargs['cursor']
+    cursor = kwargs["cursor"]
     sql = """
         SELECT *
         FROM jobs;
     """
     cursor.execute(sql)
-    results = [(job_id, script_id, worker_id, utils.format_datetime_obj(str(date)))
-                    for (job_id, script_id, worker_id, date) in cursor]
+    results = [
+        (job_id, script_id, worker_id, utils.format_datetime_obj(str(date)))
+        for (job_id, script_id, worker_id, date) in cursor
+    ]
 
     return results
+
 
 @mysql_safe
 def get_workers(**kwargs):
@@ -101,10 +115,11 @@ def get_workers(**kwargs):
     Returns:
         list of [worker_id, worker_name, worker_location]
     """
-    cursor = kwargs['cursor']
-    cursor.execute('SELECT * FROM workers')
+    cursor = kwargs["cursor"]
+    cursor.execute("SELECT * FROM workers")
     results = list(cursor)
     return results
+
 
 @mysql_safe
 def insert_worker(**kwargs):
@@ -118,19 +133,20 @@ def insert_worker(**kwargs):
     Returns:
         True if successful. False if an error occured.
     """
-    cursor = kwargs['cursor']
-    connection = kwargs['connection']
-    name = kwargs['name']
-    location = kwargs['location']
-    sql = 'INSERT INTO workers (name,location) VALUES (%s, %s);'
+    cursor = kwargs["cursor"]
+    connection = kwargs["connection"]
+    name = kwargs["name"]
+    location = kwargs["location"]
+    sql = "INSERT INTO workers (name,location) VALUES (%s, %s);"
     val = (name, location)
     # There might be an error due to unique keys
     try:
-        cursor.execute(sql,val)
+        cursor.execute(sql, val)
         connection.commit()
         return True
     except mysql.connector.errors.IntegrityError:
         return False
+
 
 @mysql_safe
 def insert_script(**kwargs):
@@ -145,22 +161,23 @@ def insert_script(**kwargs):
         True if successful. False if an error occured.
     """
     # Parse kwargs to get arguments.
-    cursor = kwargs['cursor']
-    connection = kwargs['connection']
-    name = kwargs['name']
-    contents = kwargs['contents']
+    cursor = kwargs["cursor"]
+    connection = kwargs["connection"]
+    name = kwargs["name"]
+    contents = kwargs["contents"]
 
     # Executes MySQL command
-    sql = 'INSERT INTO scripts (name, cre_date, contents) VALUES (%s, %s, %s );'
-    val = (name, utils.get_datetime_now() , contents)
+    sql = "INSERT INTO scripts (name, cre_date, contents) VALUES (%s, %s, %s );"
+    val = (name, utils.get_datetime_now(), contents)
 
     # There might be an error due to unique keys
     try:
-        cursor.execute(sql,val)
+        cursor.execute(sql, val)
         connection.commit()
         return True
     except mysql.connector.errors.IntegrityError:
         return False
+
 
 @mysql_safe
 def delete_worker(**kwargs):
@@ -172,12 +189,13 @@ def delete_worker(**kwargs):
     Returns:
         Nothing.
     """
-    cursor = kwargs['cursor']
-    connection = kwargs['connection']
-    id_ = kwargs['id']
-    sql = f'DELETE FROM workers WHERE id = {id_};'
+    cursor = kwargs["cursor"]
+    connection = kwargs["connection"]
+    id_ = kwargs["id"]
+    sql = f"DELETE FROM workers WHERE id = {id_};"
     cursor.execute(sql)
     connection.commit()
+
 
 @mysql_safe
 def delete_script(**kwargs):
@@ -189,12 +207,13 @@ def delete_script(**kwargs):
     Returns:
         Nothing.
     """
-    cursor = kwargs['cursor']
-    connection = kwargs['connection']
-    id_ = kwargs['id']
-    sql = f'DELETE FROM scripts WHERE id = {id_};'
+    cursor = kwargs["cursor"]
+    connection = kwargs["connection"]
+    id_ = kwargs["id"]
+    sql = f"DELETE FROM scripts WHERE id = {id_};"
     cursor.execute(sql)
     connection.commit()
+
 
 @mysql_safe
 def launch_job(**kwargs):
@@ -207,10 +226,10 @@ def launch_job(**kwargs):
     Returns:
         True if successful. False otherwise.
     """
-    cursor = kwargs['cursor']
-    connection = kwargs['connection']
-    script_id = kwargs['script_id']
-    worker_id = kwargs['worker_id']
+    cursor = kwargs["cursor"]
+    connection = kwargs["connection"]
+    script_id = kwargs["script_id"]
+    worker_id = kwargs["worker_id"]
 
     # Verifying that script exists
     cursor.execute(f"SELECT * FROM scripts WHERE id = '{script_id}'")
@@ -228,11 +247,11 @@ def launch_job(**kwargs):
 
     # Write file to disk
     parentdir = f"/work/scripts/{name}"
-    dockercompose_path = os.path.join(parentdir,"docker-compose.yml")
+    dockercompose_path = os.path.join(parentdir, "docker-compose.yml")
     if not os.path.exists(parentdir):
         os.makedirs(parentdir)
 
-    with open(dockercompose_path, 'wb') as file:
+    with open(dockercompose_path, "wb") as file:
         file.write(contents)
 
     # docker-compose execution. Return False if failure to bring docker-compose up.
@@ -241,9 +260,9 @@ def launch_job(**kwargs):
         return False
 
     # Insert job's location into jobs table in db
-    sql = 'INSERT INTO jobs (script_id, worker_id, launch_date) VALUES (%s, %s, %s);'
-    val = (script_id, worker_id, utils.get_datetime_now() )
-    cursor.execute(sql,val)
+    sql = "INSERT INTO jobs (script_id, worker_id, launch_date) VALUES (%s, %s, %s);"
+    val = (script_id, worker_id, utils.get_datetime_now())
+    cursor.execute(sql, val)
     connection.commit()
     return True
 
@@ -258,9 +277,9 @@ def stop_job(**kwargs):
     Returns:
 
     """
-    cursor = kwargs['cursor']
-    connection = kwargs['connection']
-    job_id = kwargs['job_id']
+    cursor = kwargs["cursor"]
+    connection = kwargs["connection"]
+    job_id = kwargs["job_id"]
 
     sql = f"""
         SELECT j.id, s.name, w.location
@@ -283,7 +302,7 @@ def stop_job(**kwargs):
     os.system(cmd)
 
     # Insert job's location into jobs table in db
-    sql = f'DELETE FROM jobs WHERE id = {job_id}'
+    sql = f"DELETE FROM jobs WHERE id = {job_id}"
     cursor.execute(sql)
     connection.commit()
     return True
