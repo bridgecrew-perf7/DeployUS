@@ -15,6 +15,8 @@ DEPLOYUS = DeployUSInterface()
 # =====================================================
 #  Testing insertions/deletions of workers
 # =====================================================
+
+
 @pytest.mark.usefixtures("_db")
 def test_insert_worker_normal():
     """

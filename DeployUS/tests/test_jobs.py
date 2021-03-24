@@ -16,6 +16,8 @@ DEPLOYUS = DeployUSInterface()
 # =====================================================
 #  Testing launch/stopings of jobs
 # =====================================================
+
+
 @pytest.mark.usefixtures("_db")
 def test_launch_and_stop_job_normal():
     """

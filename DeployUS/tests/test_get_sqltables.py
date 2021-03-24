@@ -15,6 +15,8 @@ DEPLOYUS = DeployUSInterface()
 # =====================================================
 #  Testing getting database tables
 # =====================================================
+
+
 @pytest.mark.usefixtures("_db")
 def test_get_scripts():
     """

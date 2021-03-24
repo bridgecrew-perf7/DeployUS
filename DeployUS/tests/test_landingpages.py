@@ -14,6 +14,8 @@ DEPLOYUS = DeployUSInterface()
 # =====================================================
 #  Testing landing pages
 # =====================================================
+
+
 @pytest.mark.usefixtures("_db")
 def test_index_page():
     """

@@ -16,6 +16,8 @@ DEPLOYUS = DeployUSInterface()
 # =====================================================
 #  Testing persistance data
 # =====================================================
+
+
 @pytest.mark.usefixtures("_db")
 def test_persistance_data(_db):
     """

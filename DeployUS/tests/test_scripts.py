@@ -15,6 +15,8 @@ DEPLOYUS = DeployUSInterface()
 # =====================================================
 #  Testing insertions/deletions of scripts
 # =====================================================
+
+
 @pytest.mark.usefixtures("_db")
 def test_insert_script_normal():
     """
