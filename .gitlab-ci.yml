@@ -1,0 +1,80 @@
+stages:
+  - linting-stylecheck
+  - build-docker-images
+  - testing
+
+# ==================================
+#  Linting the applications here
+# ==================================
+lint-sc-deployus:
+  stage: linting-stylecheck
+  image: 
+    name: python:3.8
+  script:    
+    - cd DeployUS
+    - pip install pylint pycodestyle
+    - pip install -r tests/requirements.txt
+    - pylint app tests run.py
+
+    # Going one step furthur and ensuring PEP8 styling. 
+    # Changing max line length to 100 because I disagree with the default 79.
+    - pycodestyle --max-line-length=100 app tests run.py
+
+# ==========================
+#  Building Sample Projects
+# ==========================
+build-sp-hello-world:
+  stage: build-docker-images
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - cd ./sample-projects/helloworld/
+    - docker build -t shawnvosburg/helloworld .
+    - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
+    - docker push shawnvosburg/helloworld:latest
+
+# ========================================================================
+#  Building docker images. Also pushing them to docker hub
+# ========================================================================
+build-deployus:
+  stage: build-docker-images
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - cd ./DeployUS
+    - docker build -t shawnvosburg/deployus .
+    - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
+    - docker push shawnvosburg/deployus:latest
+
+build-database:
+  stage: build-docker-images
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - cd ./DeployUS
+    - docker build -f Dockerfile.db -t shawnvosburg/deployusdb .
+    - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
+    - docker push shawnvosburg/deployusdb:latest
+
+# ==================================
+#  Testing the created images here
+# ==================================
+tests-deployus:
+  stage: testing
+  image: 
+    name: docker:20.10
+  services:
+    - docker:20.10-dind
+  before_script:
+    - apk update
+    - apk add --no-cache docker-compose py3-pip python3
+    - pip3 install --upgrade pip
+    - cd DeployUS/tests
+    - pip3 install -r requirements.txt
+    - cd ../
+
+  script:    
+    - python3 tests/run_tests.py

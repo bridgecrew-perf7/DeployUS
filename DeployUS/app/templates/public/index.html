@@ -1,58 +1,103 @@
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeployUS</title>
+{% extends "public/templates/public_template.html" %}
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+{% block title %}ClientUS{% endblock %}
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
-</head>
+{% block main %}
+<div class="container">
+    <div class="row">
+        <div class="col">
 
-<body>
+            <h1>Welcome to ClientUS! :-)</h1>
+            <hr>
 
-    <div class="container">
-        <div class="row">
-            <div class="col">
+            <!-- Viewing scripts in database -->
+            <h3>Scripts in database</h3>
+            <hr>
+            <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Date Uploaded</th>
+                    <th scope="col">SHA256</th>
+                    <th scope="col">Delete</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for id,name,date, hash in dbscripts %}
+                        <tr>
+                            <th scope="row">{{ id }}</th>
+                            <td>{{ name }}</td>
+                            <td>{{ date }}</td>
+                            <td>{{ hash }}</td>
+                            <td>
+                                <button onclick="delete_script({{ id }})" type="button" class="btn btn-danger">Delete</button>
+                                <div class="spinner-border spinner-border-sm text-danger" role="status" id="stopSpinner{{ id }}" style="visibility: hidden;"></div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+              </table>
 
-                <h1>Welcome to DeployUS! :-)</h1>
-                <hr>
+            <!-- Uploading script to the database -->
+            <h3>Upload a docker-compose.yml script here.</h3>
+            <form action="/insert_script" method="POST" enctype="multipart/form-data">
+                
+                
+                <!-- Name attribute -->
+                <label for="name">Script name:</label><br>
+                <input type="text" id="name" name="name"><br>
 
-                <!-- Uploading scripts to the database -->
-                <h3>Upload a docker-compose script here.</h3>
-                <form action="/" method="POST" enctype="multipart/form-data">
-                    
-                    <!-- Name attribute -->
-                    <label for="name">Script name:</label><br>
-                    <input type="text" id="name" name="name"><br>
-
-                    <!-- File selection -->
-                    <div class="form-group">
-                        <label for="scriptfile">Select file</label>
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" name="scriptfile" id="scriptfile" accept=".yml">
-                        </div>
+                <!-- File selection -->
+                <div class="form-group">
+                    <label for="scriptfile">Select file</label>
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" name="scriptfile" id="scriptfile" accept=".yml">
                     </div>
+                </div>
 
-                    <button type="submit" class="btn btn-primary">Upload</button>
-                </form>
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </form>
 
-                <!-- Execute a script on distant machines -->
 
-            </div>
         </div>
     </div>
+</div>
 
-    <!-- Bootstrap things -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
-        crossorigin="anonymous"></script>
-</body>
+{% endblock %}
 
-</html>
+{% block script %}
+
+<script>
+    function delete_script(script_id) {
+        // Activate the spinner
+        var spinner = document.getElementById("stopSpinner".concat(script_id)); 
+        spinner.style.visibility = "visible";
+
+        // Deletes script_id (primary key) of script in database
+        var entry = {
+        id: script_id
+        };
+
+        fetch(`${window.origin}/delete_script`, {
+            method: "POST",
+            credentials: "include",
+            body: JSON.stringify(entry),
+            cache: "no-cache",
+            headers: new Headers({
+                "content-type": "application/json"
+            })
+        })
+        .then(function (response) {    
+            // Deactivate spinner
+            spinner.style.visibility = "hidden";
+            
+            // When the response is receive, reload the page to see the changes.
+            window.location.reload(true)
+        });
+    }
+
+</script>
+
+{% endblock %}
