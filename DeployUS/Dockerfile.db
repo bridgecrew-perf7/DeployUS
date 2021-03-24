@@ -1,0 +1,4 @@
+FROM mysql:5.7
+
+# L'image mysql cherche ce dossier pour s'initialiser
+COPY ./db /docker-entrypoint-initdb.d/

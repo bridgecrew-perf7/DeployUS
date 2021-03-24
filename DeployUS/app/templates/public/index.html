@@ -1,0 +1,103 @@
+
+{% extends "public/templates/public_template.html" %}
+
+{% block title %}ClientUS{% endblock %}
+
+{% block main %}
+<div class="container">
+    <div class="row">
+        <div class="col">
+
+            <h1>Welcome to ClientUS! :-)</h1>
+            <hr>
+
+            <!-- Viewing scripts in database -->
+            <h3>Scripts in database</h3>
+            <hr>
+            <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Date Uploaded</th>
+                    <th scope="col">SHA256</th>
+                    <th scope="col">Delete</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for id,name,date, hash in dbscripts %}
+                        <tr>
+                            <th scope="row">{{ id }}</th>
+                            <td>{{ name }}</td>
+                            <td>{{ date }}</td>
+                            <td>{{ hash }}</td>
+                            <td>
+                                <button onclick="delete_script({{ id }})" type="button" class="btn btn-danger">Delete</button>
+                                <div class="spinner-border spinner-border-sm text-danger" role="status" id="stopSpinner{{ id }}" style="visibility: hidden;"></div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+              </table>
+
+            <!-- Uploading script to the database -->
+            <h3>Upload a docker-compose.yml script here.</h3>
+            <form action="/insert_script" method="POST" enctype="multipart/form-data">
+                
+                
+                <!-- Name attribute -->
+                <label for="name">Script name:</label><br>
+                <input type="text" id="name" name="name"><br>
+
+                <!-- File selection -->
+                <div class="form-group">
+                    <label for="scriptfile">Select file</label>
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" name="scriptfile" id="scriptfile" accept=".yml">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </form>
+
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+
+<script>
+    function delete_script(script_id) {
+        // Activate the spinner
+        var spinner = document.getElementById("stopSpinner".concat(script_id)); 
+        spinner.style.visibility = "visible";
+
+        // Deletes script_id (primary key) of script in database
+        var entry = {
+        id: script_id
+        };
+
+        fetch(`${window.origin}/delete_script`, {
+            method: "POST",
+            credentials: "include",
+            body: JSON.stringify(entry),
+            cache: "no-cache",
+            headers: new Headers({
+                "content-type": "application/json"
+            })
+        })
+        .then(function (response) {    
+            // Deactivate spinner
+            spinner.style.visibility = "hidden";
+            
+            // When the response is receive, reload the page to see the changes.
+            window.location.reload(true)
+        });
+    }
+
+</script>
+
+{% endblock %}

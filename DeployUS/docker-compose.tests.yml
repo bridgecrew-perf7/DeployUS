@@ -1,0 +1,44 @@
+version: "3.3"
+services:
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+    image: shawnvosburg/deployusdb:latest
+    ports:
+      - "32000:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: deployus
+    volumes:
+      - mysql-volume:/var/lib/mysql
+
+  app:
+    build: ./
+    image: shawnvosburg/deployus:latest
+    links:
+      - db
+    ports:
+      - "5000:5000"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    command: ["/wait-for-it.sh", "db:3306", "--timeout=30","--", "python", "run.py"]
+
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.tests
+    links:
+      - db
+      - app
+    ports:
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    command: ["/wait-for-it.sh", "app:5000", "--strict" ,"--timeout=30", "--", "pytest"]
+    depends_on:
+      - db
+      - app
+
+
+volumes:
+  mysql-volume:

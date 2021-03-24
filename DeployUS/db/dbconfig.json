@@ -1,0 +1,7 @@
+{
+    "user": "root",
+    "password": "deployus",
+    "host": "db",
+    "port": "3306",
+    "database": "deployusdb"
+}
