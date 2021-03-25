@@ -101,7 +101,7 @@ tests-watchus:
     - docker:20.10-dind
   before_script:
     - apk update
-    - apk add  python
+    - apk add python3
     - cd WatchUS
   script:    
     - python3 tests/run_tests.py
