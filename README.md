@@ -87,3 +87,6 @@ Pour faire fonctionner mes tests sur Gitlab CI, j'ai suivi ce tutoriel suivant:
 **https://bohumirzamecnik.cz/blog/2018/gitlab-docker-compose-tests/**.  
 J'ai repris de son code et je l'ai modifié pour ma situation. Voir le fichier 
 DeployUS/tests/run_tests.py
+
+Pour le linting, J'utilise les images de cytopia (https://github.com/cytopia). Ce sont des images deja contruites
+et qui contiennent le nécessaire.

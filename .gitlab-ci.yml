@@ -9,11 +9,11 @@ stages:
 lint-sc-deployus:
   stage: linting-stylecheck
   image: 
-    name: python:3.8
+    name: cytopia/pylint # Why reinvent the wheel?
+  entrypoint: ["sh"]
   script:    
     - cd DeployUS
-    - pip install pylint pycodestyle
-    - pip install -r tests/requirements.txt
+    - pip3 install pycodestyle -r tests/requirements.txt
     - pylint app tests run.py
 
     # Going one step furthur and ensuring PEP8 styling. 
@@ -92,7 +92,7 @@ tests-watchus:
     - docker:20.10-dind
   before_script:
     - apk update
-    - apk add python3
+    - apk add --no-cache python3
     - cd WatchUS
   script:    
     - python3 tests/run_tests.py
