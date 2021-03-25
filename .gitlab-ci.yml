@@ -69,7 +69,6 @@ build-images:
 # ==================================
 tests-deployus:
   stage: testing
-  needs: ["build-deployus", "build-database", "build-sp-hello-world"]
   image: 
     name: docker:20.10
   services:
@@ -87,7 +86,6 @@ tests-deployus:
 
 tests-watchus:
   stage: testing
-  needs: ["build-watchus"]
   image: 
     name: docker:20.10
   services:
