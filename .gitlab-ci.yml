@@ -27,8 +27,8 @@ lint-watchus:
     entrypoint: ["/bin/sh", "-c"]
   script:    
     - cd WatchUS
-    - golint main.go
-    - golint tests
+    - golint -set_exit_status main.go
+    - golint -set_exit_status tests
 
 sc-watchus:
   stage: linting-stylecheck
