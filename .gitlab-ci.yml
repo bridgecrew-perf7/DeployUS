@@ -48,6 +48,17 @@ build-deployus:
     - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
     - docker push shawnvosburg/deployus:latest
 
+build-watchus:
+  stage: build-docker-images
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - cd ./WatchUS
+    - docker build -t shawnvosburg/watchus .
+    - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
+    - docker push shawnvosburg/watchus:latest
+
 build-database:
   stage: build-docker-images
   image: docker:latest
@@ -75,6 +86,20 @@ tests-deployus:
     - cd DeployUS/tests
     - pip3 install -r requirements.txt
     - cd ../
+
+  script:    
+    - python3 tests/run_tests.py
+
+tests-watchus:
+  stage: testing
+  image: 
+    name: docker:20.10
+  services:
+    - docker:20.10-dind
+  before_script:
+    - apk update
+    - apk add  python
+    - cd WatchUS
 
   script:    
     - python3 tests/run_tests.py
