@@ -37,39 +37,32 @@ build-sp-hello-world:
 # ========================================================================
 #  Building docker images. Also pushing them to docker hub
 # ========================================================================
-build-deployus:
+build-images:
   stage: build-docker-images
   image: docker:latest
-  needs: ["lint-sc-deployus"]
   services:
     - docker:dind
   script:
+    - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
+
+    # DeployUS
     - cd ./DeployUS
     - docker build -t shawnvosburg/deployus .
-    - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
     - docker push shawnvosburg/deployus:latest
+    - cd ..
 
-build-watchus:
-  stage: build-docker-images
-  image: docker:latest
-  services:
-    - docker:dind
-  script:
-    - cd ./WatchUS
-    - docker build -t shawnvosburg/watchus .
-    - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
-    - docker push shawnvosburg/watchus:latest
-
-build-database:
-  stage: build-docker-images
-  image: docker:latest
-  services:
-    - docker:dind
-  script:
+    # DeployUS-Database
     - cd ./DeployUS
     - docker build -f Dockerfile.db -t shawnvosburg/deployusdb .
-    - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
     - docker push shawnvosburg/deployusdb:latest
+    - cd ..
+    
+    # WatchUS
+    - cd ./WatchUS
+    - docker build -t shawnvosburg/watchus .
+    - docker push shawnvosburg/watchus:latest
+    - cd ..
+
 
 # ==================================
 #  Testing the created images here
