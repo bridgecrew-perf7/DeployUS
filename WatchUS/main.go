@@ -15,7 +15,7 @@ func main() {
 }
 
 func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
-	
+
 	// Assumes the docker-compose.yml is in its /work directory
 	// Run in detach mode. 
 	cmdArgs := []string{"-f", "/work/docker-compose.yml", "up", "-d", "--force-recreate"}
@@ -24,12 +24,11 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 	// Catch all errors, useful for CI
 	if err != nil {
         fmt.Printf("%s", err)
-    }
+    } 
 
 	// Priting command output for dugging purposes.
-	fmt.Println("Command UP Successfully Executed")
-    output := string(out[:])
-    fmt.Println(output)
+	output := string(out[:])
+	fmt.Println(output)
 }
 
 func dockerComposeDown(writer http.ResponseWriter, reqest *http.Request) {
@@ -44,8 +43,8 @@ func dockerComposeDown(writer http.ResponseWriter, reqest *http.Request) {
         fmt.Printf("%s", err)
     }
 
-	fmt.Println("Command DOWN Successfully Executed")
-    output := string(out[:])
-    fmt.Println(output)
+	// Priting command output for dugging purposes.
+	output := string(out[:])
+	fmt.Println(output)
 }
 
