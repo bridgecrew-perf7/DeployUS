@@ -15,20 +15,19 @@ func main() {
 }
 
 func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
-
 	// Assumes the docker-compose.yml is in its /work directory
+	// Pull necessary images
+	cmdArgs := []string{"-f", "/work/docker-compose.yml", "pull"}
+	_, err := exec.Command("docker-compose", cmdArgs...).Output()
+
 	// Run in detach mode. 
-	cmdArgs := []string{"-f", "/work/docker-compose.yml", "up", "-d", "--force-recreate"}
-	out, err := exec.Command("docker-compose", cmdArgs...).Output()
+	cmdArgs = []string{"-f", "/work/docker-compose.yml", "up", "-d", "--force-recreate"}
+	_, err = exec.Command("docker-compose", cmdArgs...).Output()
 
 	// Catch all errors, useful for CI
 	if err != nil {
         fmt.Printf("%s", err)
     } 
-
-	// Priting command output for dugging purposes.
-	output := string(out[:])
-	fmt.Println(output)
 }
 
 func dockerComposeDown(writer http.ResponseWriter, reqest *http.Request) {
@@ -36,15 +35,11 @@ func dockerComposeDown(writer http.ResponseWriter, reqest *http.Request) {
 	// Assumes the docker-compose.yml is in its /work directory
 	// Run in detach mode. 
 	cmdArgs := []string{"-f", "/work/docker-compose.yml", "down"}
-	out, err := exec.Command("docker-compose", cmdArgs...).Output()
+	_, err := exec.Command("docker-compose", cmdArgs...).Output()
 
 	// Catch all errors.
 	if err != nil {
         fmt.Printf("%s", err)
     }
-
-	// Priting command output for dugging purposes.
-	output := string(out[:])
-	fmt.Println(output)
 }
 
