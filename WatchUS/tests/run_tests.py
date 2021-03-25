@@ -43,4 +43,5 @@ cmd = docker_compose_cmd + " down "
 os.system(cmd)
 
 # Return the results of the tests
-sys.exit(exit_code)
+# If the exit_code == 256, the uint8 unix register wont capture it.
+sys.exit(1 if exit_code != 0 else 0) 

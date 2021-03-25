@@ -10,7 +10,7 @@ lint-sc-deployus:
   stage: linting-stylecheck
   image: 
     name: cytopia/pylint # Why reinvent the wheel?
-  entrypoint: ["sh"]
+    entrypoint: ["/bin/sh", "-c"]
   script:    
     - cd DeployUS
     - pip3 install pycodestyle -r tests/requirements.txt
@@ -19,6 +19,24 @@ lint-sc-deployus:
     # Going one step furthur and ensuring PEP8 styling. 
     # Changing max line length to 100 because I disagree with the default 79.
     - pycodestyle --max-line-length=100 app tests run.py
+
+lint-watchus:
+  stage: linting-stylecheck
+  image: 
+    name: cytopia/golint # Why reinvent the wheel?
+    entrypoint: ["/bin/sh", "-c"]
+  script:    
+    - cd WatchUS
+    - golint main.go
+    - golint tests
+
+sc-watchus:
+  stage: linting-stylecheck
+  image: 
+    name: cytopia/gofmt # Why reinvent the wheel?
+    entrypoint: ["/bin/sh", "-c"]
+  script:    
+    - /docker-entrypoint.sh --ci WatchUS
 
 # ==========================
 #  Building Sample Projects
