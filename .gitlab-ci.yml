@@ -40,6 +40,7 @@ build-sp-hello-world:
 build-deployus:
   stage: build-docker-images
   image: docker:latest
+  needs: ["lint-sc-deployus"]
   services:
     - docker:dind
   script:
@@ -75,6 +76,7 @@ build-database:
 # ==================================
 tests-deployus:
   stage: testing
+  needs: ["build-deployus", "build-database", "build-sp-hello-world"]
   image: 
     name: docker:20.10
   services:
@@ -92,6 +94,7 @@ tests-deployus:
 
 tests-watchus:
   stage: testing
+  needs: ["build-watchus"]
   image: 
     name: docker:20.10
   services:
@@ -100,6 +103,5 @@ tests-watchus:
     - apk update
     - apk add  python
     - cd WatchUS
-
   script:    
     - python3 tests/run_tests.py
