@@ -110,7 +110,7 @@ tests-watchus:
     - docker:20.10-dind
   before_script:
     - apk update
-    - apk add --no-cache python3
+    - apk add --no-cache python3 docker-compose
     - cd WatchUS
   script:    
     - python3 tests/run_tests.py
