@@ -2,6 +2,7 @@ stages:
   - linting-stylecheck
   - build-docker-images
   - testing
+  - continuous-delivery
 
 # ==================================
 #  Linting the applications here
@@ -106,3 +107,11 @@ tests-watchus:
     - apk add --no-cache python3 docker-compose
     - cd WatchUS/tests   
     - python3 run_tests.py
+
+# ==================================
+#  Performing continuous delivery
+# ==================================
+continuous-delivery:
+  stage: continuous-delivery
+  image: 
+    name: python:3.8-alpine
