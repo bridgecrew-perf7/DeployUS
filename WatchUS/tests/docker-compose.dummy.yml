@@ -1,0 +1,11 @@
+version: "3.3"
+services:
+  dummy:
+    image: dummyexample:latest
+    networks:
+        - net
+    
+networks:
+  net:
+    external: true
+    name: my_net

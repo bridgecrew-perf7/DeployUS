@@ -1,0 +1,28 @@
+version: "3.3"
+services:
+  app:
+    build: ./
+    image: shawnvosburg/watchus:latest
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - workvolume:/work
+    networks:
+      - net
+
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.tests
+    image: shawnvosburg/watchustests:latest
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - workvolume:/work
+    networks:
+      - net
+
+volumes:
+  workvolume:
+    
+networks:
+  net:
+    name: my_net

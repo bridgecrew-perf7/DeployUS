@@ -5,8 +5,6 @@ services:
       context: .
       dockerfile: Dockerfile.db
     image: shawnvosburg/deployusdb:latest
-    ports:
-      - "32000:3306"
     environment:
       MYSQL_ROOT_PASSWORD: deployus
     volumes:
@@ -27,6 +25,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.tests
+    image: deployustests
     links:
       - db
       - app
