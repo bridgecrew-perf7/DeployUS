@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -31,6 +30,7 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 	if errJSON != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
     	writer.Write([]byte("Couldn't understand the JSON body."))
+		return
 	}
 	defer reqest.Body.Close()
 
@@ -40,15 +40,21 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
     	writer.Write([]byte("Could not create the /work/docker-compose.yml."))
+		return
 	}
 
 	// With the docker-compose.yml file in the /work directory, we can now launch it!
 	// Pull necessary images
-	cmdArgs := []string{"-f", "/work/docker-compose.yml", "pull"}
+	cmdArgs := []string{"-f", "/work/docker-compose.yml", "pull", "--ignore-pull-failures"}
 	_, err = exec.Command("docker-compose", cmdArgs...).Output()
 	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
+		// Leaving this here as the --ignore-pull-failures still throws an error if the user is not logged in!
+		// In this project, WatchUS does not require logging in as all images are public and pulled from docker hub. 
+		// If a required images is not pulled properly, it will be catched later with docker-compose up.
+		//writer.WriteHeader(http.StatusInternalServerError)
+		
     	writer.Write([]byte("Could not pull the docker images."))
+		
 	}
 
 	// Run in detach mode.
@@ -59,6 +65,7 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
     	writer.Write([]byte("Could not call docker-compose up!"))
+		return
 	}
 }
 
@@ -73,5 +80,6 @@ func dockerComposeDown(writer http.ResponseWriter, reqest *http.Request) {
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
     	writer.Write([]byte("Could not call docker-compose down!"))
+		return
 	}
 }

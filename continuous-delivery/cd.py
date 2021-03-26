@@ -22,8 +22,11 @@ DeployUS_url = f"http://{machines['DeployUS']}:{WATCHUS_PORT}/up"
 with open(DeployUS_disk_location) as compose_file:
     DeployUS_file = compose_file.read()
 
+# Creating json object
 DeployUS_dict = {"file":DeployUS_file}
 DeployUS_json = json.dumps(DeployUS_dict)
+
+# Sending DeployUS to the distant machine
 resp = urllib.request.urlopen(DeployUS_url, data=DeployUS_json.encode('ascii'))
 
 # Return the status code for CI

@@ -15,7 +15,7 @@ import (
 
 func getDummyDockerCompose() string {
 	// Create a dummy docker-compose.yml file
-	return `version: "3.3"
+	return `version: "3"
 services:
   dummy:
     image: dummyexample:latest
@@ -63,6 +63,8 @@ func startDockerDummyCompose(t *testing.T, assert *assert.Assertions) int {
 	resp, _ := http.Post("http://app:5001/up",
 		"application/json", bytes.NewBuffer(reqBody))
 	if resp.StatusCode != 200 {
+		body, _ := ioutil.ReadAll(resp.Body)
+		fmt.Println(string(body[:]))
 		t.Errorf("Unexpected status code, expected %d, got %d instead", 200, resp.StatusCode)
 	}
 
