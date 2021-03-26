@@ -13,7 +13,7 @@ lint-sc-deployus:
     entrypoint: ["/bin/sh", "-c"]
   script:    
     - cd DeployUS
-    - pip3 install pycodestyle -r tests/requirements.txt
+    - pip3 install pycodestyle -r requirements.txt -r tests/requirements.txt
     - pylint app tests run.py
 
     # Going one step furthur and ensuring PEP8 styling. 
