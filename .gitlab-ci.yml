@@ -115,3 +115,5 @@ continuous-delivery:
   stage: continuous-delivery
   image: 
     name: python:3.8-alpine
+  script:
+    - python3 continuous-delivery/cd.py
