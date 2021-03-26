@@ -86,7 +86,7 @@ func startDockerDummyCompose(t *testing.T, assert *assert.Assertions) int {
 func stopDummyDockerCompose(t *testing.T, assert *assert.Assertions, baseNumContainers int) {
 
 	// Kill the app created as to not affect the other tests
-	_ , projectname := getDummyDockerCompose()
+	_, projectname := getDummyDockerCompose()
 	reqBody, err := json.Marshal(map[string]string{
 		"name": projectname,
 	})
