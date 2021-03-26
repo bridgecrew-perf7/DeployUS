@@ -38,13 +38,13 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 	defer reqest.Body.Close()
 
 	// Find the path that will host the docker-compose.yml
-	parentDir := fmt.Sprintf("/work/%s",toWatch.Name)
-	scriptPath := fmt.Sprintf("/work/%s/docker-compose.yml",toWatch.Name)
+	parentDir := fmt.Sprintf("/work/scripts/%s",toWatch.Name) 
+	scriptPath := fmt.Sprintf("/work/scripts/%s/docker-compose.yml",toWatch.Name)
 
 	// Make sure all parent directories exists
 	_, err := os.Stat(parentDir)
 	if os.IsNotExist(err) {
-		mdkirErr := os.Mkdir(parentDir, 0700) //All permission to user
+		mdkirErr := os.MkdirAll(parentDir, 0700) //All permission to user
 		if mdkirErr != nil {
 			writer.WriteHeader(http.StatusInternalServerError)
 			errString := fmt.Sprintf("Could not create the %s directory. %s", parentDir, mdkirErr)
