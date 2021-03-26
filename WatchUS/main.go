@@ -29,7 +29,7 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 	errJSON := json.Unmarshal([]byte(body), &toWatch)
 	if errJSON != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
-    	writer.Write([]byte("Couldn't understand the JSON body."))
+		writer.Write([]byte("Couldn't understand the JSON body."))
 		return
 	}
 	defer reqest.Body.Close()
@@ -39,7 +39,7 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 	file.WriteString(toWatch.File)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
-    	writer.Write([]byte("Could not create the /work/docker-compose.yml."))
+		writer.Write([]byte("Could not create the /work/docker-compose.yml."))
 		return
 	}
 
@@ -49,12 +49,12 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 	_, err = exec.Command("docker-compose", cmdArgs...).Output()
 	if err != nil {
 		// Leaving this here as the --ignore-pull-failures still throws an error if the user is not logged in!
-		// In this project, WatchUS does not require logging in as all images are public and pulled from docker hub. 
+		// In this project, WatchUS does not require logging in as all images are public and pulled from docker hub.
 		// If a required images is not pulled properly, it will be catched later with docker-compose up.
 		//writer.WriteHeader(http.StatusInternalServerError)
-		
-    	writer.Write([]byte("Could not pull the docker images."))
-		
+
+		writer.Write([]byte("Could not pull the docker images."))
+
 	}
 
 	// Run in detach mode.
@@ -64,7 +64,7 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 	// Catch all errors, useful for CI
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
-    	writer.Write([]byte("Could not call docker-compose up!"))
+		writer.Write([]byte("Could not call docker-compose up!"))
 		return
 	}
 }
@@ -79,7 +79,7 @@ func dockerComposeDown(writer http.ResponseWriter, reqest *http.Request) {
 	// Catch all errors.
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
-    	writer.Write([]byte("Could not call docker-compose down!"))
+		writer.Write([]byte("Could not call docker-compose down!"))
 		return
 	}
 }
