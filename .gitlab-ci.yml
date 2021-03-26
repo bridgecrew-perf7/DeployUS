@@ -91,16 +91,10 @@ tests-deployus:
     name: docker:20.10
   services:
     - docker:20.10-dind
-  before_script:
-    - apk update
-    - apk add --no-cache docker-compose py3-pip python3
-    - pip3 install --upgrade pip
+  script:
+    - apk add --no-cache docker-compose python3
     - cd DeployUS/tests
-    - pip3 install -r requirements.txt
-    - cd ../
-
-  script:    
-    - python3 tests/run_tests.py
+    - python3 run_tests.py
 
 tests-watchus:
   stage: testing
@@ -108,9 +102,7 @@ tests-watchus:
     name: docker:20.10
   services:
     - docker:20.10-dind
-  before_script:
-    - apk update
+  script: 
     - apk add --no-cache python3 docker-compose
-    - cd WatchUS
-  script:    
-    - python3 tests/run_tests.py
+    - cd WatchUS/tests   
+    - python3 run_tests.py

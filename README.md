@@ -52,7 +52,7 @@ Ces commandes ont été tester dans un environement unix.
 Pour executer DeployUS:
 ```
 cd DeployUS
-docker-compose up
+docker-compose up --build
 ```
 
 Pour se connecter au client graphique, ouvrir un navigateur web et aller à l'address:
