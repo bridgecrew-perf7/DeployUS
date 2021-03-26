@@ -29,7 +29,8 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 	body, _ := ioutil.ReadAll(reqest.Body)
 	errJSON := json.Unmarshal([]byte(body), &toWatch)
 	if errJSON != nil {
-		panic(errJSON)
+		writer.WriteHeader(http.StatusInternalServerError)
+    	writer.Write([]byte("Couldn't understand the JSON body."))
 	}
 	defer reqest.Body.Close()
 
@@ -37,7 +38,8 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 	file, err := os.Create("/work/docker-compose.yml")
 	file.WriteString(toWatch.File)
 	if err != nil {
-		fmt.Println("Creating docker-compose.yml file does not work!", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+    	writer.Write([]byte("Could not create the /work/docker-compose.yml."))
 	}
 
 	// With the docker-compose.yml file in the /work directory, we can now launch it!
@@ -45,7 +47,8 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 	cmdArgs := []string{"-f", "/work/docker-compose.yml", "pull"}
 	_, err = exec.Command("docker-compose", cmdArgs...).Output()
 	if err != nil {
-		fmt.Println("docker-compose does not work!", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+    	writer.Write([]byte("Could not pull the docker images."))
 	}
 
 	// Run in detach mode.
@@ -54,7 +57,8 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 
 	// Catch all errors, useful for CI
 	if err != nil {
-		fmt.Printf("%s", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+    	writer.Write([]byte("Could not call docker-compose up!"))
 	}
 }
 
@@ -67,6 +71,7 @@ func dockerComposeDown(writer http.ResponseWriter, reqest *http.Request) {
 
 	// Catch all errors.
 	if err != nil {
-		fmt.Printf("%s", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+    	writer.Write([]byte("Could not call docker-compose down!"))
 	}
 }

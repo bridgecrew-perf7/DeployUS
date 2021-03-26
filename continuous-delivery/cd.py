@@ -6,6 +6,7 @@ Performs the continuous delivery portion of this project. Sends a GET requests t
 import pathlib
 import json
 import urllib.request
+import sys
 
 WATCHUS_PORT = 5001
 DOT_MACHINES_PATH = pathlib.Path(__file__).absolute().parent.joinpath(".machines")
@@ -25,5 +26,7 @@ DeployUS_dict = {"file":DeployUS_file}
 DeployUS_json = json.dumps(DeployUS_dict)
 resp = urllib.request.urlopen(DeployUS_url, data=DeployUS_json.encode('ascii'))
 
+# Return the status code for CI
+sys.exit(1 if resp.status != 200 else 0)
 
 
