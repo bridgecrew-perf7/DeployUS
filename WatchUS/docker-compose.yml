@@ -1,6 +1,7 @@
 version: "3.3"
 services:
   app:
+    build: ./
     image: shawnvosburg/watchus:latest
     ports:
       - "5001:5001"
