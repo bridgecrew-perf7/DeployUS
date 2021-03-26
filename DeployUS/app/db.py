@@ -255,7 +255,7 @@ def launch_job(**kwargs):
         file.write(contents)
 
     # docker-compose execution. Return False if failure to bring docker-compose up.
-    cmd = f"cd {parentdir};  docker-compose pull "
+    cmd = f"cd {parentdir};  docker-compose pull --ignore-pull-failures "
     if os.system(cmd):
         return False
     cmd = f"cd {parentdir};  docker-compose up -d"

@@ -1,8 +1,9 @@
 package tests
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
@@ -12,27 +13,29 @@ import (
 	"testing"
 )
 
-func TestMain(m *testing.M) {
-	// Running setup code before executing tests
-	setup()
-	code := m.Run()
-	os.Exit(code)
-}
-
-func setup() {
-	// Copying the dummy docker-compose file to the /work directory
-	cmdArgs := []string{"./docker-compose.dummy.yml", "/work/docker-compose.yml"}
-	exec.Command("cp", cmdArgs...).Output()
+func getDummyDockerCompose() string {
+	// Create a dummy docker-compose.yml file
+	return `version: "3"
+services:
+  dummy:
+    image: dummyexample:latest
+    networks:
+        - net
+    
+networks:
+  net:
+    external: true
+    name: my_net
+`
 }
 
 func buildDummyExample(text string) {
 	// Our test image will be a simple httpd webserver
-	dockerFileFormat := `
-FROM httpd:latest
+	dockerFileFormat := `FROM httpd:latest
 RUN echo -n "%s" > /usr/local/apache2/htdocs/index.html
 WORKDIR /usr/local/bin/
 CMD ["httpd-foreground"]
-	`
+`
 
 	// Writing the docker file to file
 	file, _ := os.Create("/work/Dockerfile.dummy")
@@ -44,7 +47,7 @@ CMD ["httpd-foreground"]
 
 }
 
-func startDockerDummyCompose(t *testing.T, assert *assert.Assertions, client *resty.Client) int {
+func startDockerDummyCompose(t *testing.T, assert *assert.Assertions) int {
 	// To start, save the number of running containers.
 	// Later, we will be starting a new container and verifying that
 	// the docker-compose cammand has worked.
@@ -54,9 +57,15 @@ func startDockerDummyCompose(t *testing.T, assert *assert.Assertions, client *re
 	baseNumContainers := strings.Count(string(out[:]), "\n")
 
 	// We send a request to WatchUs to start the container
-	resp, _ := client.R().Get("http://app:5001/up")
-	if resp.StatusCode() != 200 {
-		t.Errorf("Unexpected status code, expected %d, got %d instead", 200, resp.StatusCode())
+	reqBody, err := json.Marshal(map[string]string{
+		"file": getDummyDockerCompose(),
+	})
+	resp, _ := http.Post("http://app:5001/up",
+		"application/json", bytes.NewBuffer(reqBody))
+	if resp.StatusCode != 200 {
+		body, _ := ioutil.ReadAll(resp.Body)
+		fmt.Println(string(body[:]))
+		t.Errorf("Unexpected status code, expected %d, got %d instead", 200, resp.StatusCode)
 	}
 
 	// We count the number of containers after running WatchUS went up
@@ -71,12 +80,12 @@ func startDockerDummyCompose(t *testing.T, assert *assert.Assertions, client *re
 	return baseNumContainers
 }
 
-func stopDummyDockerCompose(t *testing.T, assert *assert.Assertions, client *resty.Client, baseNumContainers int) {
+func stopDummyDockerCompose(t *testing.T, assert *assert.Assertions, baseNumContainers int) {
 
 	// Kill the app created as to not affect the other tests
-	resp, _ := client.R().Get("http://app:5001/down")
-	if resp.StatusCode() != 200 {
-		t.Errorf("Unexpected status code, expected %d, got %d instead", 200, resp.StatusCode())
+	resp, _ := http.Get("http://app:5001/down")
+	if resp.StatusCode != 200 {
+		t.Errorf("Unexpected status code, expected %d, got %d instead", 200, resp.StatusCode)
 	}
 
 	// We count the number of containers after running WatchUS went up
@@ -93,12 +102,11 @@ func stopDummyDockerCompose(t *testing.T, assert *assert.Assertions, client *res
 
 func Test_docker_compose_up_then_down(t *testing.T) {
 	assert := assert.New(t)
-	client := resty.New()
 
 	// Start a dummy application
 	indexFileContents := "thecontents"
 	buildDummyExample(indexFileContents)
-	baseNumContainers := startDockerDummyCompose(t, assert, client)
+	baseNumContainers := startDockerDummyCompose(t, assert)
 
 	// Send request to the dummyexample page
 	resp, _ := http.Get("http://dummy/")
@@ -111,17 +119,16 @@ func Test_docker_compose_up_then_down(t *testing.T) {
 	assert.Equal(indexFileContents, string(html[:]))
 
 	// Close the dummy application. Must do this for other tests
-	stopDummyDockerCompose(t, assert, client, baseNumContainers)
+	stopDummyDockerCompose(t, assert, baseNumContainers)
 }
 
 func Test_docker_compose_up_reload_image(t *testing.T) {
 	assert := assert.New(t)
-	client := resty.New()
 
 	// Start a dummy application
 	indexFileContents := "thecontents"
 	buildDummyExample(indexFileContents)
-	baseNumContainers := startDockerDummyCompose(t, assert, client)
+	baseNumContainers := startDockerDummyCompose(t, assert)
 
 	// Read the html portion, which contains the index file contents
 	// The html contents needs to be what we sent!
@@ -134,7 +141,7 @@ func Test_docker_compose_up_reload_image(t *testing.T) {
 	// Note that the running container wasn't stopped prior to this.
 	indexFileContents = "The contents changed!"
 	buildDummyExample(indexFileContents)
-	startDockerDummyCompose(t, assert, client)
+	startDockerDummyCompose(t, assert)
 
 	resp, _ = http.Get("http://dummy/")
 	defer resp.Body.Close()
@@ -142,5 +149,5 @@ func Test_docker_compose_up_reload_image(t *testing.T) {
 	assert.Equal(indexFileContents, string(html[:]))
 
 	// Close the dummy application. Must do this for other tests
-	stopDummyDockerCompose(t, assert, client, baseNumContainers)
+	stopDummyDockerCompose(t, assert, baseNumContainers)
 }

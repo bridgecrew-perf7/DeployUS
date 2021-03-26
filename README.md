@@ -100,7 +100,6 @@ et qui contiennent le nécessaire.
 
 ## Bibliothèques externes
 * Le micro-service WatchUS est écrit avec le langage de programmation Go. 
-* Pour mes tests, je fait des requêtes REST avec la bibliothèque Resty (https://github.com/go-resty/resty)
 * Pour mes tests, je fait des assertions avec le module assert de testify (https://github.com/stretchr/testify/tree/master/assert)
 * L'analyse de code statique est fait avec golint (https://github.com/cytopia/docker-golint) et gofmt (https://github.com/cytopia/docker-gofmt)
 
@@ -108,7 +107,7 @@ et qui contiennent le nécessaire.
 WatchUS rend publique les endpoints */up* et */down* sur le port 5001. Il assume 
 aussi que l'application qu'il suit se trouve à **/work/docker-compose.yml**.
 
-En éffectuant une requête GET à /up, le WatchUS va faire un **docker-compose pull** suivi par 
+En éffectuant une requête POST à /up avec un json en format {"file": <contents of docker-compose.yml>}, le WatchUS va sauvegarder le fichier dans son répertoire /work. Le WatchUS va ensuite faire un **docker-compose pull** suivi par 
 un **docker-compose up -d --force-recreate**. Des appels sucessives de /up peut servir à un déploiement 
 en continue de l'application qu'il regarde.
 

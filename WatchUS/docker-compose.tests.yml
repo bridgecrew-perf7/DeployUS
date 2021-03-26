@@ -1,4 +1,4 @@
-version: "3.3"
+version: "3"
 services:
   app:
     build: ./
@@ -14,6 +14,8 @@ services:
       context: .
       dockerfile: Dockerfile.tests
     image: shawnvosburg/watchustests:latest
+    depends_on: 
+      - app
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - workvolume:/work

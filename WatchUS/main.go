@@ -1,10 +1,16 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
 )
+
+type watchable struct {
+	File string `json:"file"`
+}
 
 func main() {
 	http.HandleFunc("/up", dockerComposeUp)
@@ -15,10 +21,41 @@ func main() {
 }
 
 func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
-	// Assumes the docker-compose.yml is in its /work directory
+	// Initialize empty toWatch
+	var toWatch watchable
+
+	// Parse request for the json which contains the file
+	body, _ := ioutil.ReadAll(reqest.Body)
+	errJSON := json.Unmarshal([]byte(body), &toWatch)
+	if errJSON != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte("Couldn't understand the JSON body."))
+		return
+	}
+	defer reqest.Body.Close()
+
+	// Write the file to disk at /work/docker-compose.yml
+	file, err := os.Create("/work/docker-compose.yml")
+	file.WriteString(toWatch.File)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte("Could not create the /work/docker-compose.yml."))
+		return
+	}
+
+	// With the docker-compose.yml file in the /work directory, we can now launch it!
 	// Pull necessary images
-	cmdArgs := []string{"-f", "/work/docker-compose.yml", "pull"}
-	_, err := exec.Command("docker-compose", cmdArgs...).Output()
+	cmdArgs := []string{"-f", "/work/docker-compose.yml", "pull", "--ignore-pull-failures"}
+	_, err = exec.Command("docker-compose", cmdArgs...).Output()
+	if err != nil {
+		// Leaving this here as the --ignore-pull-failures still throws an error if the user is not logged in!
+		// In this project, WatchUS does not require logging in as all images are public and pulled from docker hub.
+		// If a required images is not pulled properly, it will be catched later with docker-compose up.
+		//writer.WriteHeader(http.StatusInternalServerError)
+
+		writer.Write([]byte("Could not pull the docker images."))
+
+	}
 
 	// Run in detach mode.
 	cmdArgs = []string{"-f", "/work/docker-compose.yml", "up", "-d", "--force-recreate"}
@@ -26,7 +63,9 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 
 	// Catch all errors, useful for CI
 	if err != nil {
-		fmt.Printf("%s", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte("Could not call docker-compose up!"))
+		return
 	}
 }
 
@@ -39,6 +78,8 @@ func dockerComposeDown(writer http.ResponseWriter, reqest *http.Request) {
 
 	// Catch all errors.
 	if err != nil {
-		fmt.Printf("%s", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte("Could not call docker-compose down!"))
+		return
 	}
 }
