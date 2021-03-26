@@ -106,7 +106,7 @@ et qui contiennent le nécessaire.
 
 ## Fonctionnement
 WatchUS rend publique les endpoints */up* et */down* sur le port 5001. Il assume 
-aussi que l'application qu'il suit se trouve à /work/docker-compose.yml.
+aussi que l'application qu'il suit se trouve à **/work/docker-compose.yml**.
 
 En éffectuant une requête GET à /up, le WatchUS va faire un **docker-compose pull** suivi par 
 un **docker-compose up -d --force-recreate**. Des appels sucessives de /up peut servir à un déploiement 
