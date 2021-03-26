@@ -16,15 +16,14 @@ with open(DOT_MACHINES_PATH,'r') as file:
     machines = json.load(file)
 
 # 2. Deliver DeployUS
-DeployUS_location = pathlib.Path(__file__).absolute().parent.joinpath("../DeployUS/docker-compose.yml")
+DeployUS_disk_location = pathlib.Path(__file__).absolute().parent.joinpath("../DeployUS/docker-compose.yml")
 DeployUS_url = f"http://localhost:{WATCHUS_PORT}/up"
-with open(DeployUS_location) as compose_file:
+with open(DeployUS_disk_location) as compose_file:
     DeployUS_file = compose_file.read()
+
 DeployUS_dict = {"file":DeployUS_file}
 DeployUS_json = json.dumps(DeployUS_dict)
-
-
 resp = urllib.request.urlopen(DeployUS_url, data=DeployUS_json.encode('ascii'))
-print(str(resp.read()))
+
 
 
