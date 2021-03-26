@@ -13,8 +13,9 @@ import (
 	"testing"
 )
 
-func getDummyDockerCompose() string {
+func getDummyDockerCompose() (string, string) {
 	// Create a dummy docker-compose.yml file
+	// Returns the file contents and a project name
 	return `version: "3"
 services:
   dummy:
@@ -26,7 +27,7 @@ networks:
   net:
     external: true
     name: my_net
-`
+`, "dummyexample"
 }
 
 func buildDummyExample(text string) {
@@ -57,8 +58,10 @@ func startDockerDummyCompose(t *testing.T, assert *assert.Assertions) int {
 	baseNumContainers := strings.Count(string(out[:]), "\n")
 
 	// We send a request to WorkUS to start the container
+	fileContents, projectname := getDummyDockerCompose()
 	reqBody, err := json.Marshal(map[string]string{
-		"file": getDummyDockerCompose(),
+		"file": fileContents,
+		"name": projectname,
 	})
 	resp, _ := http.Post("http://app:5002/up",
 		"application/json", bytes.NewBuffer(reqBody))
@@ -83,8 +86,15 @@ func startDockerDummyCompose(t *testing.T, assert *assert.Assertions) int {
 func stopDummyDockerCompose(t *testing.T, assert *assert.Assertions, baseNumContainers int) {
 
 	// Kill the app created as to not affect the other tests
-	resp, _ := http.Get("http://app:5002/down")
+	_ , projectname := getDummyDockerCompose()
+	reqBody, err := json.Marshal(map[string]string{
+		"name": projectname,
+	})
+	resp, _ := http.Post("http://app:5002/down",
+		"application/json", bytes.NewBuffer(reqBody))
 	if resp.StatusCode != 200 {
+		body, _ := ioutil.ReadAll(resp.Body)
+		fmt.Println(string(body[:]))
 		t.Errorf("Unexpected status code, expected %d, got %d instead", 200, resp.StatusCode)
 	}
 
