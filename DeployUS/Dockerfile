@@ -1,5 +1,7 @@
 FROM curlimages/curl:7.75.0 as curly
+RUN curl -L "https://github.com/docker/compose/releases/download/1.28.5/docker-compose-$(uname -s)-$(uname -m)" -o ~/docker-compose
 RUN curl -L "https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh" -o ~/wait-for-it.sh
+RUN chmod +x ~/docker-compose
 RUN chmod +x ~/wait-for-it.sh
 
 
@@ -26,7 +28,8 @@ COPY requirements.txt /work
 WORKDIR /work
 RUN pip install -r requirements.txt
 
-# Load the wait-fot-it.sh script
+# Load docker-compose to verify that scripts are valid
+COPY --from=curly /home/curl_user/docker-compose /usr/local/bin/docker-compose
 COPY --from=curly /home/curl_user/wait-for-it.sh /wait-for-it.sh
 
 # Executing DeployUS

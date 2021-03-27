@@ -3,7 +3,6 @@ DeployUS/app/db.py
 
 Modules that wraps the MySQL database specific to the DeployUS application.
 """
-import os
 import pathlib
 import json
 import urllib
@@ -258,15 +257,14 @@ def launch_job(**kwargs):
     # Send a POST requests to the WorkUS with
     # JSON object containing name and docker-compose.yml
     # Creating json object
-    dc_dict = {"file":contents.decode('utf-8'), "name":script_name}
-    dc_json = json.dumps(dc_dict)
+    dc_dict = {"file": contents.decode("utf-8"), "name": script_name}
     workus_url = f"http://{location}:{WORKUS_PORT}/up"
     try:
-        urllib.request.urlopen(workus_url, data=dc_json.encode('utf-8'))
-    
+        urllib.request.urlopen(workus_url, data=json.dumps(dc_dict).encode("utf-8"))
+
     # Upon failure, do not enter the job in the database
-    except urllib.error.HTTPError as e:
-        print(e)
+    except urllib.error.HTTPError as e_info:
+        print(e_info)
         return False
 
     # Insert job's location into jobs table in db
@@ -275,12 +273,12 @@ def launch_job(**kwargs):
     try:
         cursor.execute(sql, val)
         connection.commit()
-    
-    # Catch integrity errors (i.e. two scripts on the same worker) 
-    except mysql.connector.errors.IntegrityError as e:
-        print(e)
+
+    # Catch integrity errors (i.e. two scripts on the same worker)
+    except mysql.connector.errors.IntegrityError as e_info:
+        print(e_info)
         return False
-    
+
     return True
 
 
@@ -315,15 +313,15 @@ def stop_job(**kwargs):
 
     # Send a POST requests to the WorkUS with
     # Creating json object
-    dc_dict = {"name":script_name}
+    dc_dict = {"name": script_name}
     dc_json = json.dumps(dc_dict)
     workus_url = f"http://{location}:{WORKUS_PORT}/down"
     try:
-        urllib.request.urlopen(workus_url, data=dc_json.encode('utf-8'))
-    
+        urllib.request.urlopen(workus_url, data=dc_json.encode("utf-8"))
+
     # Upon failure, do not enter the job in the database
-    except urllib.error.HTTPError as e:
-        print(e)
+    except urllib.error.HTTPError as e_info:
+        print(e_info)
         return False
 
     # Insert job's location into jobs table in db

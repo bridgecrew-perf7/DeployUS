@@ -6,7 +6,6 @@ Uses pytest to perform behavioral test of DeployUS's jobs REST api.
 To run:
     - python3 run_tests.py
 """
-import subprocess
 import urllib.request
 import pytest
 from conftest import DeployUSInterface
@@ -28,7 +27,7 @@ def test_launch_and_stop_job_normal():
     Stopping project afterwards as to not affect the other tests.
     """
     # Inserting the workus worker
-    resp = DEPLOYUS.insert_worker('w1', 'workus1')
+    resp = DEPLOYUS.insert_worker("w1", "workus1")
     dbworkers = DEPLOYUS.get_workers().json()
     assert resp.status_code == 200
     assert len(dbworkers) == 1
@@ -52,9 +51,9 @@ def test_launch_and_stop_job_normal():
 
     # Testing if the hello-world application is functioning
     resp = urllib.request.urlopen("http://dummy")
-    content =  resp.read().decode('utf-8')
+    content = resp.read().decode("utf-8")
     assert resp.status == 200
-    assert index_contents == content.strip() # Must strip because an extra \n is added.
+    assert index_contents == content.strip()  # Must strip because an extra \n is added.
 
     # Stopping the job
     response = DEPLOYUS.stop_job(job_id=1)
@@ -65,7 +64,7 @@ def test_launch_and_stop_job_normal():
     assert len(dbjobs) == 0
 
     # Must throw an error, as the job is offline
-    with pytest.raises(urllib.request.URLError) as e_info:
+    with pytest.raises(urllib.request.URLError):
         urllib.request.urlopen("http://dummy")
 
 
@@ -78,13 +77,13 @@ def test_launch_and_stop_job_normal_multiple():
     Stopping projects afterwards as to not affect the other tests.
     """
     # Inserting the workus worker #1
-    resp = DEPLOYUS.insert_worker('w1', 'workus1')
+    resp = DEPLOYUS.insert_worker("w1", "workus1")
     dbworkers = DEPLOYUS.get_workers().json()
     assert resp.status_code == 200
     assert len(dbworkers) == 1
 
     # Inserting the workus worker #2
-    resp = DEPLOYUS.insert_worker('w2', 'workus2')
+    resp = DEPLOYUS.insert_worker("w2", "workus2")
     dbworkers = DEPLOYUS.get_workers().json()
     assert resp.status_code == 200
     assert len(dbworkers) == 2
@@ -105,7 +104,6 @@ def test_launch_and_stop_job_normal_multiple():
     assert dbjobs[0][1] == 1  # script id
     assert dbjobs[0][2] == 1  # worker id
 
-
     # Launching the second job on the second worker
     response = DEPLOYUS.launch_job(script_id=2, worker_id=2)
     dbjobs = DEPLOYUS.get_jobs().json()
@@ -120,15 +118,19 @@ def test_launch_and_stop_job_normal_multiple():
 
     # Testing if myscript1 is functioning
     resp = urllib.request.urlopen("http://dummy1")
-    content =  resp.read().decode('utf-8')
+    content = resp.read().decode("utf-8")
     assert resp.status == 200
-    assert index_contents1 == content.strip() # Must strip because an extra \n is added.
+    assert (
+        index_contents1 == content.strip()
+    )  # Must strip because an extra \n is added.
 
     # Testing if myscript2 is functioning
     resp = urllib.request.urlopen("http://dummy2")
-    content =  resp.read().decode('utf-8')
+    content = resp.read().decode("utf-8")
     assert resp.status == 200
-    assert index_contents2 == content.strip() # Must strip because an extra \n is added.
+    assert (
+        index_contents2 == content.strip()
+    )  # Must strip because an extra \n is added.
 
     # Stopping the jobs
     DEPLOYUS.stop_job(job_id=1)
@@ -140,11 +142,11 @@ def test_launch_and_stop_job_normal_multiple():
     assert len(dbjobs) == 0
 
     # Must throw an error, as the job 1 is offline
-    with pytest.raises(urllib.request.URLError) as e_info:
+    with pytest.raises(urllib.request.URLError):
         urllib.request.urlopen("http://dummy1")
 
     # Must throw an error, as the job 2 is offline
-    with pytest.raises(urllib.request.URLError) as e_info:
+    with pytest.raises(urllib.request.URLError):
         urllib.request.urlopen("http://dummy2")
 
 
@@ -155,7 +157,7 @@ def test_launch_job_bad_script_id():
     exists in DeployUS
     """
     # Inserting the workus worker #1
-    resp = DEPLOYUS.insert_worker('w1', 'workus1')
+    resp = DEPLOYUS.insert_worker("w1", "workus1")
     dbworkers = DEPLOYUS.get_workers().json()
     assert resp.status_code == 200
     assert len(dbworkers) == 1
@@ -163,7 +165,7 @@ def test_launch_job_bad_script_id():
     # Inserting the hello-world script
     test_insert_script_normal()
     script_id = 10  # This script doesn't exists. Therefore, the job should not launch
-    worker_id = 1   # w1
+    worker_id = 1  # w1
 
     response = DEPLOYUS.launch_job(script_id, worker_id)
     dbjobs = DEPLOYUS.get_jobs().json()
@@ -180,7 +182,7 @@ def test_launch_job_bad_worker_id():
     exists in DeployUS
     """
     # Inserting the workus worker #1
-    resp = DEPLOYUS.insert_worker('w1', 'workus1')
+    resp = DEPLOYUS.insert_worker("w1", "workus1")
     dbworkers = DEPLOYUS.get_workers().json()
     assert resp.status_code == 200
     assert len(dbworkers) == 1
@@ -206,7 +208,7 @@ def test_launch_job_failed_execution():
     """
 
     # Inserting the workus worker #1
-    resp = DEPLOYUS.insert_worker('w1', 'workus1')
+    resp = DEPLOYUS.insert_worker("w1", "workus1")
     dbworkers = DEPLOYUS.get_workers().json()
     assert resp.status_code == 200
     assert len(dbworkers) == 1

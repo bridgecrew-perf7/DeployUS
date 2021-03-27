@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-func getDummyDockerCompose(indexFileContents string) (string) {
+func getDummyDockerCompose(indexFileContents string) string {
 	// Create a dummy docker-compose.yml file
 	// Returns the file contents and a project name
 	dcContents := fmt.Sprintf(`version: "3"
@@ -28,11 +28,11 @@ networks:
   net:
     external: true
     name: my_net`, indexFileContents)
-	
+
 	return dcContents
 }
 
-func getDummyProjectName() (string) {
+func getDummyProjectName() string {
 	// Return a dummy project name
 	return "dummyexample"
 }

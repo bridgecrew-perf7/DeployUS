@@ -59,7 +59,6 @@ def test_persistance_data(_db):
         "workus1",
         "workus2",
         "app",
-        
     ]
     assert subprocess.call(cmd) == 0
     subprocess.call(["/wait-for-it.sh", "app:5000", "--strict", "--timeout=30"])

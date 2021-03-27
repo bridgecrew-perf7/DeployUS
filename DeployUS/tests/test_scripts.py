@@ -44,7 +44,9 @@ networks:
   net:
     external: true
     name: my_net
-    """.encode('utf-8')
+    """.encode(
+        "utf-8"
+    )
 
     # Testing hash of filecontents. This step ensures that the file transmitted wasn't corrupted.
     hash1 = hashlib.sha256(filecontents).hexdigest()
@@ -61,6 +63,7 @@ networks:
     assert dbscripts[0][3] == hash1  # filehash
 
     return content1
+
 
 @pytest.mark.usefixtures("_db")
 def test_insert_script_normal_multiple():
@@ -93,7 +96,9 @@ networks:
   net:
     external: true
     name: my_net
-    """.encode('ascii')
+    """.encode(
+        "ascii"
+    )
     filecontents2 = f"""version: "3"
 services:
   dummy2:
@@ -107,7 +112,9 @@ networks:
   net:
     external: true
     name: my_net
-    """.encode('ascii')
+    """.encode(
+        "ascii"
+    )
 
     # Calcualte hash to compare with database to ensure
     # that the file has not been corrupted during upload.
@@ -130,6 +137,7 @@ networks:
     assert dbscripts[1][3] == hash2  # filehash of myscript2's script
 
     return content1, content2
+
 
 @pytest.mark.usefixtures("_db")
 def test_insert_script_not_yaml():

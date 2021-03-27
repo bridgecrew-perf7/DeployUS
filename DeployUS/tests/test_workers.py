@@ -34,7 +34,7 @@ def test_insert_worker_normal():
     assert len(dbworkers) == 1
 
     # Verifying resultant state of database
-    assert dbworkers[0][0] == 1 # id
+    assert dbworkers[0][0] == 1  # id
     assert dbworkers[0][1] == name  # name
     assert dbworkers[0][2] == location  # location
 
