@@ -7,6 +7,7 @@ To run:
     - python3 run_tests.py
 """
 import subprocess
+import urllib.request
 import pytest
 from conftest import DeployUSInterface
 from test_scripts import test_insert_script_normal, test_insert_script_normal_multiple
@@ -22,13 +23,13 @@ DEPLOYUS = DeployUSInterface()
 def test_launch_and_stop_job_normal():
     """
     Launching a job with a basic helloworld project.
-    Verifying with docker that the docker-compose file is up.
+    The job launched opens on port 8000. We will send a GET request and check the html contents.
 
     Stopping project afterwards as to not affect the other tests.
     """
 
     # Inserting the hello-world script
-    test_insert_script_normal()
+    index_contents = test_insert_script_normal()
     script_id = 1  # Following MySQL AUTO_INCREMENT convention
     worker_id = 1  # localhost
 
@@ -45,10 +46,10 @@ def test_launch_and_stop_job_normal():
     assert dbjobs[0][2] == worker_id  # worker id
 
     # Testing if the hello-world application is functioning
-    ps_ = subprocess.Popen(("docker", "ps"), stdout=subprocess.PIPE)
-    result = subprocess.check_output(("grep", "myscript"), stdin=ps_.stdout)
-    ps_.wait()
-    assert len(result) > 0  # The script is started!
+    resp = urllib.request.urlopen("http://dummy")
+    content =  resp.read().decode('utf-8')
+    assert resp.status == 200
+    assert index_contents == content.strip() # Must strip because an extra \n is added.
 
     # Stopping the job
     response = DEPLOYUS.stop_job(job_id=1)
@@ -68,7 +69,7 @@ def test_launch_and_stop_job_normal_multiple():
     Stopping projects afterwards as to not affect the other tests.
     """
     # Inserting the hello-world script multiple times
-    test_insert_script_normal_multiple()
+    index_contents1, index_contents2 = test_insert_script_normal_multiple()
     DEPLOYUS.launch_job(script_id=1, worker_id=1)
     response = DEPLOYUS.launch_job(script_id=2, worker_id=1)
     dbjobs = DEPLOYUS.get_jobs().json()
@@ -86,16 +87,16 @@ def test_launch_and_stop_job_normal_multiple():
     assert dbjobs[1][2] == 1  # worker id
 
     # Testing if myscript1 is functioning
-    ps_ = subprocess.Popen(("docker", "ps"), stdout=subprocess.PIPE)
-    result = subprocess.check_output(("grep", "myscript1"), stdin=ps_.stdout)
-    ps_.wait()
-    assert len(result) > 0  # The script is started!
+    resp = urllib.request.urlopen("http://dummy1")
+    content =  resp.read().decode('utf-8')
+    assert resp.status == 200
+    assert index_contents1 == content.strip() # Must strip because an extra \n is added.
 
     # Testing if myscript2 is functioning
-    ps_ = subprocess.Popen(("docker", "ps"), stdout=subprocess.PIPE)
-    result = subprocess.check_output(("grep", "myscript1"), stdin=ps_.stdout)
-    ps_.wait()
-    assert len(result) > 0  # The script is started!
+    resp = urllib.request.urlopen("http://dummy2")
+    content =  resp.read().decode('utf-8')
+    assert resp.status == 200
+    assert index_contents2 == content.strip() # Must strip because an extra \n is added.
 
     # Stopping the jobs
     DEPLOYUS.stop_job(job_id=1)

@@ -9,6 +9,8 @@ services:
       MYSQL_ROOT_PASSWORD: deployus
     volumes:
       - mysql-volume:/var/lib/mysql
+    networks: 
+      - default
 
   app:
     build: ./
@@ -20,6 +22,8 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     command: ["/wait-for-it.sh", "db:3306", "--timeout=30","--", "python", "run.py"]
+    networks: 
+      - default
 
   tests:
     build:
@@ -37,7 +41,18 @@ services:
     depends_on:
       - db
       - app
+    networks: 
+      - default
+      - net
 
 
 volumes:
   mysql-volume:
+
+networks:
+  default:
+  
+  # This network is to connect to launch scripts during testing
+  # Only the test service is connected to it.
+  net:
+    name: my_net
