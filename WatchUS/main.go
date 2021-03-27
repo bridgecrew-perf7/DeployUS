@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -33,6 +34,19 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 		return
 	}
 	defer reqest.Body.Close()
+
+	// Make sure all parent directories exists
+	parentDir := "/work"
+	_, err := os.Stat(parentDir)
+	if os.IsNotExist(err) {
+		mdkirErr := os.MkdirAll(parentDir, 0700) //All permission to user
+		if mdkirErr != nil {
+			writer.WriteHeader(http.StatusInternalServerError)
+			errString := fmt.Sprintf("Could not create the %s directory. %s", parentDir, mdkirErr)
+			writer.Write([]byte(errString))
+			return
+		}
+	}
 
 	// Write the file to disk at /work/docker-compose.yml
 	file, err := os.Create("/work/docker-compose.yml")
