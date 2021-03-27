@@ -12,7 +12,7 @@ services:
     networks: 
       - default
   
-  workus:
+  workus1:
     build:
       context: ../WorkUS
       dockerfile: Dockerfile
@@ -21,20 +21,33 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
     networks: 
       - default
-      - workus-deployus
+      - workus1-deployus
+
+  workus2:
+    build:
+      context: ../WorkUS
+      dockerfile: Dockerfile
+    image: shawnvosburg/workus:latest
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks: 
+      - default
+      - workus2-deployus
 
   app:
     build: ./
     image: shawnvosburg/deployus:latest
     depends_on: 
       - db
-      - workus
+      - workus1
+      - workus2
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     command: ["/wait-for-it.sh", "db:3306", "--timeout=30","--", "python", "run.py"]
     networks: 
       - default
-      - workus-deployus
+      - workus1-deployus
+      - workus2-deployus
 
   tests:
     build:
@@ -49,7 +62,6 @@ services:
       - "../WorkUS:/WorkUS" # Needed to kill WorkUS during persistance tests.
     command: ["/wait-for-it.sh", "app:5000", "--strict" ,"--timeout=30", "--", "pytest"]
     depends_on:
-      - db
       - app
     networks: 
       - default
@@ -63,7 +75,8 @@ networks:
   default:
 
   # This one if to allow communication between a workus & deployus instance.
-  workus-deployus:
+  workus1-deployus:
+  workus2-deployus:
   
   # This network is to connect to launched scripts during testing
   # Only the test service and the dummy script that is launched is connected to it.

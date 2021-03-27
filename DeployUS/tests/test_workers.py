@@ -31,17 +31,12 @@ def test_insert_worker_normal():
 
     # Testing reponse. Worker should be added
     assert response.status_code == 200
-    assert len(dbworkers) == 2
-
-    # Part 0: specifics
-    assert dbworkers[0][0] == 1  # id
-    assert dbworkers[0][1] == "localhost"  # name
-    assert dbworkers[0][2] == "127.0.0.1"  # location
+    assert len(dbworkers) == 1
 
     # Verifying resultant state of database
-    assert dbworkers[1][0] == 2  # id
-    assert dbworkers[1][1] == name  # name
-    assert dbworkers[1][2] == location  # location
+    assert dbworkers[0][0] == 1 # id
+    assert dbworkers[0][1] == name  # name
+    assert dbworkers[0][2] == location  # location
 
 
 @pytest.mark.usefixtures("_db")
@@ -63,11 +58,11 @@ def test_insert_worker_unique_name():
 
     # Testing reponse. Worker should be added.
     assert response.status_code == 422
-    assert len(dbworkers) == 2
+    assert len(dbworkers) == 1
 
-    assert dbworkers[1][0] == 2  # id
-    assert dbworkers[1][1] == name  # name
-    assert dbworkers[1][2] == location1  #
+    assert dbworkers[0][0] == 1  # id
+    assert dbworkers[0][1] == name  # name
+    assert dbworkers[0][2] == location1  #
 
 
 @pytest.mark.usefixtures("_db")
@@ -89,10 +84,10 @@ def test_insert_worker_unique_location():
 
     # Testing reponse. Worker should be added.
     assert response.status_code == 422
-    assert len(dbworkers) == 2
-    assert dbworkers[1][0] == 2  # id
-    assert dbworkers[1][1] == name1  # name
-    assert dbworkers[1][2] == location  # location
+    assert len(dbworkers) == 1
+    assert dbworkers[0][0] == 1  # id
+    assert dbworkers[0][1] == name1  # name
+    assert dbworkers[0][2] == location  # location
 
 
 @pytest.mark.usefixtures("_db")
@@ -104,12 +99,12 @@ def test_delete_worker_normal():
     test_insert_worker_normal()
 
     # Deletion of worker and querying result with database
-    response = DEPLOYUS.delete_worker(worker_id=2)
+    response = DEPLOYUS.delete_worker(worker_id=1)
     dbworkers = DEPLOYUS.get_workers().json()
 
     # Testing reponse. Not testing datetime uploaded because it is server specific.
     assert response.status_code == 200
-    assert len(dbworkers) == 1
+    assert len(dbworkers) == 0
 
 
 @pytest.mark.usefixtures("_db")
@@ -126,4 +121,4 @@ def test_delete_worker_non_existant():
 
     # Testing reponse. Not testing datetime uploaded because it is server specific.
     assert response.status_code == 200
-    assert len(dbworkers) == 2
+    assert len(dbworkers) == 1

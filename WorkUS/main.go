@@ -31,7 +31,7 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 	body, _ := ioutil.ReadAll(reqest.Body)
 	errJSON := json.Unmarshal([]byte(body), &toWatch)
 	if errJSON != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
+		writer.WriteHeader(http.StatusUnprocessableEntity)
 		writer.Write([]byte("Couldn't understand the JSON body."))
 		return
 	}
@@ -46,7 +46,7 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 	if os.IsNotExist(err) {
 		mdkirErr := os.MkdirAll(parentDir, 0700) //All permission to user
 		if mdkirErr != nil {
-			writer.WriteHeader(http.StatusInternalServerError)
+			writer.WriteHeader(http.StatusUnprocessableEntity)
 			errString := fmt.Sprintf("Could not create the %s directory. %s", parentDir, mdkirErr)
 			writer.Write([]byte(errString))
 			return
@@ -57,24 +57,20 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 	file, err := os.Create(scriptPath)
 	file.WriteString(toWatch.File)
 	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
+		writer.WriteHeader(http.StatusUnprocessableEntity)
 		errString := fmt.Sprintf("Could not create the %s.", scriptPath)
 		writer.Write([]byte(errString))
 		return
 	}
 
-	// With the docker-compose.yml file in the /work directory, we can now launch it!
+	// With the docker-compose.yml file in the /work/<script name> directory, we can now launch it!
 	// Pull necessary images
-	cmdArgs := []string{"-f", scriptPath, "pull", "--ignore-pull-failures"}
+	cmdArgs := []string{"-f", scriptPath, "pull"}
 	_, err = exec.Command("docker-compose", cmdArgs...).Output()
 	if err != nil {
-		// Leaving this here as the --ignore-pull-failures still throws an error if the user is not logged in!
-		// In this project, WorkUS does not require logging in as all images are public and pulled from docker hub.
-		// If a required images is not pulled properly, it will be catched later with docker-compose up.
-		//writer.WriteHeader(http.StatusInternalServerError)
-
-		writer.Write([]byte("Could not pull the docker images."))
-
+		writer.WriteHeader(http.StatusUnprocessableEntity)
+		writer.Write([]byte("Could not pull the docker images.\n"))
+		return
 	}
 
 	// Run in detach mode.
@@ -83,8 +79,8 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 
 	// Catch all errors, useful for CI
 	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-		writer.Write([]byte("Could not call docker-compose up!"))
+		writer.WriteHeader(http.StatusUnprocessableEntity)
+		writer.Write([]byte("Could not call docker-compose up!\n"))
 		return
 	}
 }
@@ -97,8 +93,8 @@ func dockerComposeDown(writer http.ResponseWriter, reqest *http.Request) {
 	body, _ := ioutil.ReadAll(reqest.Body)
 	errJSON := json.Unmarshal([]byte(body), &toWatch)
 	if errJSON != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-		writer.Write([]byte("Couldn't understand the JSON body."))
+		writer.WriteHeader(http.StatusUnprocessableEntity)
+		writer.Write([]byte("Couldn't understand the JSON body.\n"))
 		return
 	}
 	defer reqest.Body.Close()
@@ -113,8 +109,8 @@ func dockerComposeDown(writer http.ResponseWriter, reqest *http.Request) {
 
 	// Catch all errors.
 	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-		errMsg := fmt.Sprintf("Could not call docker-compose down on %s!", scriptPath)
+		writer.WriteHeader(http.StatusUnprocessableEntity)
+		errMsg := fmt.Sprintf("Could not call docker-compose down on %s!\n", scriptPath)
 		writer.Write([]byte(errMsg))
 		return
 	}

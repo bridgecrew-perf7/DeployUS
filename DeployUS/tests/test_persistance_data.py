@@ -41,7 +41,8 @@ def test_persistance_data(_db):
         "/DeployUS/docker-compose.tests.yml",
         "kill",
         "db",
-        "workus",
+        "workus1",
+        "workus2",
         "app",
     ]
     assert subprocess.call(cmd) == 0
@@ -55,7 +56,8 @@ def test_persistance_data(_db):
         "-d",
         "--no-build",
         "db",
-        "workus",
+        "workus1",
+        "workus2",
         "app",
         
     ]

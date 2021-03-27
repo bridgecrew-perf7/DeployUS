@@ -1,7 +1,8 @@
 stages:
   - linting-stylecheck
-  - build-docker-images
+  - build-sample-projects
   - testing
+  - build-docker-images
   - continuous-delivery
 
 # ==================================
@@ -62,7 +63,7 @@ sc-workus:
 #  Building Sample Projects
 # ==========================
 build-sp-hello-world:
-  stage: build-docker-images
+  stage: build-sample-projects
   image: docker:latest
   services:
     - docker:dind
@@ -71,6 +72,41 @@ build-sp-hello-world:
     - docker build -t shawnvosburg/helloworld .
     - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
     - docker push shawnvosburg/helloworld:latest
+
+
+
+# ==================================
+#  Testing the images here
+# ==================================
+tests-deployus:
+  stage: testing
+  image: 
+    name: docker:20.10
+  services:
+    - docker:20.10-dind
+  script:
+    - apk add --no-cache python3 docker-compose
+    - python3 run_tests.py --test DeployUS --pull
+
+tests-watchus:
+  stage: testing
+  image: 
+    name: docker:20.10
+  services:
+    - docker:20.10-dind
+  script: 
+    - apk add --no-cache python3 docker-compose
+    - python3 run_tests.py --test WatchUS --pull
+
+tests-workus:
+  stage: testing
+  image: 
+    name: docker:20.10
+  services:
+    - docker:20.10-dind
+  script: 
+    - apk add --no-cache python3 docker-compose
+    - python3 run_tests.py --test WorkUS --pull
 
 # ========================================================================
 #  Building docker images. Also pushing them to docker hub
@@ -106,40 +142,6 @@ build-images:
     - docker build -t shawnvosburg/workus .
     - docker push shawnvosburg/workus:latest
     - cd ..
-
-
-# ==================================
-#  Testing the images here
-# ==================================
-tests-deployus:
-  stage: testing
-  image: 
-    name: docker:20.10
-  services:
-    - docker:20.10-dind
-  script:
-    - apk add --no-cache python3 docker-compose
-    - python3 run_tests.py --test DeployUS --pull
-
-tests-watchus:
-  stage: testing
-  image: 
-    name: docker:20.10
-  services:
-    - docker:20.10-dind
-  script: 
-    - apk add --no-cache python3 docker-compose
-    - python3 run_tests.py --test WatchUS --pull
-
-tests-workus:
-  stage: testing
-  image: 
-    name: docker:20.10
-  services:
-    - docker:20.10-dind
-  script: 
-    - apk add --no-cache python3 docker-compose
-    - python3 run_tests.py --test WorkUS --pull
 
 # ==================================
 #  Performing continuous delivery
