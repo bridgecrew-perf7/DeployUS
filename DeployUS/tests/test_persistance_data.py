@@ -40,8 +40,9 @@ def test_persistance_data(_db):
         "-f",
         "/DeployUS/docker-compose.tests.yml",
         "kill",
-        "app",
         "db",
+        "workus",
+        "app",
     ]
     assert subprocess.call(cmd) == 0
 
@@ -54,7 +55,9 @@ def test_persistance_data(_db):
         "-d",
         "--no-build",
         "db",
+        "workus",
         "app",
+        
     ]
     assert subprocess.call(cmd) == 0
     subprocess.call(["/wait-for-it.sh", "app:5000", "--strict", "--timeout=30"])

@@ -27,11 +27,16 @@ def test_launch_and_stop_job_normal():
 
     Stopping project afterwards as to not affect the other tests.
     """
+    # Inserting the workus worker
+    resp = DEPLOYUS.insert_worker('w1', 'workus')
+    dbworkers = DEPLOYUS.get_workers().json()
+    assert resp.status_code == 200
+    assert len(dbworkers) == 2 # There is localhost
 
     # Inserting the hello-world script
     index_contents = test_insert_script_normal()
     script_id = 1  # Following MySQL AUTO_INCREMENT convention
-    worker_id = 1  # localhost
+    worker_id = 2  # w1
 
     response = DEPLOYUS.launch_job(script_id, worker_id)
     dbjobs = DEPLOYUS.get_jobs().json()
