@@ -66,7 +66,7 @@ for module in args.test:
 # Return the results of the tests
 # Print module name that failed. This will make it more verbose in the CI
 for module in failed_modules:
-    print(f"ERROR: The {module} module's tests has failed.")
+    print(f"ERROR: The {module} module's tests failed.")
 
 # If the exit_code == 256, the uint8 unix register wont capture it.
 sys.exit(1 if exit_code != 0 else 0) 
