@@ -10,7 +10,7 @@ stages:
 lint-sc-deployus:
   stage: linting-stylecheck
   image: 
-    name: cytopia/pylint # Why reinvent the wheel?
+    name: cytopia/pylint:latest-0.2 # Why reinvent the wheel?
     entrypoint: ["/bin/sh", "-c"]
   script:    
     - cd DeployUS
@@ -24,7 +24,7 @@ lint-sc-deployus:
 lint-watchus:
   stage: linting-stylecheck
   image: 
-    name: cytopia/golint # Why reinvent the wheel?
+    name: cytopia/golint:latest-0.1 # Why reinvent the wheel?
     entrypoint: ["/bin/sh", "-c"]
   script:    
     - cd WatchUS
@@ -34,7 +34,7 @@ lint-watchus:
 sc-watchus:
   stage: linting-stylecheck
   image: 
-    name: cytopia/gofmt # Why reinvent the wheel?
+    name: cytopia/gofmt:latest-0.1 # Why reinvent the wheel?
     entrypoint: ["/bin/sh", "-c"]
   script:    
     - /docker-entrypoint.sh --ci WatchUS
@@ -42,7 +42,7 @@ sc-watchus:
 lint-workus:
   stage: linting-stylecheck
   image: 
-    name: cytopia/golint # Why reinvent the wheel?
+    name: cytopia/golint:latest-0.1 # Why reinvent the wheel?
     entrypoint: ["/bin/sh", "-c"]
   script:    
     - cd WorkUS
@@ -52,7 +52,7 @@ lint-workus:
 sc-workus:
   stage: linting-stylecheck
   image: 
-    name: cytopia/gofmt # Why reinvent the wheel?
+    name: cytopia/gofmt:latest-0.1 # Why reinvent the wheel?
     entrypoint: ["/bin/sh", "-c"]
   script:    
     - /docker-entrypoint.sh --ci WorkUS
