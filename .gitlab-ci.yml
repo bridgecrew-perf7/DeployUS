@@ -86,7 +86,7 @@ tests-deployus:
     - docker:20.10-dind
   script:
     - apk add --no-cache python3 docker-compose
-    - python3 run_tests.py --test DeployUS --pull
+    - python3 run_tests.py --test DeployUS
 
 tests-watchus:
   stage: testing
@@ -96,7 +96,7 @@ tests-watchus:
     - docker:20.10-dind
   script: 
     - apk add --no-cache python3 docker-compose
-    - python3 run_tests.py --test WatchUS --pull
+    - python3 run_tests.py --test WatchUS
 
 tests-workus:
   stage: testing
@@ -106,7 +106,7 @@ tests-workus:
     - docker:20.10-dind
   script: 
     - apk add --no-cache python3 docker-compose
-    - python3 run_tests.py --test WorkUS --pull
+    - python3 run_tests.py --test WorkUS
 
 # ========================================================================
 #  Building docker images. Also pushing them to docker hub
