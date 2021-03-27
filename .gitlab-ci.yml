@@ -10,9 +10,10 @@ stages:
 lint-sc-deployus:
   stage: linting-stylecheck
   image: 
-    name: cytopia/pylint:latest-0.2 # Why reinvent the wheel?
+    name: cytopia/pylint:latest-0.3 # Why reinvent the wheel?
     entrypoint: ["/bin/sh", "-c"]
   script:    
+    - apk add py3-pip
     - cd DeployUS
     - pip3 install pycodestyle -r requirements.txt -r tests/requirements.txt
     - pylint app tests run.py
@@ -108,7 +109,7 @@ build-images:
 
 
 # ==================================
-#  Testing the created images here
+#  Testing the images here
 # ==================================
 tests-deployus:
   stage: testing
@@ -118,7 +119,7 @@ tests-deployus:
     - docker:20.10-dind
   script:
     - apk add --no-cache python3 docker-compose
-    - python3 run_tests.py -t DeployUS
+    - python3 run_tests.py --test DeployUS --pull
 
 tests-watchus:
   stage: testing
@@ -128,7 +129,7 @@ tests-watchus:
     - docker:20.10-dind
   script: 
     - apk add --no-cache python3 docker-compose
-    - python3 run_tests.py -t WatchUS
+    - python3 run_tests.py --test WatchUS --pull
 
 tests-workus:
   stage: testing
@@ -138,7 +139,7 @@ tests-workus:
     - docker:20.10-dind
   script: 
     - apk add --no-cache python3 docker-compose
-    - python3 run_tests.py -t WorkUS
+    - python3 run_tests.py --test WorkUS --pull
 
 # ==================================
 #  Performing continuous delivery
