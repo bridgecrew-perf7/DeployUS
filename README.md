@@ -72,15 +72,14 @@ sudo docker run -it -v $(pwd):/TP3 -v "/var/run/docker.sock:/var/run/docker.sock
 
 # Dans le conteneur docker
 apk add --no-cache docker-compose python3
-cd TP3/DeployUS/tests
-python3 run_tests.py
+cd TP3
+python3 run_tests.py -t DeployUS
 ```
 
 Pour executer les tests sans être dans un conteneur docker, vous devez installer python3. il se peut que vous devez 
 ajouter les privileges d'administrateurs.
 ```
-cd DeployUS/tests
-sudo python3 run_tests.py
+sudo python3 run_tests.py -t DeployUS
 ```
 
 ## Remerciement
@@ -137,15 +136,14 @@ sudo docker run -it -v $(pwd):/TP3 -v "/var/run/docker.sock:/var/run/docker.sock
 
 # Dans le conteneur docker
 apk add --no-cache docker-compose python3
-cd TP3/WatchUS/tests
-python3 run_tests.py
+cd TP3
+python3 run_tests.py -t WatchUS
 ```
 
 Pour executer les tests sans être dans un conteneur docker, vous devez installer python3. il se peut que vous devez 
 ajouter les privileges d'administrateurs.
 ```
-cd DeployUS/tests
-sudo python3 run_tests.py
+sudo python3 run_tests.py -t WatchUS
 ```
 
 ## Remerciement

@@ -13,7 +13,7 @@ services:
   app:
     build: ./
     image: shawnvosburg/deployus:latest
-    links:
+    depends_on: 
       - db
     ports:
       - "5000:5000"
@@ -26,7 +26,7 @@ services:
       context: .
       dockerfile: Dockerfile.tests
     image: deployustests
-    links:
+    depends_on:
       - db
       - app
     ports:
