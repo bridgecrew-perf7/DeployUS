@@ -104,7 +104,7 @@ func dockerComposeDown(writer http.ResponseWriter, reqest *http.Request) {
 	defer reqest.Body.Close()
 
 	// Obtain the path to the script
-	scriptPath := fmt.Sprintf("/work/%s/docker-compose.yml", toWatch.Name)
+	scriptPath := fmt.Sprintf("/work/scripts/%s/docker-compose.yml", toWatch.Name)
 
 	// Assumes the docker-compose.yml is in its /work directory
 	// Run in detach mode.
@@ -114,7 +114,8 @@ func dockerComposeDown(writer http.ResponseWriter, reqest *http.Request) {
 	// Catch all errors.
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
-		writer.Write([]byte("Could not call docker-compose down!"))
+		errMsg := fmt.Sprintf("Could not call docker-compose down on %s!", scriptPath)
+		writer.Write([]byte(errMsg))
 		return
 	}
 }
