@@ -39,7 +39,7 @@ cmd = docker_compose_cmd + " run --rm tests "
 exit_code = os.system(cmd)
 
 # Clean up. simple docker-compose down
-cmd = docker_compose_cmd + " down "
+cmd = docker_compose_cmd + " down -v "
 os.system(cmd)
 
 # Return the results of the tests

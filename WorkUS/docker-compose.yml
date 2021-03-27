@@ -1,0 +1,10 @@
+version: "3"
+services:
+  app:
+    build: ./
+    image: shawnvosburg/workus:latest
+    ports:
+      - "5002:5002"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "/work:/work"

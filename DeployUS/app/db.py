@@ -236,7 +236,7 @@ def launch_job(**kwargs):
     results = list(cursor)
     if len(results) == 0:
         return False
-    (script_id, name, _, contents) = results[0]
+    (script_id, script_name, _, contents) = results[0]
 
     # Verifying that worker exists
     cursor.execute(f"SELECT * FROM workers WHERE id = '{worker_id}'")
@@ -246,7 +246,7 @@ def launch_job(**kwargs):
     (worker_id, _, _) = results[0]
 
     # Write file to disk
-    parentdir = f"/work/scripts/{name}"
+    parentdir = f"/work/scripts/{script_name}"
     dockercompose_path = os.path.join(parentdir, "docker-compose.yml")
     if not os.path.exists(parentdir):
         os.makedirs(parentdir)
