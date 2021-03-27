@@ -39,7 +39,7 @@ services:
       INDEX_TEXT: {content1}
     networks:
         - net
-    
+
 networks:
   net:
     external: true
@@ -91,7 +91,7 @@ services:
       INDEX_TEXT: {content1}
     networks:
         - net
-    
+
 networks:
   net:
     external: true
@@ -107,7 +107,7 @@ services:
       INDEX_TEXT: {content2}
     networks:
         - net
-    
+
 networks:
   net:
     external: true
