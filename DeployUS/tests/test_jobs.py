@@ -51,7 +51,7 @@ def test_launch_and_stop_job_normal():
     assert dbjobs[0][2] == worker_id  # worker id
 
     # Testing if the hello-world application is functioning
-    sleep(1) # Give time to dummy application to launch
+    sleep(1)  # Give time to dummy application to launch
     resp = urllib.request.urlopen("http://dummy")
     content = resp.read().decode("utf-8")
     assert resp.status == 200
@@ -119,7 +119,7 @@ def test_launch_and_stop_job_normal_multiple():
     assert dbjobs[1][2] == 2  # worker id
 
     # Testing if myscript1 is functioning
-    sleep(1) # Give time to dummy application to launch
+    sleep(1)  # Give time to dummy application to launch
     resp = urllib.request.urlopen("http://dummy1")
     content = resp.read().decode("utf-8")
     assert resp.status == 200
@@ -128,7 +128,7 @@ def test_launch_and_stop_job_normal_multiple():
     )  # Must strip because an extra \n is added.
 
     # Testing if myscript2 is functioning
-    sleep(1) # Give time to dummy application to launch
+    sleep(1)  # Give time to dummy application to launch
     resp = urllib.request.urlopen("http://dummy2")
     content = resp.read().decode("utf-8")
     assert resp.status == 200
