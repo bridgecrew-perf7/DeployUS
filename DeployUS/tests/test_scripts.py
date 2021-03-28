@@ -24,17 +24,29 @@ def test_insert_script_normal():
     and uploading it to DeployUS.
 
     Testing the state of the mysql database.
+
+    Returns the contents of the index.html file.
+    This is because other tests might test the connections.
     """
     name = "myscript"
     filename = "docker-compose.yml"
-    filecontents = b"""
-        version: "3.3"
-        services:
-          app:
-            image: shawnvosburg/helloworld:latest
-            ports:
-              - "8000:80"
-    """
+    content1 = "thecontents"
+    filecontents = f"""version: "3"
+services:
+  dummy:
+    image: shawnvosburg/helloworld:latest
+    environment:
+      INDEX_TEXT: {content1}
+    networks:
+        - net
+
+networks:
+  net:
+    external: true
+    name: my_net
+    """.encode(
+        "utf-8"
+    )
 
     # Testing hash of filecontents. This step ensures that the file transmitted wasn't corrupted.
     hash1 = hashlib.sha256(filecontents).hexdigest()
@@ -50,6 +62,8 @@ def test_insert_script_normal():
     assert dbscripts[0][1] == name  # name
     assert dbscripts[0][3] == hash1  # filehash
 
+    return content1
+
 
 @pytest.mark.usefixtures("_db")
 def test_insert_script_normal_multiple():
@@ -60,26 +74,47 @@ def test_insert_script_normal_multiple():
     The file name is the standard docker-compose.yml.
 
     Uploads the scripts to DeployUS and queries database for sucessful upload.
+
+    Returns the contents of the index.html files.
+    This is because other tests might test the connections.
     """
     name1 = "myscript1"
     name2 = "myscript2"
     filename = "docker-compose.yml"
-    filecontents1 = b"""
-        version: "3.3"
-        services:
-          app:
-            image: shawnvosburg/helloworld:latest
-            ports:
-              - "8000:80"
-    """
-    filecontents2 = b"""
-        version: "3.3"
-        services:
-          app:
-            image: shawnvosburg/helloworld:latest
-            ports:
-              - "8001:80"
-    """
+    content1 = "thecontents1"
+    content2 = "thecontents2"
+    filecontents1 = f"""version: "3"
+services:
+  dummy1:
+    image: shawnvosburg/helloworld:latest
+    environment:
+      INDEX_TEXT: {content1}
+    networks:
+        - net
+
+networks:
+  net:
+    external: true
+    name: my_net
+    """.encode(
+        "ascii"
+    )
+    filecontents2 = f"""version: "3"
+services:
+  dummy2:
+    image: shawnvosburg/helloworld:latest
+    environment:
+      INDEX_TEXT: {content2}
+    networks:
+        - net
+
+networks:
+  net:
+    external: true
+    name: my_net
+    """.encode(
+        "ascii"
+    )
 
     # Calcualte hash to compare with database to ensure
     # that the file has not been corrupted during upload.
@@ -100,6 +135,8 @@ def test_insert_script_normal_multiple():
     assert dbscripts[1][0] == 2  # id myscript2
     assert dbscripts[1][1] == name2  # myscript2
     assert dbscripts[1][3] == hash2  # filehash of myscript2's script
+
+    return content1, content2
 
 
 @pytest.mark.usefixtures("_db")

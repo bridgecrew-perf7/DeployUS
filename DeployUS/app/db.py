@@ -3,14 +3,17 @@ DeployUS/app/db.py
 
 Modules that wraps the MySQL database specific to the DeployUS application.
 """
-import os
 import pathlib
 import json
+import urllib
 import mysql.connector
 from app import utils
 
 # This ensures that the path is not hard-coded to where the script is executed.
 DB_CONFIG_FILE = pathlib.Path(__file__).parent.parent.joinpath("dbconfig.json")
+
+# WorkUS related
+WORKUS_PORT = 5002
 
 
 def mysql_safe(func):
@@ -243,30 +246,39 @@ def launch_job(**kwargs):
     results = list(cursor)
     if len(results) == 0:
         return False
-    (worker_id, _, _) = results[0]
+    (worker_id, _, location) = results[0]
 
-    # Write file to disk
-    parentdir = f"/work/scripts/{script_name}"
-    dockercompose_path = os.path.join(parentdir, "docker-compose.yml")
-    if not os.path.exists(parentdir):
-        os.makedirs(parentdir)
-
-    with open(dockercompose_path, "wb") as file:
-        file.write(contents)
-
-    # docker-compose execution. Return False if failure to bring docker-compose up.
-    cmd = f"cd {parentdir};  docker-compose pull --ignore-pull-failures "
-    if os.system(cmd):
+    # Verifying that worker is free
+    cursor.execute(f"SELECT * FROM jobs WHERE worker_id = '{worker_id}'")
+    results = list(cursor)
+    if len(results) != 0:
         return False
-    cmd = f"cd {parentdir};  docker-compose up -d"
-    if os.system(cmd):
+
+    # Send a POST requests to the WorkUS with
+    # JSON object containing name and docker-compose.yml
+    # Creating json object
+    dc_dict = {"file": contents.decode("utf-8"), "name": script_name}
+    workus_url = f"http://{location}:{WORKUS_PORT}/up"
+    try:
+        urllib.request.urlopen(workus_url, data=json.dumps(dc_dict).encode("utf-8"))
+
+    # Upon failure, do not enter the job in the database
+    except urllib.error.HTTPError as e_info:
+        print(e_info)
         return False
 
     # Insert job's location into jobs table in db
     sql = "INSERT INTO jobs (script_id, worker_id, launch_date) VALUES (%s, %s, %s);"
     val = (script_id, worker_id, utils.get_datetime_now())
-    cursor.execute(sql, val)
-    connection.commit()
+    try:
+        cursor.execute(sql, val)
+        connection.commit()
+
+    # Catch integrity errors (i.e. two scripts on the same worker)
+    except mysql.connector.errors.IntegrityError as e_info:
+        print(e_info)
+        return False
+
     return True
 
 
@@ -294,15 +306,23 @@ def stop_job(**kwargs):
     cursor.execute(sql)
     results = list(cursor)
 
-    # Script does not exists
+    # Throw error if job does not exists
     if len(results) == 0:
         return False
-    (_, script_name, _) = results[0]
+    (_, script_name, location) = results[0]
 
-    # docker compose execution
-    parentdir = f"/work/scripts/{script_name}"
-    cmd = f"cd {parentdir};  docker-compose down"
-    os.system(cmd)
+    # Send a POST requests to the WorkUS with
+    # Creating json object
+    dc_dict = {"name": script_name}
+    dc_json = json.dumps(dc_dict)
+    workus_url = f"http://{location}:{WORKUS_PORT}/down"
+    try:
+        urllib.request.urlopen(workus_url, data=dc_json.encode("utf-8"))
+
+    # Upon failure, do not enter the job in the database
+    except urllib.error.HTTPError as e_info:
+        print(e_info)
+        return False
 
     # Insert job's location into jobs table in db
     sql = f"DELETE FROM jobs WHERE id = {job_id}"

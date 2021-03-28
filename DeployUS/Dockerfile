@@ -28,7 +28,7 @@ COPY requirements.txt /work
 WORKDIR /work
 RUN pip install -r requirements.txt
 
-# Part 0: Copy docker-compose from curl stage
+# Load docker-compose to verify that scripts are valid
 COPY --from=curly /home/curl_user/docker-compose /usr/local/bin/docker-compose
 COPY --from=curly /home/curl_user/wait-for-it.sh /wait-for-it.sh
 

@@ -7,47 +7,37 @@ import (
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"os/exec"
 	"strings"
 	"testing"
 )
 
-func getDummyDockerCompose() string {
+func getDummyDockerCompose(indexFileContents string) string {
 	// Create a dummy docker-compose.yml file
-	return `version: "3"
+	// Returns the file contents and a project name
+	dcContents := fmt.Sprintf(`version: "3"
 services:
   dummy:
-    image: dummyexample:latest
+    image: shawnvosburg/helloworld:latest
+    environment:
+      INDEX_TEXT: %s
     networks:
-        - net
+      - net
     
 networks:
   net:
     external: true
-    name: my_net
-`
+    name: my_net`, indexFileContents)
+
+	return dcContents
 }
 
-func buildDummyExample(text string) {
-	// Our test image will be a simple httpd webserver
-	dockerFileFormat := `FROM httpd:latest
-RUN echo -n "%s" > /usr/local/apache2/htdocs/index.html
-WORKDIR /usr/local/bin/
-CMD ["httpd-foreground"]
-`
-
-	// Writing the docker file to file
-	file, _ := os.Create("/work/Dockerfile.dummy")
-	file.WriteString(fmt.Sprintf(dockerFileFormat, text))
-
-	// Building the docker image
-	cmdArgs := []string{"build", "-t", "dummyexample", "-f", "/work/Dockerfile.dummy", "/work"}
-	exec.Command("docker", cmdArgs...).Output()
-
+func getDummyProjectName() string {
+	// Return a dummy project name
+	return "dummyexample"
 }
 
-func startDockerDummyCompose(t *testing.T, assert *assert.Assertions) int {
+func startDockerDummyCompose(t *testing.T, assert *assert.Assertions, indexFileContents string) int {
 	// To start, save the number of running containers.
 	// Later, we will be starting a new container and verifying that
 	// the docker-compose cammand has worked.
@@ -56,9 +46,12 @@ func startDockerDummyCompose(t *testing.T, assert *assert.Assertions) int {
 	assert.Nil(err)
 	baseNumContainers := strings.Count(string(out[:]), "\n")
 
-	// We send a request to WatchUs to start the container
+	// We send a request to WatchUS to start the container
+	fileContents := getDummyDockerCompose(indexFileContents)
+	projectname := getDummyProjectName()
 	reqBody, err := json.Marshal(map[string]string{
-		"file": getDummyDockerCompose(),
+		"file": fileContents,
+		"name": projectname,
 	})
 	resp, _ := http.Post("http://app:5001/up",
 		"application/json", bytes.NewBuffer(reqBody))
@@ -83,8 +76,15 @@ func startDockerDummyCompose(t *testing.T, assert *assert.Assertions) int {
 func stopDummyDockerCompose(t *testing.T, assert *assert.Assertions, baseNumContainers int) {
 
 	// Kill the app created as to not affect the other tests
-	resp, _ := http.Get("http://app:5001/down")
+	projectname := getDummyProjectName()
+	reqBody, err := json.Marshal(map[string]string{
+		"name": projectname,
+	})
+	resp, _ := http.Post("http://app:5001/down",
+		"application/json", bytes.NewBuffer(reqBody))
 	if resp.StatusCode != 200 {
+		body, _ := ioutil.ReadAll(resp.Body)
+		fmt.Println(string(body[:]))
 		t.Errorf("Unexpected status code, expected %d, got %d instead", 200, resp.StatusCode)
 	}
 
@@ -105,8 +105,7 @@ func Test_docker_compose_up_then_down(t *testing.T) {
 
 	// Start a dummy application
 	indexFileContents := "thecontents"
-	buildDummyExample(indexFileContents)
-	baseNumContainers := startDockerDummyCompose(t, assert)
+	baseNumContainers := startDockerDummyCompose(t, assert, indexFileContents)
 
 	// Send request to the dummyexample page
 	resp, _ := http.Get("http://dummy/")
@@ -114,9 +113,10 @@ func Test_docker_compose_up_then_down(t *testing.T) {
 
 	// Read the html portion, which contains the index file contents
 	html, _ := ioutil.ReadAll(resp.Body)
+	htmlstr := strings.TrimSpace(string(html[:])) //Removing extra \n that appears because of echo command
 
 	// show the HTML code as a string %s
-	assert.Equal(indexFileContents, string(html[:]))
+	assert.Equal(indexFileContents, htmlstr)
 
 	// Close the dummy application. Must do this for other tests
 	stopDummyDockerCompose(t, assert, baseNumContainers)
@@ -127,26 +127,26 @@ func Test_docker_compose_up_reload_image(t *testing.T) {
 
 	// Start a dummy application
 	indexFileContents := "thecontents"
-	buildDummyExample(indexFileContents)
-	baseNumContainers := startDockerDummyCompose(t, assert)
+	baseNumContainers := startDockerDummyCompose(t, assert, indexFileContents)
 
 	// Read the html portion, which contains the index file contents
 	// The html contents needs to be what we sent!
 	resp, _ := http.Get("http://dummy/")
 	defer resp.Body.Close()
 	html, _ := ioutil.ReadAll(resp.Body)
-	assert.Equal(indexFileContents, string(html[:]))
+	htmlstr := strings.TrimSpace(string(html[:])) //Removing extra \n that appears because of echo command
+	assert.Equal(indexFileContents, htmlstr)
 
 	// Change the file contents and do a docker-compose up again!
 	// Note that the running container wasn't stopped prior to this.
 	indexFileContents = "The contents changed!"
-	buildDummyExample(indexFileContents)
-	startDockerDummyCompose(t, assert)
+	startDockerDummyCompose(t, assert, indexFileContents)
 
 	resp, _ = http.Get("http://dummy/")
 	defer resp.Body.Close()
 	html, _ = ioutil.ReadAll(resp.Body)
-	assert.Equal(indexFileContents, string(html[:]))
+	htmlstr = strings.TrimSpace(string(html[:])) //Removing extra \n that appears because of echo command
+	assert.Equal(indexFileContents, htmlstr)
 
 	// Close the dummy application. Must do this for other tests
 	stopDummyDockerCompose(t, assert, baseNumContainers)

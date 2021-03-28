@@ -69,12 +69,6 @@ class DataBase:
         assert len(self.query("SELECT * FROM scripts;")) == 0
         assert len(self.query("SELECT * FROM workers;")) == 0
 
-        # Part 0 specifics
-        self.query(
-            "INSERT INTO workers (name, location) VALUES ('localhost','127.0.0.1');"
-        )
-        assert len(self.query("SELECT * FROM workers;")) == 1
-
         # Close connection
         self.connection.close()
         self.cursor.close()

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -28,11 +29,24 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 	body, _ := ioutil.ReadAll(reqest.Body)
 	errJSON := json.Unmarshal([]byte(body), &toWatch)
 	if errJSON != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
+		writer.WriteHeader(http.StatusUnprocessableEntity)
 		writer.Write([]byte("Couldn't understand the JSON body."))
 		return
 	}
 	defer reqest.Body.Close()
+
+	// Make sure all parent directories exists
+	parentDir := "/work"
+	_, err := os.Stat(parentDir)
+	if os.IsNotExist(err) {
+		mdkirErr := os.MkdirAll(parentDir, 0700) //All permission to user
+		if mdkirErr != nil {
+			writer.WriteHeader(http.StatusInternalServerError)
+			errString := fmt.Sprintf("Could not create the %s directory. %s", parentDir, mdkirErr)
+			writer.Write([]byte(errString))
+			return
+		}
+	}
 
 	// Write the file to disk at /work/docker-compose.yml
 	file, err := os.Create("/work/docker-compose.yml")
@@ -43,18 +57,13 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 		return
 	}
 
-	// With the docker-compose.yml file in the /work directory, we can now launch it!
 	// Pull necessary images
 	cmdArgs := []string{"-f", "/work/docker-compose.yml", "pull", "--ignore-pull-failures"}
 	_, err = exec.Command("docker-compose", cmdArgs...).Output()
 	if err != nil {
-		// Leaving this here as the --ignore-pull-failures still throws an error if the user is not logged in!
-		// In this project, WatchUS does not require logging in as all images are public and pulled from docker hub.
-		// If a required images is not pulled properly, it will be catched later with docker-compose up.
-		//writer.WriteHeader(http.StatusInternalServerError)
-
+		writer.WriteHeader(http.StatusInternalServerError)
 		writer.Write([]byte("Could not pull the docker images."))
-
+		return
 	}
 
 	// Run in detach mode.
@@ -78,7 +87,7 @@ func dockerComposeDown(writer http.ResponseWriter, reqest *http.Request) {
 
 	// Catch all errors.
 	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
+		writer.WriteHeader(http.StatusUnprocessableEntity)
 		writer.Write([]byte("Could not call docker-compose down!"))
 		return
 	}

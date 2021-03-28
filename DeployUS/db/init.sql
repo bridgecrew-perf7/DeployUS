@@ -24,10 +24,6 @@ CREATE TABLE jobs (
   launch_date DATETIME NOT NULL,
   FOREIGN KEY (script_id) REFERENCES scripts(id),
   FOREIGN KEY (worker_id) REFERENCES workers(id),
-  UNIQUE (script_id, worker_id)
+  UNIQUE (script_id, worker_id),
+  UNIQUE (worker_id)
 );
-
-
--- Adding localhost for Part0
-INSERT INTO workers (name, location) VALUES
-('localhost','127.0.0.1');
