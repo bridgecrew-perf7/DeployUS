@@ -63,7 +63,7 @@ func dockerComposeUp(writer http.ResponseWriter, reqest *http.Request) {
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		writer.Write([]byte("Could not pull the docker images."))
-		return 
+		return
 	}
 
 	// Run in detach mode.
