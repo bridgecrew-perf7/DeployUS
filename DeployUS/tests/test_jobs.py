@@ -180,6 +180,124 @@ def test_launch_job_bad_script_id():
 
 
 @pytest.mark.usefixtures("_db")
+def test_cant_delete_a_running_script():
+    """
+    Launching a job with a basic helloworld project.
+    The job launched opens on port 8000. We will send a GET request and check the html contents.
+
+    Trying to delete the script from database while it is deployed should fail.
+
+    Stopping project afterwards as to not affect the other tests.
+    """
+    # Inserting the workus worke
+    resp = DEPLOYUS.insert_worker("w1", "workus1")
+    dbworkers = DEPLOYUS.get_workers().json()
+    assert resp.status_code == 200
+    assert len(dbworkers) == 1
+
+    # Inserting the hello-world script
+    index_contents = test_insert_script_normal()
+    script_id = 1  # Following MySQL AUTO_INCREMENT convention
+    worker_id = 1  # w1
+
+    response = DEPLOYUS.launch_job(script_id, worker_id)
+    dbjobs = DEPLOYUS.get_jobs().json()
+
+    # Testing reponse.
+    assert response.status_code == 200
+    assert len(dbjobs) == 1
+
+    # Testing entry in database
+    assert dbjobs[0][0] == 1  # job id
+    assert dbjobs[0][1] == script_id  # script id
+    assert dbjobs[0][2] == worker_id  # worker id
+
+    # Testing if the hello-world application is functioning
+    sleep(1)  # Give time to dummy application to launch
+    resp = urllib.request.urlopen("http://dummy")
+    content = resp.read().decode("utf-8")
+    assert resp.status == 200
+    assert index_contents == content.strip()  # Must strip because an extra \n is added.
+
+    # Deleting script should fail
+    response = DEPLOYUS.delete_script(script_id)
+    dbscripts = DEPLOYUS.get_scripts().json()
+    assert response.status_code == 422
+    assert len(dbscripts) == 1
+
+    # Stopping the job
+    response = DEPLOYUS.stop_job(job_id=1)
+    dbjobs = DEPLOYUS.get_jobs().json()
+
+    # Testing reponse.
+    assert response.status_code == 200
+    assert len(dbjobs) == 0
+
+    # Must throw an error, as the job is offline
+    with pytest.raises(urllib.request.URLError):
+        urllib.request.urlopen("http://dummy")
+
+
+@pytest.mark.usefixtures("_db")
+def test_cant_delete_a_worker_with_a_running_script():
+    """
+    Launching a job with a basic helloworld project.
+    The job launched opens on port 8000. We will send a GET request and check the html contents.
+
+    Trying to delete the script from database while it is deployed should fail.
+
+    Stopping project afterwards as to not affect the other tests.
+    """
+    # Inserting the workus worker
+    resp = DEPLOYUS.insert_worker("w1", "workus1")
+    dbworkers = DEPLOYUS.get_workers().json()
+    assert resp.status_code == 200
+    assert len(dbworkers) == 1
+
+    # Inserting the hello-world script
+    index_contents = test_insert_script_normal()
+    script_id = 1  # Following MySQL AUTO_INCREMENT convention
+    worker_id = 1  # w1
+
+    response = DEPLOYUS.launch_job(script_id, worker_id)
+    dbjobs = DEPLOYUS.get_jobs().json()
+
+    # Testing reponse.
+    assert response.status_code == 200
+    assert len(dbjobs) == 1
+
+    # Testing entry in database
+    assert dbjobs[0][0] == 1  # job id
+    assert dbjobs[0][1] == script_id  # script id
+    assert dbjobs[0][2] == worker_id  # worker id
+
+    # Testing if the hello-world application is functioning
+    sleep(1)  # Give time to dummy application to launch
+    resp = urllib.request.urlopen("http://dummy")
+    content = resp.read().decode("utf-8")
+    assert resp.status == 200
+    assert index_contents == content.strip()  # Must strip because an extra \n is added.
+
+    # Deleting worker should fail
+    response = DEPLOYUS.delete_worker(worker_id)
+    dbworkers = DEPLOYUS.get_workers().json()
+    assert response.status_code == 422
+    assert len(dbworkers) == 1
+
+    # Stopping the job
+    response = DEPLOYUS.stop_job(job_id=1)
+    dbjobs = DEPLOYUS.get_jobs().json()
+
+    # Testing reponse.
+    assert response.status_code == 200
+    assert len(dbjobs) == 0
+
+    # Must throw an error, as the job is offline
+    with pytest.raises(urllib.request.URLError):
+        urllib.request.urlopen("http://dummy")
+
+
+@pytest.mark.usefixtures("_db")
 def test_launch_job_bad_worker_id():
     """
     A docker-compose file should not launch if the worker does not

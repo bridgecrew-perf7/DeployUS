@@ -105,9 +105,13 @@ def delete_script():
     """
     # Deleting script
     id_ = request.get_json()["id"]
-    db.delete_script(id=id_)
 
-    return make_response("", 200)
+    # Script was deleted
+    if db.delete_script(id=id_):
+        return make_response("", 200)
+
+    # Script was not deleted
+    return make_response("", 422)
 
 
 @flaskapp.route("/launch", methods=["GET"])
@@ -197,6 +201,10 @@ def delete_worker():
     Returns 200 status_code
     """
     id_ = request.get_json()["id"]
-    db.delete_worker(id=id_)
 
-    return make_response("", 200)
+    # Worker was deleted
+    if db.delete_worker(id=id_):
+        return make_response("", 200)
+
+    # Worker was not deleted
+    return make_response("", 422)

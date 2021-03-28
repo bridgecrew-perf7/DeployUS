@@ -190,14 +190,18 @@ def delete_worker(**kwargs):
         kwgars:
             id: Unique identifyer under the 'id' column in the MySQL workers table.
     Returns:
-        Nothing.
+        True if sucessful, False otherwise.
     """
     cursor = kwargs["cursor"]
     connection = kwargs["connection"]
     id_ = kwargs["id"]
     sql = f"DELETE FROM workers WHERE id = {id_};"
-    cursor.execute(sql)
-    connection.commit()
+    try:
+        cursor.execute(sql)
+        connection.commit()
+        return True
+    except mysql.connector.errors.IntegrityError:
+        return False
 
 
 @mysql_safe
@@ -208,14 +212,18 @@ def delete_script(**kwargs):
         kwgars:
             id: Unique identifyer under the 'id' column in the MySQL scripts table.
     Returns:
-        Nothing.
+        True if sucessful, False otherwise.
     """
     cursor = kwargs["cursor"]
     connection = kwargs["connection"]
     id_ = kwargs["id"]
     sql = f"DELETE FROM scripts WHERE id = {id_};"
-    cursor.execute(sql)
-    connection.commit()
+    try:
+        cursor.execute(sql)
+        connection.commit()
+        return True
+    except mysql.connector.errors.IntegrityError:
+        return False
 
 
 @mysql_safe
