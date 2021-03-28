@@ -178,6 +178,7 @@ def test_launch_job_bad_script_id():
     assert response.status_code == 422
     assert len(dbjobs) == 0
 
+
 @pytest.mark.usefixtures("_db")
 def test_cant_delete_a_running_script():
     """
@@ -236,6 +237,7 @@ def test_cant_delete_a_running_script():
     with pytest.raises(urllib.request.URLError):
         urllib.request.urlopen("http://dummy")
 
+
 @pytest.mark.usefixtures("_db")
 def test_cant_delete_a_worker_with_a_running_script():
     """
@@ -293,8 +295,6 @@ def test_cant_delete_a_worker_with_a_running_script():
     # Must throw an error, as the job is offline
     with pytest.raises(urllib.request.URLError):
         urllib.request.urlopen("http://dummy")
-
-
 
 
 @pytest.mark.usefixtures("_db")
