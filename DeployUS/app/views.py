@@ -109,7 +109,7 @@ def delete_script():
     # Script was deleted
     if db.delete_script(id=id_):
         return make_response("", 200)
-    
+
     # Script was not deleted
     return make_response("", 422)
 
@@ -205,6 +205,6 @@ def delete_worker():
     # Worker was deleted
     if db.delete_worker(id=id_):
         return make_response("", 200)
-    
+
     # Worker was not deleted
     return make_response("", 422)
