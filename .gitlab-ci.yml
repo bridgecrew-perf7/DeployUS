@@ -152,3 +152,5 @@ continuous-delivery:
     name: python:3.8-alpine
   script:
     - python3 continuous-delivery/cd.py
+  only:
+    - TP3
