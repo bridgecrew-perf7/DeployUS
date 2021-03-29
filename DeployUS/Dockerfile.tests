@@ -21,4 +21,5 @@ COPY --from=curly /home/curl_user/wait-for-it.sh /wait-for-it.sh
 WORKDIR /work
 RUN pip3 install -r requirements.txt 
 
+EXPOSE 5002
 CMD ["pytest",'-s','-v']

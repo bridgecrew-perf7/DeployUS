@@ -116,6 +116,8 @@ build-images:
   image: docker:latest
   services:
     - docker:dind
+  only:
+    - TP3
   script:
     - docker login -u shawnvosburg -p $DOCKER_HUB_VOSS2502
 
@@ -152,3 +154,5 @@ continuous-delivery:
     name: python:3.8-alpine
   script:
     - python3 continuous-delivery/cd.py
+  only:
+    - TP3

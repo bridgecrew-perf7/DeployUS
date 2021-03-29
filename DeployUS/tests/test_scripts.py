@@ -30,13 +30,13 @@ def test_insert_script_normal():
     """
     name = "myscript"
     filename = "docker-compose.yml"
-    content1 = "thecontents"
+    content = "thecontents"
     filecontents = f"""version: "3"
 services:
   dummy:
     image: shawnvosburg/helloworld:latest
     environment:
-      INDEX_TEXT: {content1}
+      INDEX_TEXT: {content}
     networks:
         - net
 
@@ -62,7 +62,7 @@ networks:
     assert dbscripts[0][1] == name  # name
     assert dbscripts[0][3] == hash1  # filehash
 
-    return content1
+    return (name, filecontents)
 
 
 @pytest.mark.usefixtures("_db")
@@ -97,7 +97,7 @@ networks:
     external: true
     name: my_net
     """.encode(
-        "ascii"
+        "utf-8"
     )
     filecontents2 = f"""version: "3"
 services:
@@ -113,7 +113,7 @@ networks:
     external: true
     name: my_net
     """.encode(
-        "ascii"
+        "utf-8"
     )
 
     # Calcualte hash to compare with database to ensure
@@ -136,7 +136,7 @@ networks:
     assert dbscripts[1][1] == name2  # myscript2
     assert dbscripts[1][3] == hash2  # filehash of myscript2's script
 
-    return content1, content2
+    return (name1, filecontents1), (name2, filecontents2)
 
 
 @pytest.mark.usefixtures("_db")

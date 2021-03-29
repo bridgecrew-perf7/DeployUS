@@ -39,11 +39,12 @@ Tous les ports sont ouverts pour permettre une présentation plus verbose aux co
 
 ### Bibliothèques externes
 * Le micro-service DeployUS est ecrit avec le langage de programmation Python3.
-* Pour le serveur web, la bilbiotèque Flask disponible sur PyPI est utilisée. Flask contient Jinja2, qui permet de facilement recycler du code HTML sur plusieurs pages.
-* Pour connecter avec la base de données MySQL, j'utilise la librairie mysql-connector de PyPI.
-* Pour executer les tests, j'utilise pytest de PyPi.
-* Pour faire de requêtes REST dans mes tests, j'utilise la librairie requests de PyPI.
-* L'analyse de code statique est fait à l'aide des modules pylint (https://github.com/cytopia/docker-pylint) et pycodestyle (https://github.com/cytopia/docker-pycodestyle) de PyPI.
+* Pour le serveur web, la bilbiotèque Flask (https://pypi.org/project/Flask/) est utilisée. Flask contient Jinja2, qui permet de facilement recycler du code HTML sur plusieurs pages. Licence BSD (BSD-3-Clause).
+* Pour connecter avec la base de données MySQL, j'utilise la librairie mysql-connector (https://pypi.org/project/mysql-connector/). Licence MIT.
+* Pour executer les tests, j'utilise pytest (https://pypi.org/project/pytest/). Licence MIT.
+* Pour faire un mock des WorkUS, j'utilise pytest_httpserver (https://pypi.org/project/pytest-httpserver/). Licence MIT.
+* Pour faire de requêtes REST dans mes tests, j'utilise la librairie requests (https://pypi.org/project/requests/). Licence Apache Software License (Apache 2.0). 
+* L'analyse de code statique est fait à l'aide des modules pylint (https://github.com/cytopia/docker-pylint) et pycodestyle (https://github.com/cytopia/docker-pycodestyle). Licence MIT.
 
 ### Fonctionnement
 DeployUS utilise des requêtes REST pour recevoir des scripts valides de docker-compose.yml sur le port 5000.  
@@ -180,8 +181,8 @@ et qui contiennent le nécessaire.
 
 ### Bibliothèques externes
 * Le micro-service WatchUS est écrit avec le langage de programmation Go. 
-* Pour mes tests, je fait des assertions avec le module assert de testify (https://github.com/stretchr/testify/tree/master/assert)
-* L'analyse de code statique est fait avec golint (https://github.com/cytopia/docker-golint) et gofmt (https://github.com/cytopia/docker-gofmt)
+* Pour mes tests, je fait des assertions avec le module assert de testify (https://github.com/stretchr/testify/tree/master/assert). Licence MIT.
+* L'analyse de code statique est fait avec golint (https://github.com/cytopia/docker-golint) et gofmt (https://github.com/cytopia/docker-gofmt). Licence MIT.
 
 ### Fonctionnement
 WatchUS rend publique les endpoints */up* et */down* sur le port 5001. Il à la capacité de recevoir un script docker-compose.yml et le sauvegarde à **/work/docker-compose.yml**.
@@ -250,8 +251,8 @@ et qui contiennent le nécessaire.
 
 ### Bibliothèques externes
 * Le micro-service WorkUS est écrit avec le langage de programmation Go. 
-* Pour mes tests, je fait des assertions avec le module assert de testify (https://github.com/stretchr/testify/tree/master/assert)
-* L'analyse de code statique est fait avec golint (https://github.com/cytopia/docker-golint) et gofmt (https://github.com/cytopia/docker-gofmt)
+* Pour mes tests, je fait des assertions avec le module assert de testify (https://github.com/stretchr/testify/tree/master/assert). Licence MIT.
+* L'analyse de code statique est fait avec golint (https://github.com/cytopia/docker-golint) et gofmt (https://github.com/cytopia/docker-gofmt). Licence MIT.
 
 ### Fonctionnement
 WorkUS rend publique les endpoints */up* et */down* sur le port 5002. Il à la capacité de recevoir un script docker-compose.yml et le sauvegarde à **/work/scripts/<script_name>/docker-compose.yml**.

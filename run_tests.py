@@ -53,7 +53,7 @@ for module in args.test:
         os.system(cmd)
 
     # Run the tests and keep the exit_code (useful for gitlab ci)
-    cmd = docker_compose_cmd + " run --rm tests "
+    cmd = docker_compose_cmd + " run --rm --use-aliases tests "
     exit_code_cmd = os.system(cmd)
     exit_code |= exit_code_cmd
     if exit_code_cmd != 0:

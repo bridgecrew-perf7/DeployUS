@@ -11,36 +11,12 @@ services:
       - mysql-volume:/var/lib/mysql
     networks: 
       - default
-  
-  workus1:
-    build:
-      context: ../WorkUS
-      dockerfile: Dockerfile
-    image: shawnvosburg/workus:latest
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
-    networks: 
-      - default
-      - workus1-deployus
-
-  workus2:
-    build:
-      context: ../WorkUS
-      dockerfile: Dockerfile
-    image: shawnvosburg/workus:latest
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
-    networks: 
-      - default
-      - workus2-deployus
 
   app:
     build: ./
     image: shawnvosburg/deployus:latest
     depends_on: 
       - db
-      - workus1
-      - workus2
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     command: ["/wait-for-it.sh", "db:3306", "--timeout=30","--", "python", "run.py"]
@@ -54,18 +30,21 @@ services:
       context: .
       dockerfile: Dockerfile.tests
     image: deployustests
-    depends_on:
-      - db
-      - app
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "../WorkUS:/WorkUS" # Needed to kill WorkUS during persistance tests.
     command: ["/wait-for-it.sh", "app:5000", "--strict" ,"--timeout=30", "--", "pytest"]
     depends_on:
       - app
     networks: 
-      - default
-      - net
+      default:
+
+      # We will mock two workus in the tests. 
+      workus1-deployus:
+        aliases:
+          - workus1
+      workus2-deployus:
+        aliases:
+          - workus2
 
 
 volumes:
@@ -74,11 +53,7 @@ volumes:
 networks:
   default:
 
-  # This one if to allow communication between a workus & deployus instance.
+  # This one if to allow communication between a (mocked) workus & deployus instance.
   workus1-deployus:
   workus2-deployus:
   
-  # This network is to connect to launched scripts during testing
-  # Only the test service and the dummy script that is launched is connected to it.
-  net:
-    name: my_net
