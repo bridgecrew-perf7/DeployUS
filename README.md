@@ -270,7 +270,8 @@ En éffectuant une requête GET à /down, le WatchUS va faire un simple **docker
     * Sauvegarde le script à /work/docker-compose.yml. Fait un **docker-compose pull** dessus et ensuite un **docker-compose up**.
     * Retourne le code 422 ou 500 si une erreur s'est produite, sinon 200
 * **/down**
-    * Méthode: GET
+    * Méthode: POST
+    * Nécessite un json de format {"name":<script_name>}
     * Fait un **docker-compose down** sur le script qu'il regarde. Utile pour les tests.
     * Retourne le code 422 ou 500 si une erreur s'est produite, sinon 200
 
