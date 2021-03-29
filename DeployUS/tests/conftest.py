@@ -12,6 +12,7 @@ import mysql.connector
 # This ensures that the path is not hard-coded to where the script is executed.
 DB_CONFIG_FILE = pathlib.Path(__file__).parent.joinpath("dbconfig.json")
 
+
 class DataBase:
     """
     Class that wraps the MySQL database with config specifics to DeployUS
