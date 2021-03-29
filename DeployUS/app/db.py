@@ -271,7 +271,7 @@ def launch_job(**kwargs):
         urllib.request.urlopen(workus_url, data=json.dumps(dc_dict).encode("utf-8"))
 
     # Upon failure, do not enter the job in the database
-    except urllib.error.HTTPError as e_info:
+    except (urllib.error.HTTPError, urllib.error.URLError) as e_info:
         print(e_info)
         return False
 
