@@ -257,7 +257,7 @@ et qui contiennent le nécessaire.
 ### Fonctionnement
 WorkUS rend publique les endpoints */up* et */down* sur le port 5002. Il à la capacité de recevoir un script docker-compose.yml et le sauvegarde à **/work/scripts/<script_name>/docker-compose.yml**.
 
-En éffectuant une requête POST à /up avec un json en format {"name":<script_name>, "file": <contents of docker-compose.yml>}, le WorkUS va sauvegarder le fichier dans son répertoire /work/scripts/<script_name>/. Le WatchUS va ensuite faire un **docker-compose pull** suivi par 
+En éffectuant une requête POST à /up avec un json en format {"name":<script_name>, "file": <contents_of_docker-compose.yml>}, le WorkUS va sauvegarder le fichier dans son répertoire /work/scripts/<script_name>/. Le WatchUS va ensuite faire un **docker-compose pull** suivi par 
 un **docker-compose up -d --force-recreate**. Des appels sucessives de /up peut servir à un déploiement 
 en continue de l'application qu'il regarde.
 
@@ -266,7 +266,7 @@ En éffectuant une requête GET à /down, le WatchUS va faire un simple **docker
 ### REST Endpoints
 * **/up**
     * Méthode: POST
-    * Nécessite un json de format {"name":<script_name>, "file": <contents of docker-compose.yml>}
+    * Nécessite un json de format {"name":<script_name>, "file": <contents_of_docker-compose.yml>}
     * Sauvegarde le script à /work/docker-compose.yml. Fait un **docker-compose pull** dessus et ensuite un **docker-compose up**.
     * Retourne le code 422 ou 500 si une erreur s'est produite, sinon 200
 * **/down**
