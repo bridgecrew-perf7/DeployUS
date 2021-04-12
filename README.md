@@ -212,7 +212,7 @@ Pour executer WatchUS:
 cd WatchUS
 docker-compose up
 ```
-On peut ensuite faire des requêtes vers /up et /down sur un navigateur web.
+On peut ensuite faire des requêtes vers /up et /down. 
 ```
 http://localhost:5001/up
 http://localhost:5001/down
@@ -283,7 +283,7 @@ Pour executer WorkUS:
 cd WorkUS
 docker-compose up
 ```
-On peut ensuite faire des requêtes vers /up et /down sur un navigateur web.
+On peut ensuite faire des requêtes vers /up et /down. 
 ```
 http://localhost:5002/up
 http://localhost:5002/down
